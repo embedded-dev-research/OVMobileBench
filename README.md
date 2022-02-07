@@ -1,1 +1,1 @@
-# OpenVINO™ Toolkit benchmark statistics
+# OpenVINO™ Toolkit Android ARM benchmark statistics
