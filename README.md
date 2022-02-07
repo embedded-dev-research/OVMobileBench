@@ -1,1 +1,1 @@
-# openvino_benchmark_statistics
+# OpenVINO™ Toolkit benchmark statistics
