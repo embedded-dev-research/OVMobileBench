@@ -2,41 +2,52 @@
 
 import argparse
 import os
+import subprocess
 
 
 class BenchmarkPipeline:
-    home_dir = "/data/local/tmp"
-    cmd_line = ['/usr/bin/adb']
-    dl_models = {}
-
     def __init__(self,
                  _intel_models,
                  _public_models,
                  _statistics,
                  _precision,
                  _binaries_path,
-                 _libraries_path):
+                 _libraries_path,
+                 _android_ndk_path,
+                 _android_abi):
+        self.adb_model_path = None
         self.intel_models = _intel_models
         self.public_models = _public_models
         self.statistics = _statistics
         self.precision = _precision
         self.binaries_path = _binaries_path
         self.libraries_path = _libraries_path
+        self.android_ndk_path = _android_ndk_path
+        self.android_abi = _android_abi
+        self.home_dir = "/data/local/tmp"
+        self.cmd_line = ['/usr/bin/adb']
+        self.dl_models = {}
+        self.app_name = "benchmark_app"
 
     @staticmethod
-    def run_cmd(cmd):
+    def run_cmd(cmd, postfix):
         cmd_line = " ".join(str(item) for item in cmd)
-        os.system(cmd_line)
+        with open(postfix + ".txt", "wb") as out, \
+                open("stderr_" + postfix + ".txt", "wb") as err:
+            process = subprocess.Popen(cmd_line, shell=True, stdout=out, stderr=err)
+            process.wait()
 
-    def clear_environment(self):
+    def clear_environment(self, rm_dir=None):
         cmd_line = self.cmd_line.copy()
         cmd_line.append('shell')
         cmd_line.append('\"')
         cmd_line.append('rm -rf')
-        cmd_line.append(self.home_dir + '/*')
+        if rm_dir is None:
+            rm_dir = self.home_dir + '/*'
+        cmd_line.append(rm_dir)
         cmd_line.append('\"')
-        self.run_cmd(cmd_line)
-        print("--- Cleared environment")
+        self.run_cmd(cmd_line, self.clear_environment.__name__)
+        print("--- Cleared environment: ", rm_dir)
         return True
 
     def check_environment(self):
@@ -46,8 +57,8 @@ class BenchmarkPipeline:
         cmd_line.append('ls -l')
         cmd_line.append(self.home_dir)
         cmd_line.append('\"')
-        self.run_cmd(cmd_line)
-        print("--- Checked environment")
+        self.run_cmd(cmd_line, self.clear_environment.__name__)
+        print("Checked environment")
         return True
 
     def get_list_models(self):
@@ -63,11 +74,11 @@ class BenchmarkPipeline:
 
         return result_list
 
-    def send_bin_and_lib(self, app_name):
+    def send_bin_and_lib(self):
         cmd_line = self.cmd_line.copy()
-        cmd_line.append("push")
+        cmd_line.append("push --sync")
 
-        app_path = os.path.join(self.binaries_path, app_name)
+        app_path = os.path.join(self.binaries_path, self.app_name)
         if os.path.isfile(app_path):
             cmd_line.append(app_path)
         else:
@@ -77,20 +88,82 @@ class BenchmarkPipeline:
         else:
             return False
         cmd_line.append(self.home_dir)
-        cmd_line.append('$> /dev/null')
-        self.run_cmd(cmd_line)
+        self.run_cmd(cmd_line, self.clear_environment.__name__ + "_openvino")
+
         print("--- Sent bin: ", app_path)
         print("--- Sent libs: ", self.libraries_path)
+        print("Sent OpenVINO™ files")
+
+        ndk_cxx_lib_rel_path = "sources/cxx-stl/llvm-libc++/libs/" + self.android_abi + "/libc++_shared.so"
+        ndk_cxx_lib_abs_path = os.path.join(self.android_ndk_path, ndk_cxx_lib_rel_path)
+
+        if os.path.isfile(ndk_cxx_lib_abs_path):
+            cmd_line = self.cmd_line.copy()
+            cmd_line.append("push --sync")
+            cmd_line.append(ndk_cxx_lib_abs_path)
+            cmd_line.append(os.path.join(self.home_dir, os.path.basename(self.libraries_path)))
+        else:
+            return False
+        self.run_cmd(cmd_line, self.clear_environment.__name__ + "_android_ndk")
+
+        print("Sent Android NDK libs: ", ndk_cxx_lib_abs_path)
         return True
 
-    def send_model(self, model_path):
+    def send_model(self, local_model_name):
+        model_path = self.dl_models[local_model_name]
+        self.adb_model_path = os.path.join(self.home_dir, os.path.basename(model_path))
+        self.clear_environment(self.adb_model_path)
         cmd_line = self.cmd_line.copy()
         cmd_line.append("push")
         cmd_line.append(model_path)
         cmd_line.append(self.home_dir)
-        cmd_line.append('$> /dev/null')
-        self.run_cmd(cmd_line)
+        self.run_cmd(cmd_line, self.clear_environment.__name__ + "_" + local_model_name)
         print("--- Sent model: ", model_path)
+
+    def run_model(self, local_model_name):
+        cmd_line = self.cmd_line.copy()
+        cmd_line.append("shell")
+        cmd_line.append('\"')
+        # LD_LIBRARY_PATH=...
+        lib_path = os.path.join(self.home_dir, 'lib')
+        cmd_line.append('LD_LIBRARY_PATH=' + lib_path)
+        # ./.../benchmark_app
+        app_path = os.path.join(self.home_dir, self.app_name)
+        cmd_line.append(app_path)
+        # -m .../model.xml
+        local_model_path = os.path.join(self.adb_model_path, local_model_name + '.xml')
+        cmd_line.append('-m')
+        cmd_line.append(local_model_path)
+        # -niter 10
+        cmd_line.append('-niter 10')
+        # -api sync
+        cmd_line.append('-api sync')
+        # -report_type detailed_counters
+        cmd_line.append('-report_type detailed_counters')
+        # -report_folder /data/local/tmp"
+        cmd_line.append('-report_folder')
+        cmd_line.append(self.home_dir)
+
+        cmd_line.append('\"')
+        print("--- Run to benchmark model")
+        self.run_cmd(cmd_line, "cmd_" + local_model_name)
+        print("--- Finished to benchmark model")
+
+    def get_per_layer_stat(self, local_model_name):
+        cmd_line = self.cmd_line.copy()
+        cmd_line.append("pull")
+        perf_report_name = "benchmark_detailed_counters_report.csv"
+        cmd_line.append(os.path.join(self.home_dir, perf_report_name))
+        cmd_line.append(".")
+        self.run_cmd(cmd_line, self.clear_environment.__name__ + "_" + local_model_name)
+
+        cmd_line = ["mv"]
+        _, file_extension = os.path.splitext(perf_report_name)
+        cmd_line.append(perf_report_name)
+        cmd_line.append(local_model_name + file_extension)
+        self.run_cmd(cmd_line, self.clear_environment.__name__ + "_" + local_model_name)
+
+        print("--- Get results")
 
 
 if __name__ == '__main__':
@@ -114,6 +187,16 @@ if __name__ == '__main__':
     parser.add_argument('--libraries_path',
                         help='Path to OpenVINO™ libraries (*.a, *.so)',
                         required=True)
+    parser.add_argument('--android_ndk_path',
+                        help='Path to Android NDK',
+                        required=True)
+    parser.add_argument('--android_abi',
+                        help='Path to Android NDK',
+                        required=True,
+                        choices=['arm64-v8a'])
+    parser.add_argument('--clear',
+                        action='store_true',
+                        help='Clear device temporary directory')
     args = parser.parse_args()
 
     print("Started OpenVINO™ Toolkit Android ARM benchmark statistics")
@@ -123,12 +206,17 @@ if __name__ == '__main__':
                                    args.collect_statistics,
                                    args.precision,
                                    args.binaries_path,
-                                   args.libraries_path)
-    bench_pipe.clear_environment()
-    bench_pipe.check_environment()
-    if not bench_pipe.send_bin_and_lib('benchmark_app'):
+                                   args.libraries_path,
+                                   args.android_ndk_path,
+                                   args.android_abi)
+    if args.clear:
+        bench_pipe.clear_environment()
+        bench_pipe.check_environment()
+    if not bench_pipe.send_bin_and_lib():
         print("Problem with send OpenVINO™ binary files and libraries")
     list_models_name = bench_pipe.get_list_models()
     for model_name in list_models_name:
-        bench_pipe.send_model(bench_pipe.dl_models[model_name])
-
+        print("Name model: ", model_name)
+        bench_pipe.send_model(model_name)
+        bench_pipe.run_model(model_name)
+        bench_pipe.get_per_layer_stat(model_name)
