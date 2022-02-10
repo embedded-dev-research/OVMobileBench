@@ -3,22 +3,29 @@
 import argparse
 import os
 import subprocess
+import shutil
 
 
 class BenchmarkPipeline:
     def __init__(self,
                  _intel_models,
                  _public_models,
-                 _statistics,
+                 _statistics_path,
                  _precision,
                  _binaries_path,
                  _libraries_path,
                  _android_ndk_path,
                  _android_abi):
-        self.adb_model_path = None
         self.intel_models = _intel_models
         self.public_models = _public_models
-        self.statistics = _statistics
+        self.stat_path = _statistics_path
+        if os.path.exists(self.stat_path):
+            shutil.rmtree(self.stat_path)
+            os.mkdir(self.stat_path)
+        self.log_path = os.path.join(self.stat_path, "log_info")
+        os.mkdir(self.log_path)
+        self.bench_app_log_path = os.path.join(self.stat_path, "benchmark_app_info")
+        os.mkdir(self.bench_app_log_path)
         self.precision = _precision
         self.binaries_path = _binaries_path
         self.libraries_path = _libraries_path
@@ -28,12 +35,15 @@ class BenchmarkPipeline:
         self.cmd_line = ['/usr/bin/adb']
         self.dl_models = {}
         self.app_name = "benchmark_app"
+        self.adb_model_path = None
+        self.curr_stat_dir = None
 
     @staticmethod
-    def run_cmd(cmd, postfix):
+    def run_cmd(cmd, postfix, path_to_save):
         cmd_line = " ".join(str(item) for item in cmd)
-        with open(postfix + ".txt", "wb") as out, \
-                open("stderr_" + postfix + ".txt", "wb") as err:
+        stdout_path = os.path.join(path_to_save, postfix + ".txt")
+        stderr_path = os.path.join(path_to_save, "stderr_" + postfix + ".txt")
+        with open(stdout_path, "wb") as out, open(stderr_path, "wb") as err:
             process = subprocess.Popen(cmd_line, shell=True, stdout=out, stderr=err)
             process.wait()
 
@@ -46,7 +56,9 @@ class BenchmarkPipeline:
             rm_dir = self.home_dir + '/*'
         cmd_line.append(rm_dir)
         cmd_line.append('\"')
-        self.run_cmd(cmd_line, self.clear_environment.__name__)
+        self.run_cmd(cmd_line,
+                     self.clear_environment.__name__,
+                     self.log_path)
         print("--- Cleared environment: ", rm_dir)
         return True
 
@@ -57,7 +69,9 @@ class BenchmarkPipeline:
         cmd_line.append('ls -l')
         cmd_line.append(self.home_dir)
         cmd_line.append('\"')
-        self.run_cmd(cmd_line, self.clear_environment.__name__)
+        self.run_cmd(cmd_line,
+                     self.clear_environment.__name__,
+                     self.log_path)
         print("Checked environment")
         return True
 
@@ -88,7 +102,9 @@ class BenchmarkPipeline:
         else:
             return False
         cmd_line.append(self.home_dir)
-        self.run_cmd(cmd_line, self.clear_environment.__name__ + "_openvino")
+        self.run_cmd(cmd_line,
+                     self.clear_environment.__name__ + "_openvino",
+                     self.log_path)
 
         print("--- Sent bin: ", app_path)
         print("--- Sent libs: ", self.libraries_path)
@@ -104,7 +120,9 @@ class BenchmarkPipeline:
             cmd_line.append(os.path.join(self.home_dir, os.path.basename(self.libraries_path)))
         else:
             return False
-        self.run_cmd(cmd_line, self.clear_environment.__name__ + "_android_ndk")
+        self.run_cmd(cmd_line,
+                     self.clear_environment.__name__ + "_android_ndk",
+                     self.log_path)
 
         print("Sent Android NDK libs: ", ndk_cxx_lib_abs_path)
         return True
@@ -117,7 +135,9 @@ class BenchmarkPipeline:
         cmd_line.append("push")
         cmd_line.append(model_path)
         cmd_line.append(self.home_dir)
-        self.run_cmd(cmd_line, self.clear_environment.__name__ + "_" + local_model_name)
+        self.run_cmd(cmd_line,
+                     self.clear_environment.__name__ + "_" + local_model_name,
+                     self.log_path)
         print("--- Sent model: ", model_path)
 
     def run_model(self, local_model_name):
@@ -145,8 +165,10 @@ class BenchmarkPipeline:
         cmd_line.append(self.home_dir)
 
         cmd_line.append('\"')
-        print("--- Run to benchmark model")
-        self.run_cmd(cmd_line, "cmd_" + local_model_name)
+        print("--- Run to benchmark model: ", self.bench_app_log_path)
+        self.run_cmd(cmd_line,
+                     local_model_name,
+                     self.bench_app_log_path)
         print("--- Finished to benchmark model")
 
     def get_per_layer_stat(self, local_model_name):
@@ -154,16 +176,23 @@ class BenchmarkPipeline:
         cmd_line.append("pull")
         perf_report_name = "benchmark_detailed_counters_report.csv"
         cmd_line.append(os.path.join(self.home_dir, perf_report_name))
-        cmd_line.append(".")
-        self.run_cmd(cmd_line, self.clear_environment.__name__ + "_" + local_model_name)
+        self.curr_stat_dir = os.path.join(self.stat_path, os.path.basename(self.dl_models[local_model_name]))
+        if not os.path.exists(self.curr_stat_dir):
+            os.mkdir(self.curr_stat_dir)
+        cmd_line.append(self.curr_stat_dir)
+        self.run_cmd(cmd_line,
+                     self.get_per_layer_stat.__name__,
+                     self.log_path)
 
         cmd_line = ["mv"]
         _, file_extension = os.path.splitext(perf_report_name)
-        cmd_line.append(perf_report_name)
-        cmd_line.append(local_model_name + file_extension)
-        self.run_cmd(cmd_line, self.clear_environment.__name__ + "_" + local_model_name)
+        cmd_line.append(os.path.join(self.curr_stat_dir, perf_report_name))
+        cmd_line.append(os.path.join(self.curr_stat_dir, local_model_name + file_extension))
+        self.run_cmd(cmd_line,
+                     self.get_per_layer_stat.__name__,
+                     self.log_path)
 
-        print("--- Get results")
+        print("--- Store results: ", self.curr_stat_dir)
 
 
 if __name__ == '__main__':
