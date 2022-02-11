@@ -93,14 +93,8 @@ class BenchmarkPipeline:
         cmd_line.append("push --sync")
 
         app_path = os.path.join(self.binaries_path, self.app_name)
-        if os.path.isfile(app_path):
-            cmd_line.append(app_path)
-        else:
-            return False
-        if os.path.isdir(self.libraries_path):
-            cmd_line.append(self.libraries_path)
-        else:
-            return False
+        cmd_line.append(app_path)
+        cmd_line.append(self.libraries_path)
         cmd_line.append(self.home_dir)
         self.run_cmd(cmd_line,
                      self.clear_environment.__name__ + "_openvino",
@@ -113,13 +107,10 @@ class BenchmarkPipeline:
         ndk_cxx_lib_rel_path = "sources/cxx-stl/llvm-libc++/libs/" + self.android_abi + "/libc++_shared.so"
         ndk_cxx_lib_abs_path = os.path.join(self.android_ndk_path, ndk_cxx_lib_rel_path)
 
-        if os.path.isfile(ndk_cxx_lib_abs_path):
-            cmd_line = self.cmd_line.copy()
-            cmd_line.append("push --sync")
-            cmd_line.append(ndk_cxx_lib_abs_path)
-            cmd_line.append(os.path.join(self.home_dir, os.path.basename(self.libraries_path)))
-        else:
-            return False
+        cmd_line = self.cmd_line.copy()
+        cmd_line.append("push --sync")
+        cmd_line.append(ndk_cxx_lib_abs_path)
+        cmd_line.append(os.path.join(self.home_dir, os.path.basename(self.libraries_path)))
         self.run_cmd(cmd_line,
                      self.clear_environment.__name__ + "_android_ndk",
                      self.log_path)
