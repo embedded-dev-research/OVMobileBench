@@ -1,6 +1,6 @@
 # CI/CD Integration Guide
 
-This guide covers integrating OVBench into continuous integration and deployment pipelines.
+This guide covers integrating OVMobileBench into continuous integration and deployment pipelines.
 
 ## Table of Contents
 
@@ -62,13 +62,13 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install OVBench
+      - name: Install OVMobileBench
         run: |
           pip install -e .[dev]
       
       - name: Build OpenVINO
         run: |
-          ovbench build -c ci/config.yaml
+          ovmobilebench build -c ci/config.yaml
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -91,9 +91,9 @@ jobs:
       
       - name: Run benchmarks
         run: |
-          ovbench deploy -c ci/config.yaml
-          ovbench run -c ci/config.yaml
-          ovbench report -c ci/config.yaml
+          ovmobilebench deploy -c ci/config.yaml
+          ovmobilebench run -c ci/config.yaml
+          ovmobilebench report -c ci/config.yaml
       
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -124,7 +124,7 @@ jobs:
           PRECISION: ${{ matrix.precision }}
           THREADS: ${{ matrix.threads }}
         run: |
-          ovbench run -c ci/matrix.yaml \
+          ovmobilebench run -c ci/matrix.yaml \
             --override "run.matrix.threads=[$THREADS]" \
             --override "run.matrix.infer_precision=[\"$PRECISION\"]"
 ```
@@ -153,12 +153,12 @@ jobs:
       
       - name: Run PR benchmark
         run: |
-          ovbench all -c ci/pr.yaml -o results/pr.json
+          ovmobilebench all -c ci/pr.yaml -o results/pr.json
       
       - name: Run baseline benchmark
         run: |
           cd baseline
-          ovbench all -c ci/pr.yaml -o results/baseline.json
+          ovmobilebench all -c ci/pr.yaml -o results/baseline.json
       
       - name: Compare results
         id: compare
@@ -197,7 +197,7 @@ jobs:
       
       - name: Full benchmark suite
         run: |
-          ovbench all -c ci/nightly.yaml
+          ovmobilebench all -c ci/nightly.yaml
       
       - name: Upload to dashboard
         run: |
@@ -235,7 +235,7 @@ build:openvino:
   before_script:
     - apt-get update && apt-get install -y cmake ninja-build
   script:
-    - ovbench build -c $OVBENCH_CONFIG
+    - ovmobilebench build -c $OVBENCH_CONFIG
   artifacts:
     paths:
       - artifacts/
@@ -246,7 +246,7 @@ package:bundle:
   dependencies:
     - build:openvino
   script:
-    - ovbench package -c $OVBENCH_CONFIG
+    - ovmobilebench package -c $OVBENCH_CONFIG
   artifacts:
     paths:
       - bundles/
@@ -258,8 +258,8 @@ benchmark:android:
   dependencies:
     - package:bundle
   script:
-    - ovbench deploy -c $OVBENCH_CONFIG
-    - ovbench run -c $OVBENCH_CONFIG
+    - ovmobilebench deploy -c $OVBENCH_CONFIG
+    - ovmobilebench run -c $OVBENCH_CONFIG
   artifacts:
     paths:
       - results/
@@ -271,7 +271,7 @@ report:performance:
   dependencies:
     - benchmark:android
   script:
-    - ovbench report -c $OVBENCH_CONFIG
+    - ovmobilebench report -c $OVBENCH_CONFIG
     - python ci/generate_report.py
   artifacts:
     paths:
@@ -290,11 +290,11 @@ benchmark:mr:
   script:
     - |
       # Run benchmarks
-      ovbench all -c ci/mr.yaml
+      ovmobilebench all -c ci/mr.yaml
       
       # Compare with target branch
       git checkout $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-      ovbench all -c ci/mr.yaml -o baseline.json
+      ovmobilebench all -c ci/mr.yaml -o baseline.json
       
       # Generate comparison
       python ci/compare.py --format markdown > comparison.md
@@ -323,11 +323,11 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
-                    image 'ovbench/build:latest'
+                    image 'ovmobilebench/build:latest'
                 }
             }
             steps {
-                sh 'ovbench build -c $OVBENCH_CONFIG'
+                sh 'ovmobilebench build -c $OVBENCH_CONFIG'
                 stash includes: 'artifacts/**', name: 'build-artifacts'
             }
         }
@@ -335,7 +335,7 @@ pipeline {
         stage('Package') {
             steps {
                 unstash 'build-artifacts'
-                sh 'ovbench package -c $OVBENCH_CONFIG'
+                sh 'ovmobilebench package -c $OVBENCH_CONFIG'
                 stash includes: 'bundles/**', name: 'bundles'
             }
         }
@@ -347,9 +347,9 @@ pipeline {
             steps {
                 unstash 'bundles'
                 sh '''
-                    ovbench deploy -c $OVBENCH_CONFIG
-                    ovbench run -c $OVBENCH_CONFIG
-                    ovbench report -c $OVBENCH_CONFIG
+                    ovmobilebench deploy -c $OVBENCH_CONFIG
+                    ovmobilebench run -c $OVBENCH_CONFIG
+                    ovmobilebench report -c $OVBENCH_CONFIG
                 '''
             }
         }
@@ -406,7 +406,7 @@ pipeline {
                     config.run.matrix.infer_precision = [params.PRECISION]
                     writeYaml file: 'ci/dynamic.yaml', data: config
                 }
-                sh 'ovbench all -c ci/dynamic.yaml'
+                sh 'ovmobilebench all -c ci/dynamic.yaml'
             }
         }
     }
@@ -528,10 +528,10 @@ for device in devices:
 test:
   stage: test
   script:
-    - pytest tests/ --cov=ovbench --cov-report=xml
-    - mypy ovbench --strict
-    - ruff check ovbench
-    - black --check ovbench
+    - pytest tests/ --cov=ovmobilebench --cov-report=xml
+    - mypy ovmobilebench --strict
+    - ruff check ovmobilebench
+    - black --check ovmobilebench
   coverage: '/TOTAL.*\s+(\d+%)$/'
 ```
 
@@ -556,7 +556,7 @@ integration:
 ```python
 # tests/test_performance.py
 import pytest
-from ovbench import pipeline
+from ovmobilebench import pipeline
 
 @pytest.mark.benchmark
 def test_baseline_performance():
@@ -613,7 +613,7 @@ def collect_metrics(results_path, metadata):
 def send_to_influxdb(metrics):
     from influxdb import InfluxDBClient
     
-    client = InfluxDBClient('localhost', 8086, database='ovbench')
+    client = InfluxDBClient('localhost', 8086, database='ovmobilebench')
     
     points = []
     for result in metrics['results']:
@@ -640,7 +640,7 @@ def send_to_influxdb(metrics):
 ```yaml
 # Grafana dashboard config
 dashboard:
-  title: "OVBench Performance"
+  title: "OVMobileBench Performance"
   panels:
     - title: "Throughput Over Time"
       query: |

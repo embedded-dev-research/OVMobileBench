@@ -37,7 +37,7 @@ This guide covers running benchmarks, interpreting results, and optimizing perfo
 
 ```bash
 # Simple benchmark with default settings
-ovbench run -c experiments/basic.yaml
+ovmobilebench run -c experiments/basic.yaml
 ```
 
 Basic configuration:
@@ -73,7 +73,7 @@ run:
 
 ```bash
 # Run specific configuration
-ovbench run -c experiments/config.yaml \
+ovmobilebench run -c experiments/config.yaml \
     --filter "threads=4,nstreams=2"
 ```
 

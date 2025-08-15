@@ -87,11 +87,11 @@ build:
     CMAKE_CXX_FLAGS: "-march=armv8.2-a+fp16"
 ```
 
-### Step 4: Build with OVBench
+### Step 4: Build with OVMobileBench
 
 ```bash
-# Build using OVBench
-ovbench build -c experiments/android_build.yaml --verbose
+# Build using OVMobileBench
+ovmobilebench build -c experiments/android_build.yaml --verbose
 ```
 
 ### Manual Build Process
@@ -492,7 +492,7 @@ jobs:
       
       - name: Build
         run: |
-          ovbench build -c config.yaml
+          ovmobilebench build -c config.yaml
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

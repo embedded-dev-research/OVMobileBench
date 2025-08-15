@@ -1,7 +1,7 @@
 """Tests for benchmark output parser."""
 
 import pytest
-from ovbench.parsers.benchmark_parser import parse_metrics, BenchmarkParser
+from ovmobilebench.parsers.benchmark_parser import parse_metrics, BenchmarkParser
 
 
 class TestParseMetrics:

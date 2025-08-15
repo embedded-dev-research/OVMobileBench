@@ -1,5 +1,5 @@
 project:
-  name: "ovbench-android"
+  name: "ovmobilebench-android"
   run_id: "android_benchmark_001"
   description: "OpenVINO benchmark on Android device"
 
@@ -27,7 +27,7 @@ package:
 device:
   kind: "android"
   serials: ["YOUR_DEVICE_SERIAL"]  # UPDATE THIS - use 'adb devices' to get serial
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
   use_root: false
 
 models:

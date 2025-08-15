@@ -4,15 +4,15 @@ import logging
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Union
 
-from ovbench.config.schema import Experiment
-from ovbench.devices.android import AndroidDevice
-from ovbench.builders.openvino import OpenVINOBuilder
-from ovbench.packaging.packager import Packager
-from ovbench.runners.benchmark import BenchmarkRunner
-from ovbench.parsers.benchmark_parser import BenchmarkParser
-from ovbench.report.sink import JSONSink, CSVSink
-from ovbench.core.fs import ensure_dir
-from ovbench.core.errors import OVBenchError, DeviceError
+from ovmobilebench.config.schema import Experiment
+from ovmobilebench.devices.android import AndroidDevice
+from ovmobilebench.builders.openvino import OpenVINOBuilder
+from ovmobilebench.packaging.packager import Packager
+from ovmobilebench.runners.benchmark import BenchmarkRunner
+from ovmobilebench.parsers.benchmark_parser import BenchmarkParser
+from ovmobilebench.report.sink import JSONSink, CSVSink
+from ovmobilebench.core.fs import ensure_dir
+from ovmobilebench.core.errors import OVMobileBenchError, DeviceError
 
 logger = logging.getLogger(__name__)
 
@@ -197,7 +197,7 @@ class Pipeline:
         if self.config.device.kind == "android":
             return AndroidDevice(serial, self.config.device.push_dir)
         else:
-            raise OVBenchError(f"Unsupported device kind: {self.config.device.kind}")
+            raise OVMobileBenchError(f"Unsupported device kind: {self.config.device.kind}")
 
     def _prepare_device(self, device: AndroidDevice) -> None:
         """Prepare device for benchmarking."""

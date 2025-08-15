@@ -1,8 +1,8 @@
-# OVBench Architecture
+# OVMobileBench Architecture
 
 ## Overview
 
-OVBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devices. It automates the complete workflow from building OpenVINO runtime, packaging models and libraries, deploying to devices, running benchmarks, and generating reports.
+OVMobileBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devices. It automates the complete workflow from building OpenVINO runtime, packaging models and libraries, deploying to devices, running benchmarks, and generating reports.
 
 ## System Architecture
 
@@ -30,7 +30,7 @@ OVBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devices. I
 
 ## Core Components
 
-### 1. Configuration System (`ovbench/config/`)
+### 1. Configuration System (`ovmobilebench/config/`)
 
 **Purpose**: Define and validate experiment configurations.
 
@@ -43,7 +43,7 @@ OVBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devices. I
 
 **Technology**: Pydantic for schema validation and type safety.
 
-### 2. CLI Interface (`ovbench/cli.py`)
+### 2. CLI Interface (`ovmobilebench/cli.py`)
 
 **Purpose**: Command-line interface for user interaction.
 
@@ -57,7 +57,7 @@ OVBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devices. I
 
 **Technology**: Typer for modern CLI with auto-completion.
 
-### 3. Pipeline Orchestrator (`ovbench/pipeline.py`)
+### 3. Pipeline Orchestrator (`ovmobilebench/pipeline.py`)
 
 **Purpose**: Coordinate execution of all pipeline stages.
 
@@ -69,7 +69,7 @@ OVBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devices. I
 
 **Design Pattern**: Chain of Responsibility with stage isolation.
 
-### 4. Device Abstraction (`ovbench/devices/`)
+### 4. Device Abstraction (`ovmobilebench/devices/`)
 
 **Purpose**: Uniform interface for different device types.
 
@@ -90,7 +90,7 @@ class Device(ABC):
     def info()
 ```
 
-### 5. Build System (`ovbench/builders/`)
+### 5. Build System (`ovmobilebench/builders/`)
 
 **Purpose**: Build OpenVINO runtime for target platforms.
 
@@ -104,7 +104,7 @@ class Device(ABC):
 - Android (arm64-v8a)
 - Linux ARM (aarch64)
 
-### 6. Packaging System (`ovbench/packaging/`)
+### 6. Packaging System (`ovmobilebench/packaging/`)
 
 **Purpose**: Bundle runtime, libraries, and models.
 
@@ -122,7 +122,7 @@ ovbundle.tar.gz
 └── README.txt
 ```
 
-### 7. Benchmark Runner (`ovbench/runners/`)
+### 7. Benchmark Runner (`ovmobilebench/runners/`)
 
 **Purpose**: Execute benchmark_app with various configurations.
 
@@ -133,7 +133,7 @@ ovbundle.tar.gz
 - Warmup runs
 - Progress tracking
 
-### 8. Output Parser (`ovbench/parsers/`)
+### 8. Output Parser (`ovmobilebench/parsers/`)
 
 **Purpose**: Extract metrics from benchmark_app output.
 
@@ -143,7 +143,7 @@ ovbundle.tar.gz
 - Device utilization
 - Memory usage
 
-### 9. Report Generation (`ovbench/report/`)
+### 9. Report Generation (`ovmobilebench/report/`)
 
 **Purpose**: Generate structured reports from results.
 
@@ -153,7 +153,7 @@ ovbundle.tar.gz
 - SQLite: Database format (planned)
 - HTML: Visual reports (planned)
 
-### 10. Core Utilities (`ovbench/core/`)
+### 10. Core Utilities (`ovmobilebench/core/`)
 
 **Shared Components**:
 - `shell.py`: Command execution with timeout

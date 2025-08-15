@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-This guide helps you diagnose and resolve common issues with OVBench.
+This guide helps you diagnose and resolve common issues with OVMobileBench.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ This guide helps you diagnose and resolve common issues with OVBench.
 
 ### Python Version Mismatch
 
-**Problem**: `ERROR: ovbench requires Python 3.11+`
+**Problem**: `ERROR: ovmobilebench requires Python 3.11+`
 
 **Solution**:
 ```bash
@@ -213,12 +213,12 @@ ssh -v user@host  # Verbose mode for debugging
 adb shell getenforce
 
 # If enforcing, try different directory
-adb shell mkdir -p /sdcard/ovbench
+adb shell mkdir -p /sdcard/ovmobilebench
 # Update config
 ```
 ```yaml
 device:
-  push_dir: "/sdcard/ovbench"
+  push_dir: "/sdcard/ovmobilebench"
 ```
 
 ## Benchmark Execution Errors
@@ -230,13 +230,13 @@ device:
 **Solution**:
 ```bash
 # Verify file exists
-adb shell ls -la /data/local/tmp/ovbench/bin/benchmark_app
+adb shell ls -la /data/local/tmp/ovmobilebench/bin/benchmark_app
 
 # Check execute permission
-adb shell chmod +x /data/local/tmp/ovbench/bin/benchmark_app
+adb shell chmod +x /data/local/tmp/ovmobilebench/bin/benchmark_app
 
 # Verify architecture match
-adb shell file /data/local/tmp/ovbench/bin/benchmark_app
+adb shell file /data/local/tmp/ovmobilebench/bin/benchmark_app
 adb shell getprop ro.product.cpu.abi
 ```
 
@@ -247,14 +247,14 @@ adb shell getprop ro.product.cpu.abi
 **Solution**:
 ```bash
 # Set library path
-adb shell "export LD_LIBRARY_PATH=/data/local/tmp/ovbench/lib:\$LD_LIBRARY_PATH && benchmark_app"
+adb shell "export LD_LIBRARY_PATH=/data/local/tmp/ovmobilebench/lib:\$LD_LIBRARY_PATH && benchmark_app"
 
 # Or in config
 ```
 ```yaml
 device:
   env_vars:
-    LD_LIBRARY_PATH: "/data/local/tmp/ovbench/lib:$LD_LIBRARY_PATH"
+    LD_LIBRARY_PATH: "/data/local/tmp/ovmobilebench/lib:$LD_LIBRARY_PATH"
 ```
 
 ### Model File Not Found
@@ -264,7 +264,7 @@ device:
 **Solution**:
 ```bash
 # Verify model files exist
-adb shell ls -la /data/local/tmp/ovbench/models/
+adb shell ls -la /data/local/tmp/ovmobilebench/models/
 
 # Check both .xml and .bin files
 # Ensure matching base names
@@ -276,7 +276,7 @@ model.bin  # Must have same base name
 ```yaml
 models:
   - name: "model"
-    path: "/data/local/tmp/ovbench/models/model.xml"
+    path: "/data/local/tmp/ovmobilebench/models/model.xml"
 ```
 
 ### Timeout During Execution
@@ -402,7 +402,7 @@ python -c "import yaml; yaml.safe_load(open('config.yaml'))"
 **Solution**:
 ```python
 # Debug configuration
-from ovbench.config.schema import Experiment
+from ovmobilebench.config.schema import Experiment
 
 try:
     config = Experiment.from_yaml("config.yaml")
@@ -550,7 +550,7 @@ run:
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-from ovbench.pipeline import Pipeline
+from ovmobilebench.pipeline import Pipeline
 pipeline = Pipeline("config.yaml")
 ```
 
@@ -561,7 +561,7 @@ If you're still experiencing issues:
 1. **Check existing issues**: [GitHub Issues](https://github.com/embedded-dev-research/openvino_remote_benchmark/issues)
 2. **Search discussions**: [GitHub Discussions](https://github.com/embedded-dev-research/openvino_remote_benchmark/discussions)
 3. **File a bug report** with:
-   - OVBench version: `ovbench --version`
+   - OVMobileBench version: `ovmobilebench --version`
    - Python version: `python --version`
    - Full error message and stack trace
    - Configuration file (sanitized)

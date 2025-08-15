@@ -1,4 +1,4 @@
-"""Configuration module for OVBench."""
+"""Configuration module for OVMobileBench."""
 
 from .schema import Experiment, BuildConfig, DeviceConfig, RunConfig, ReportConfig
 from .loader import load_experiment

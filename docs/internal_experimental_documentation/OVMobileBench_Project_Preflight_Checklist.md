@@ -1,6 +1,6 @@
-# OVBench — Repository Preflight Checklist for Publication and CI Launch
+# OVMobileBench — Repository Preflight Checklist for Publication and CI Launch
 
-> **Purpose**: This document is a detailed preflight checklist to prepare the **OVBench**
+> **Purpose**: This document is a detailed preflight checklist to prepare the **OVMobileBench**
 > repository (automation for building OpenVINO, packaging, deploying to mobile devices,
 > and running `benchmark_app`) for public/internal release and stable CI/CD operation.
 >
@@ -42,7 +42,7 @@
 - [ ] **Consistency**: same structure, tooling and commands locally and in CI.
 - [ ] **Reproducibility**: pin NDK, CMake, Python deps, and model versions.
 - [ ] **Observability**: JSONL logs, artifacts, build/device metadata.
-- [ ] **Simplicity**: `ovbench all -c <yaml>` should work without manual steps.
+- [ ] **Simplicity**: `ovmobilebench all -c <yaml>` should work without manual steps.
 - [ ] **Least privilege**: secrets and access are locked down to minimum.
 - [ ] **Transparency**: docs cover end-to-end scenarios and incident SOPs.
 - [ ] **Quality-by-default**: linters, formatters, typing, tests — mandatory and fast.
@@ -55,7 +55,7 @@
 ## Fast Start: Top 10 Must-Haves
 
 1. [ ] License chosen and added (MIT/Apache-2.0/etc.).
-2. [ ] `pyproject.toml` + `ovbench` package with `ovbench.cli:app` entrypoint.
+2. [ ] `pyproject.toml` + `ovmobilebench` package with `ovmobilebench.cli:app` entrypoint.
 3. [ ] `pre-commit` with Black, Ruff, Mypy, end-of-file-fixer.
 4. [ ] CI badges in README, working `bench.yml` workflow.
 5. [ ] `.gitignore`, `.gitattributes`, `CODEOWNERS`, `CONTRIBUTING.md`.
@@ -83,12 +83,12 @@
   - [ ] no merge on red statuses.
 - [ ] **Sign-off** (DCO) or GPG-signed commits policy.
 - [ ] Enable **secret scanning** (GH Advanced Security/Trufflehog if available).
-- [ ] Define **CODEOWNERS** for critical dirs (`ovbench/core`, `devices/*`, workflows).
+- [ ] Define **CODEOWNERS** for critical dirs (`ovmobilebench/core`, `devices/*`, workflows).
 - [ ] Add `SECURITY.md` (contacts, vulnerability disclosure policy).
 
 ## Directory Structure & Required Files
 
-- [ ] `ovbench/` — sources
+- [ ] `ovmobilebench/` — sources
   - [ ] `cli.py` — Typer/Click CLI
   - [ ] `pipeline.py` — orchestrator
   - [ ] `config/` — schemas/loader/defaults
@@ -113,19 +113,19 @@
 ## Python Package: pyproject, Dependencies, Extras
 
 - [ ] Package via `pyproject.toml` (Poetry or PEP 621):
-  - [ ] `name = "ovbench"`, `version`, `readme`, `scripts`.
+  - [ ] `name = "ovmobilebench"`, `version`, `readme`, `scripts`.
   - [ ] Runtime deps: `typer`, `pydantic`, `pyyaml`, `paramiko`, `pandas`, `rich`.
   - [ ] Dev deps: `pytest`, `pytest-cov`, `mypy`, `ruff`, `black`.
   - [ ] Extras: `[dev]`, `[ssh]`, `[viz]` as needed.
 - [ ] Minimum Python version: 3.11 (pinned in CI).
 - [ ] Dependency pinning strategy: `^` / `~` / exact.
-- [ ] Commands: `ovbench build|package|deploy|run|report|all`.
-- [ ] `entry_points`: `ovbench = "ovbench.cli:app"`.
+- [ ] Commands: `ovmobilebench build|package|deploy|run|report|all`.
+- [ ] `entry_points`: `ovmobilebench = "ovmobilebench.cli:app"`.
 
 ## Code Quality: Formatting, Linting, Typing, Hooks
 
 - [ ] **Black** (formatting) and **Ruff** (linting) configured.
-- [ ] **Mypy** (strict options for `ovbench/core`, `devices/*`).
+- [ ] **Mypy** (strict options for `ovmobilebench/core`, `devices/*`).
 - [ ] `pre-commit` with black, ruff, mypy, trailing-whitespace, end-of-file-fixer.
 - [ ] Quality badges in README (lint/type/test).
 - [ ] Ruff profiles for excluding dirs (e.g., `artifacts/`).
@@ -395,8 +395,8 @@ build/
 ### CODEOWNERS (example)
 ```
 *                 @team/owners
-/ovbench/core/    @team/core
-/ovbench/devices/ @team/devices
+/ovmobilebench/core/    @team/core
+/ovmobilebench/devices/ @team/devices
 /.github/         @team/ci
 ```
 

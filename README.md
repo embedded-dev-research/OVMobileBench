@@ -1,10 +1,10 @@
-# OVBench - OpenVINO™ Mobile Benchmarking Pipeline
+# OVMobileBench - OpenVINO™ Mobile Benchmarking Pipeline
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/embedded-dev-research/openvino_remote_benchmark/actions/workflows/bench.yml/badge.svg)](https://github.com/embedded-dev-research/openvino_remote_benchmark/actions)
 
-**OVBench** is an end-to-end automation pipeline for benchmarking OpenVINO inference performance on mobile devices. It handles the complete workflow from building OpenVINO runtime, packaging models, deploying to devices, executing benchmarks, and generating comprehensive reports.
+**OVMobileBench** is an end-to-end automation pipeline for benchmarking OpenVINO inference performance on mobile devices. It handles the complete workflow from building OpenVINO runtime, packaging models, deploying to devices, executing benchmarks, and generating comprehensive reports.
 
 ## 🚀 Quick Start
 
@@ -15,7 +15,7 @@ cd openvino_remote_benchmark
 pip install -e .
 
 # Run complete benchmark pipeline
-ovbench all -c experiments/android_example.yaml
+ovmobilebench all -c experiments/android_example.yaml
 
 # View results
 cat experiments/results/*.csv

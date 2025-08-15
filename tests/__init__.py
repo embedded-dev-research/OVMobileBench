@@ -1,1 +1,1 @@
-"""OVBench test suite."""
+"""OVMobileBench test suite."""

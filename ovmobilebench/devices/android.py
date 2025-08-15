@@ -4,7 +4,7 @@ import subprocess
 import shlex
 from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
-from ovbench.devices.base import Device
+from ovmobilebench.devices.base import Device
 
 
 def list_android_devices() -> List[Tuple[str, str]]:
@@ -30,7 +30,7 @@ def list_android_devices() -> List[Tuple[str, str]]:
 class AndroidDevice(Device):
     """Android device accessed via ADB."""
 
-    def __init__(self, serial: str, push_dir: str = "/data/local/tmp/ovbench"):
+    def __init__(self, serial: str, push_dir: str = "/data/local/tmp/ovmobilebench"):
         super().__init__(name=serial)
         self.serial = serial
         self.push_dir = push_dir

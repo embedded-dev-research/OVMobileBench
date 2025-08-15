@@ -1,6 +1,6 @@
-# Contributing to OVBench
+# Contributing to OVMobileBench
 
-Thank you for your interest in contributing to OVBench! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to OVMobileBench! This document provides guidelines and instructions for contributing.
 
 ## Code of Conduct
 
@@ -11,7 +11,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 ### Reporting Issues
 
 - Check if the issue already exists
-- Include clear description and steps to reproduce
+- Include a clear description and steps to reproduce
 - Provide system information (OS, Python version, device type)
 - Include relevant logs and error messages
 
@@ -19,8 +19,8 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 1. **Fork and Clone**
    ```bash
-   git clone https://github.com/yourusername/ovbench.git
-   cd ovbench
+   git clone https://github.com/embedded-dev-research/OVMobileBench
+   cd OVMobileBench
    ```
 
 2. **Create Branch**
@@ -37,20 +37,20 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    ```
 
 4. **Make Changes**
-   - Follow existing code style
+   - Follow the existing code style
    - Add tests for new functionality
    - Update documentation if needed
 
 5. **Run Quality Checks**
    ```bash
    # Format code
-   poetry run black ovbench tests
+   poetry run black ovmobilebench tests
    
    # Lint
-   poetry run ruff ovbench tests
+   poetry run ruff ovmobilebench tests
    
    # Type check
-   poetry run mypy ovbench
+   poetry run mypy ovmobilebench
    
    # Run tests
    poetry run pytest tests/
@@ -104,7 +104,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 ## Project Structure
 
 ```
-ovbench/
+ovmobilebench/
 ├── cli.py           # CLI commands (Typer)
 ├── config/          # Configuration schemas (Pydantic)
 ├── devices/         # Device abstractions
@@ -120,17 +120,17 @@ ovbench/
 
 ### Adding a New Device Type
 
-1. Create new class in `ovbench/devices/` inheriting from `Device`
+1. Create new class in `ovmobilebench/devices/` inheriting from `Device`
 2. Implement all abstract methods
-3. Update `pipeline.py` to support new device type
+3. Update `pipeline.py` to support a new device type
 4. Add tests in `tests/test_devices.py`
 5. Update documentation
 
 ### Adding a New Report Format
 
-1. Create new sink class in `ovbench/report/`
+1. Create new sink class in `ovmobilebench/report/`
 2. Inherit from `ReportSink` and implement `write()`
-3. Update `pipeline.py` to handle new format
+3. Update `pipeline.py` to handle a new format
 4. Add tests and examples
 
 ### Adding New Benchmark Parameters
@@ -146,7 +146,7 @@ ovbench/
 2. Update CHANGELOG.md
 3. Create git tag: `git tag v0.1.0`
 4. Push tag: `git push origin v0.1.0`
-5. CI will automatically create release
+5. CI will automatically create a release
 
 ## Getting Help
 

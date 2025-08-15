@@ -1,43 +1,43 @@
-# CODEOWNERS file for OVBench
+# CODEOWNERS file for OVMobileBench
 # These owners will be the default owners for everything in the repo.
 
 # Global owners
-*                           @ovbench/maintainers
+*                           @ovmobilebench/maintainers
 
 # Core modules
-/ovbench/core/              @ovbench/core-team
-/ovbench/config/            @ovbench/core-team
+/ovmobilebench/core/              @ovmobilebench/core-team
+/ovmobilebench/config/            @ovmobilebench/core-team
 
 # Device implementations
-/ovbench/devices/           @ovbench/device-team
-/ovbench/devices/android.py @ovbench/android-team
+/ovmobilebench/devices/           @ovmobilebench/device-team
+/ovmobilebench/devices/android.py @ovmobilebench/android-team
 
 # Build and packaging
-/ovbench/builders/          @ovbench/build-team
-/ovbench/packaging/         @ovbench/build-team
+/ovmobilebench/builders/          @ovmobilebench/build-team
+/ovmobilebench/packaging/         @ovmobilebench/build-team
 
 # Benchmarking and reporting
-/ovbench/runners/           @ovbench/perf-team
-/ovbench/parsers/           @ovbench/perf-team
-/ovbench/report/            @ovbench/perf-team
+/ovmobilebench/runners/           @ovmobilebench/perf-team
+/ovmobilebench/parsers/           @ovmobilebench/perf-team
+/ovmobilebench/report/            @ovmobilebench/perf-team
 
 # CLI and pipeline
-/ovbench/cli.py             @ovbench/maintainers
-/ovbench/pipeline.py        @ovbench/maintainers
+/ovmobilebench/cli.py             @ovmobilebench/maintainers
+/ovmobilebench/pipeline.py        @ovmobilebench/maintainers
 
 # CI/CD
-/.github/                   @ovbench/devops-team
-/Makefile                   @ovbench/devops-team
-/.pre-commit-config.yaml    @ovbench/devops-team
+/.github/                   @ovmobilebench/devops-team
+/Makefile                   @ovmobilebench/devops-team
+/.pre-commit-config.yaml    @ovmobilebench/devops-team
 
 # Documentation
-/README.md                  @ovbench/docs-team
-/CONTRIBUTING.md            @ovbench/docs-team
-/ARCHITECTURE.md            @ovbench/architects
-/SECURITY.md                @ovbench/security-team
+/README.md                  @ovmobilebench/docs-team
+/CONTRIBUTING.md            @ovmobilebench/docs-team
+/ARCHITECTURE.md            @ovmobilebench/architects
+/SECURITY.md                @ovmobilebench/security-team
 
 # Tests
-/tests/                     @ovbench/qa-team
+/tests/                     @ovmobilebench/qa-team
 
 # Configuration examples
-/experiments/               @ovbench/maintainers
+/experiments/               @ovmobilebench/maintainers

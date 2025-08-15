@@ -6,9 +6,9 @@ import logging
 from pathlib import Path
 from typing import List, Dict
 
-from ovbench.config.schema import PackageConfig, ModelItem
-from ovbench.core.fs import ensure_dir, get_digest
-from ovbench.core.errors import OVBenchError
+from ovmobilebench.config.schema import PackageConfig, ModelItem
+from ovmobilebench.core.fs import ensure_dir, get_digest
+from ovmobilebench.core.errors import OVMobileBenchError
 
 logger = logging.getLogger(__name__)
 
@@ -83,9 +83,9 @@ class Packager:
             bin_path = xml_path.with_suffix(".bin")
 
             if not xml_path.exists():
-                raise OVBenchError(f"Model XML not found: {xml_path}")
+                raise OVMobileBenchError(f"Model XML not found: {xml_path}")
             if not bin_path.exists():
-                raise OVBenchError(f"Model BIN not found: {bin_path}")
+                raise OVMobileBenchError(f"Model BIN not found: {bin_path}")
 
             # Copy with model name prefix
             dst_xml = models_dir / f"{model.name}.xml"
@@ -98,7 +98,7 @@ class Packager:
 
     def _create_readme(self, bundle_dir: Path):
         """Create README with usage instructions."""
-        readme_content = """# OVBench Bundle
+        readme_content = """# OVMobileBench Bundle
 
 ## Usage
 

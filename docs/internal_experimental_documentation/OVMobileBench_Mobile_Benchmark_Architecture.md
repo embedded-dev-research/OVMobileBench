@@ -1,4 +1,4 @@
-# OVBench Mobile — End-to-End Benchmarking Pipeline for OpenVINO on Mobile Devices
+# OVMobileBench Mobile — End-to-End Benchmarking Pipeline for OpenVINO on Mobile Devices
 > **Summary**: This document describes a Python project that automates the full pipeline
 > from building OpenVINO Runtime and `benchmark_app`, packaging runtime and models,
 > deploying the bundle to mobile devices (Android via ADB, with optional Linux/SSH, iOS stub),
@@ -10,7 +10,7 @@
 > examples, troubleshooting, FAQs, and extensibility roadmap.
 - **Document Version**: 1.0
 - **Generated**: 2025-08-15 14:04:42
-- **Project Codename**: `ovbench`
+- **Project Codename**: `ovmobilebench`
 - **Primary Target**: Android (ADB, arm64-v8a)
 - **Secondary Targets**: Linux ARM (SSH), iOS (stub/interface)
 - **Authoring Tool**: ChatGPT (programmatic generation)
@@ -67,10 +67,10 @@
 ## Directory Structure
 
 ```text
-ovbench/
+ovmobilebench/
   pyproject.toml
   README.md
-  ovbench/
+  ovmobilebench/
     __init__.py
     cli.py
     pipeline.py
@@ -128,12 +128,12 @@ They describe the build options, devices, models, and run matrix, as well as rep
 - `report`: sinks (CSV/JSON/SQLite) and custom tags.
 ## CLI Commands
 
-- `ovbench build -c <yaml>` — Build runtime and benchmark_app for the target.
-- `ovbench package -c <yaml>` — Create a device-ready bundle with libs and models.
-- `ovbench deploy -c <yaml>` — Push to device(s) and prepare run directory.
-- `ovbench run -c <yaml>` — Execute the test matrix and collect raw outputs.
-- `ovbench report -c <yaml>` — Parse, aggregate, and save formatted results.
-- `ovbench all -c <yaml>` — Perform the entire pipeline in one go.
+- `ovmobilebench build -c <yaml>` — Build runtime and benchmark_app for the target.
+- `ovmobilebench package -c <yaml>` — Create a device-ready bundle with libs and models.
+- `ovmobilebench deploy -c <yaml>` — Push to device(s) and prepare run directory.
+- `ovmobilebench run -c <yaml>` — Execute the test matrix and collect raw outputs.
+- `ovmobilebench report -c <yaml>` — Parse, aggregate, and save formatted results.
+- `ovmobilebench all -c <yaml>` — Perform the entire pipeline in one go.
 - Common flags: `--dry-run`, `--verbose`, `--timeout <sec>`, `--cooldown-sec <sec>`.
 ## Core Utilities
 
@@ -200,7 +200,7 @@ class Device(ABC):
 ```
 ### Android (ADB)
 - `adb -s <serial> push/pull/shell`
-- Run directory: `/data/local/tmp/ovbench`
+- Run directory: `/data/local/tmp/ovmobilebench`
 - Env: `LD_LIBRARY_PATH` includes `lib/` within run directory
 - Optional: thermal and CPU governor inspection
 
@@ -289,7 +289,7 @@ All intermediate artifacts and logs are stored beneath `artifacts/`.
 
 ### 1) Minimal Android Run (single device, FP16)
 - Prepare `experiments/android_minimal.yaml`
-- Run: `ovbench all -c experiments/android_minimal.yaml`
+- Run: `ovmobilebench all -c experiments/android_minimal.yaml`
 - Inspect outputs: `experiments/out/*.json` and `*.csv`
 
 ### 2) Multi-Device Matrix
@@ -334,7 +334,7 @@ A: Implement a device-agnostic `Runner` that produces comparable metrics, and pl
 ## Appendix A — Config Schemas
 
 ```python
-# ovbench/config/schema.py
+# ovmobilebench/config/schema.py
 from pydantic import BaseModel, Field, validator
 from typing import List, Literal, Optional, Dict, Any
 
@@ -369,7 +369,7 @@ class DeviceConfig(BaseModel):
     host: Optional[str] = None
     user: Optional[str] = None
     key_path: Optional[str] = None
-    push_dir: str = "/data/local/tmp/ovbench"
+    push_dir: str = "/data/local/tmp/ovmobilebench"
     use_root: bool = False
 
 class ModelItem(BaseModel):
@@ -436,7 +436,7 @@ class Experiment(BaseModel):
 ```
 ## Appendix B — Code Skeletons
 
-### `ovbench/core/shell.py`
+### `ovmobilebench/core/shell.py`
 ```python
 import subprocess, shlex, time
 from dataclasses import dataclass
@@ -464,7 +464,7 @@ def run(cmd, timeout=None, env=None, cwd=None) -> CommandResult:
     return CommandResult(proc.returncode, out, err, time.time() - start)
 ```
 
-### `ovbench/devices/android.py`
+### `ovmobilebench/devices/android.py`
 ```python
 import subprocess
 from pathlib import Path
@@ -503,7 +503,7 @@ class AndroidDevice(Device):
 ### `experiments/android_mcpu_fp16.yaml`
 ```yaml
 project:
-  name: "ovbench-mobile"
+  name: "ovmobilebench-mobile"
   run_id: "2025-08-14_ov_arm_fp16"
 
 build:
@@ -530,7 +530,7 @@ package:
 device:
   kind: "android"
   serials: ["R3CN30XXXX"]
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
   use_root: false
 
 models:
@@ -563,7 +563,7 @@ report:
 ### `experiments/linux_arm_fp32.yaml`
 ```yaml
 project:
-  name: "ovbench-linux-arm"
+  name: "ovmobilebench-linux-arm"
   run_id: "2025-08-14_ov_linux_fp32"
 
 build:
@@ -585,7 +585,7 @@ device:
   host: "jetson.local"
   user: "ubuntu"
   key_path: "~/.ssh/id_rsa"
-  push_dir: "/home/ubuntu/ovbench"
+  push_dir: "/home/ubuntu/ovmobilebench"
   use_root: false
 
 models:
@@ -630,7 +630,7 @@ Example (JSON):
 ```json
 {
   "timestamp": "2025-08-14T11:20:05Z",
-  "project_name": "ovbench-mobile",
+  "project_name": "ovmobilebench-mobile",
   "run_id": "2025-08-14_ov_arm_fp16",
   "serial": "R3CN30XXXX",
   "device_name": "R3CN30XXXX",
@@ -650,7 +650,7 @@ Example (JSON):
   "latency_med_ms": 7.6,
   "iterations": 200,
   "return_code": 0,
-  "cmd": "/data/local/tmp/ovbench/bin/benchmark_app -m models/resnet50_fp16.xml -d CPU -api sync -niter 200 -nireq 2 -nstreams 2 -nthreads 4",
+  "cmd": "/data/local/tmp/ovmobilebench/bin/benchmark_app -m models/resnet50_fp16.xml -d CPU -api sync -niter 200 -nireq 2 -nstreams 2 -nthreads 4",
   "build_type": "RelWithDebInfo",
   "build_commit": "ab12cd34",
   "toolchain_versions": {"ndk":"r26d"},
@@ -681,7 +681,7 @@ Example (JSON):
 ### Android
 - Enable Developer Options and USB Debugging.
 - Confirm `adb devices` lists the serial.
-- Ensure run directory permissions: `/data/local/tmp/ovbench` is typically writable.
+- Ensure run directory permissions: `/data/local/tmp/ovmobilebench` is typically writable.
 
 ### Linux (SSH)
 - Ensure SSH key-based auth; confirm SFTP is enabled.
@@ -1555,20 +1555,20 @@ Example (JSON):
 # Using Poetry
 pipx install poetry
 poetry install
-poetry run ovbench --help
+poetry run ovmobilebench --help
 
 # Or editable install
 python -m venv .venv && source .venv/bin/activate
 pip install -U pip wheel
 pip install -e .[dev]
-ovbench --help
+ovmobilebench --help
 ```
 
 ### First Run
 ```bash
 cp experiments/android_mcpu_fp16.yaml experiments/local.yaml
 # Edit paths: openvino_repo, models/*.xml, ndk path, etc.
-ovbench all -c experiments/local.yaml --verbose
+ovmobilebench all -c experiments/local.yaml --verbose
 ```
 
 ---
@@ -1577,12 +1577,12 @@ ovbench all -c experiments/local.yaml --verbose
 
 ```toml
 [tool.poetry]
-name = "ovbench"
+name = "ovmobilebench"
 version = "0.1.0"
 description = "End-to-end benchmarking pipeline for OpenVINO on mobile devices"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{ include = "ovbench" }]
+packages = [{ include = "ovmobilebench" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -1601,7 +1601,7 @@ ruff = "^0.5.0"
 black = "^24.4.2"
 
 [tool.poetry.scripts]
-ovbench = "ovbench.cli:app"
+ovmobilebench = "ovmobilebench.cli:app"
 
 [build-system]
 requires = ["poetry-core"]
@@ -1619,29 +1619,29 @@ help:
 	@echo "Targets: build package deploy run report all lint fmt test clean"
 
 build:
-	poetry run ovbench build -c $(CFG)
+	poetry run ovmobilebench build -c $(CFG)
 
 package:
-	poetry run ovbench package -c $(CFG)
+	poetry run ovmobilebench package -c $(CFG)
 
 deploy:
-	poetry run ovbench deploy -c $(CFG)
+	poetry run ovmobilebench deploy -c $(CFG)
 
 run:
-	poetry run ovbench run -c $(CFG)
+	poetry run ovmobilebench run -c $(CFG)
 
 report:
-	poetry run ovbench report -c $(CFG)
+	poetry run ovmobilebench report -c $(CFG)
 
 all:
-	poetry run ovbench all -c $(CFG)
+	poetry run ovmobilebench all -c $(CFG)
 
 lint:
-	poetry run ruff ovbench
-	poetry run mypy ovbench
+	poetry run ruff ovmobilebench
+	poetry run mypy ovmobilebench
 
 fmt:
-	poetry run black ovbench
+	poetry run black ovmobilebench
 
 test:
 	poetry run pytest -q
@@ -1661,17 +1661,17 @@ skipsdist = true
 
 [testenv]
 deps = pytest pytest-cov
-commands = pytest --cov=ovbench --cov-report=term-missing -q
+commands = pytest --cov=ovmobilebench --cov-report=term-missing -q
 
 [testenv:lint]
 deps = ruff black
 commands =
-    ruff ovbench
-    black --check ovbench
+    ruff ovmobilebench
+    black --check ovmobilebench
 
 [testenv:type]
 deps = mypy
-commands = mypy ovbench
+commands = mypy ovmobilebench
 ```
 
 ---
@@ -1693,7 +1693,7 @@ RUN curl -sSL https://dl.google.com/android/repository/platform-tools-latest-lin
 
 WORKDIR /workspace
 COPY pyproject.toml README.md ./
-COPY ovbench ./ovbench
+COPY ovmobilebench ./ovmobilebench
 RUN pip install -U pip && pip install .[dev]
 ```
 
@@ -1703,7 +1703,7 @@ RUN pip install -U pip && pip install .[dev]
 
 ### `.github/workflows/bench.yml`
 ```yaml
-name: ovbench-mobile
+name: ovmobilebench-mobile
 
 on:
   workflow_dispatch:
@@ -1731,8 +1731,8 @@ jobs:
           ANDROID_NDK: ${{ secrets.ANDROID_NDK }}
         run: |
           export PATH="$ANDROID_NDK:$PATH"
-          poetry run ovbench build -c experiments/android_mcpu_fp16.yaml
-          poetry run ovbench package -c experiments/android_mcpu_fp16.yaml
+          poetry run ovmobilebench build -c experiments/android_mcpu_fp16.yaml
+          poetry run ovmobilebench package -c experiments/android_mcpu_fp16.yaml
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -1754,7 +1754,7 @@ jobs:
         with:
           name: ovbundle-android
           path: artifacts
-      - name: Install ovbench
+      - name: Install ovmobilebench
         run: |
           pip install -U pip
           pip install .
@@ -1770,9 +1770,9 @@ jobs:
           with open('experiments/ci.yaml', 'w') as f:
               yaml.safe_dump(cfg, f)
           PY
-          ovbench deploy -c experiments/ci.yaml
-          ovbench run -c experiments/ci.yaml
-          ovbench report -c experiments/ci.yaml
+          ovmobilebench deploy -c experiments/ci.yaml
+          ovmobilebench run -c experiments/ci.yaml
+          ovmobilebench report -c experiments/ci.yaml
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
@@ -1864,7 +1864,7 @@ def check_gates(latest: float, baseline: float | None, min_fps: float, allowed_p
 
 ### `tests/test_parser.py`
 ```python
-from ovbench.parsers.benchmark_parser import parse_metrics
+from ovmobilebench.parsers.benchmark_parser import parse_metrics
 
 SAMPLE = """
 [ INFO ] Throughput: 245.67 FPS
@@ -1889,7 +1889,7 @@ def test_parse_basic():
 
 ### `tests/test_android_device.py`
 ```python
-from ovbench.devices.android import AndroidDevice
+from ovmobilebench.devices.android import AndroidDevice
 
 class FakeCP:
     returncode = 0
@@ -1900,7 +1900,7 @@ def fake_adb(self, args):
     return FakeCP()
 
 def test_push_shell_exists(monkeypatch, tmp_path):
-    dev = AndroidDevice(serial="TESTSERIAL", push_dir="/data/local/tmp/ovbench")
+    dev = AndroidDevice(serial="TESTSERIAL", push_dir="/data/local/tmp/ovmobilebench")
     monkeypatch.setattr(AndroidDevice, "_adb", fake_adb)
     dev.push(tmp_path/"a", "/remote/a")  # does not raise
     rc, out, err = dev.shell("echo 1")
@@ -1993,9 +1993,9 @@ cp public/resnet-50-tf/FP16/resnet-50-tf.bin models/resnet50_fp16.bin
 
 ```html
 <!doctype html>
-<html><head><meta charset="utf-8"><title>OVBench Report</title></head>
+<html><head><meta charset="utf-8"><title>OVMobileBench Report</title></head>
 <body>
-<h1>OVBench Report — {{ run_id }}</h1>
+<h1>OVMobileBench Report — {{ run_id }}</h1>
 <table border="1" cellspacing="0" cellpadding="4">
 <tr><th>Model</th><th>Device</th><th>Threads</th><th>nstreams</th><th>FPS median</th></tr>
 {% for row in rows %}
@@ -2077,8 +2077,8 @@ for k in sorted(set(L.keys()) | set(B.keys())):
 
 ```python
 import typer
-from ovbench.pipeline import run_all
-from ovbench.config.loader import load_experiment
+from ovmobilebench.pipeline import run_all
+from ovmobilebench.config.loader import load_experiment
 
 app = typer.Typer(add_completion=False)
 
@@ -2118,7 +2118,7 @@ def deep_set(dct, path, value):
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "OVBench Run Record",
+  "title": "OVMobileBench Run Record",
   "type": "object",
   "properties": {
     "timestamp": { "type": "string", "format": "date-time" },

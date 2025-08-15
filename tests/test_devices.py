@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from pathlib import Path
 
-from ovbench.devices.android import AndroidDevice, list_android_devices
+from ovmobilebench.devices.android import AndroidDevice, list_android_devices
 
 
 class TestListAndroidDevices:
@@ -140,7 +140,7 @@ class TestAndroidDevice:
         assert info["memory_gb"] == pytest.approx(7.63, rel=0.1)
         assert info["abi"] == "arm64-v8a"
 
-    @patch("ovbench.devices.android.list_android_devices")
+    @patch("ovmobilebench.devices.android.list_android_devices")
     def test_is_available_true(self, mock_list, device):
         """Test device availability check (available)."""
         mock_list.return_value = [("test_serial", "device"), ("other", "device")]
@@ -148,7 +148,7 @@ class TestAndroidDevice:
         available = device.is_available()
         assert available is True
 
-    @patch("ovbench.devices.android.list_android_devices")
+    @patch("ovmobilebench.devices.android.list_android_devices")
     def test_is_available_false(self, mock_list, device):
         """Test device availability check (not available)."""
         mock_list.return_value = [("other", "device")]

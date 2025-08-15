@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
-from ovbench.core.fs import ensure_dir, atomic_write
+from ovmobilebench.core.fs import ensure_dir, atomic_write
 
 
 class ArtifactManager:

@@ -1,16 +1,16 @@
-# OVBench — User Guide & Operations Manual
+# OVMobileBench — User Guide & Operations Manual
 
 
 > **Version**: 1.0 · **Generated**: 2025-08-15 15:33:50  
 > **Scope**: This manual consolidates all guidance shared so far (architecture, checklists, CI, repo bundle) 
-> into a single, user-facing document. It explains how to install, configure, run, and operate OVBench — 
+> into a single, user-facing document. It explains how to install, configure, run, and operate OVMobileBench — 
 > an end‑to‑end automation pipeline for building OpenVINO, packaging runtime + models, deploying to mobile devices 
 > (Android via ADB; optional Linux ARM via SSH), executing `benchmark_app`, parsing metrics, and producing reports.
 
 
 ## Table of Contents
 
-1. [What is OVBench?](#what-is-ovbench)
+1. [What is OVMobileBench?](#what-is-ovmobilebench)
 2. [Key Features](#key-features)
 3. [System Requirements](#system-requirements)
 4. [Install & Setup](#install--setup)
@@ -49,9 +49,9 @@
 30. [Changelog & Next Steps](#changelog--next-steps)
 
 
-## What is OVBench?
+## What is OVMobileBench?
 
-**OVBench** is a Python project that automates the full pipeline for measuring inference performance of neural
+**OVMobileBench** is a Python project that automates the full pipeline for measuring inference performance of neural
 networks using OpenVINO’s `benchmark_app` on **mobile devices**. It takes you from building the runtime and sample
 on your host machine, to **packaging** binaries + libraries + models, **deploying** to devices (ADB/SSH),
 **running** a test matrix, **parsing** metrics, and **reporting** results with rich metadata for traceability.
@@ -68,7 +68,7 @@ Typical flow:
 
 ## Key Features
 
-- One‑command pipeline (`ovbench all -c ...`) from build to report.
+- One‑command pipeline (`ovmobilebench all -c ...`) from build to report.
 - Android (ADB, arm64‑v8a) first; Linux ARM via SSH optional; iOS stub for future.
 - Clean separation of layers: builders, devices, runners, parsers, reporting.
 - Strict provenance: commit SHA, CMake flags, NDK/ABI, device props, model checksums.
@@ -96,21 +96,21 @@ Typical flow:
 ## Install & Setup
 
 ### From the All‑Files Markdown Bundle
-If you have `OVBench_All_Files_Bundle.md`, it contains a **Bootstrap Script** that materializes a full repo.
+If you have `OVMobileBench_All_Files_Bundle.md`, it contains a **Bootstrap Script** that materializes a full repo.
 
 Steps:
 1. Open the bundle and copy the entire **Bootstrap Script** block.
 2. Paste into a terminal inside an empty directory:
    ```bash
-   bash <(sed -n '/^```bash$/,/^```$/p' OVBench_All_Files_Bundle.md | sed '1d;$d')
+   bash <(sed -n '/^```bash$/,/^```$/p' OVMobileBench_All_Files_Bundle.md | sed '1d;$d')
    ```
    Or simply copy the shown script and run it.
 3. A new `repo/` folder will be created with all files.
 
 ### Fresh Repo Setup
 ```bash
-git clone <your-repo-url> ovbench
-cd ovbench
+git clone <your-repo-url> ovmobilebench
+cd ovmobilebench
 python -m venv .venv && source .venv/bin/activate
 pip install -U pip
 pip install -e .[dev]
@@ -138,7 +138,7 @@ brew install cmake ninja android-platform-tools
 1. **Prepare an experiment YAML**, e.g. `experiments/android_mcpu_fp16.yaml`:
    ```yaml
    project:
-     name: "ovbench-mobile"
+     name: "ovmobilebench-mobile"
      run_id: "2025-08-14_ov_arm_fp16"
 
    build:
@@ -164,7 +164,7 @@ brew install cmake ninja android-platform-tools
    device:
      kind: "android"
      serials: ["R3CN30XXXX"]
-     push_dir: "/data/local/tmp/ovbench"
+     push_dir: "/data/local/tmp/ovmobilebench"
      use_root: false
 
    models:
@@ -195,7 +195,7 @@ brew install cmake ninja android-platform-tools
 
 2. **Run the pipeline**:
    ```bash
-   ovbench all -c experiments/android_mcpu_fp16.yaml --verbose
+   ovmobilebench all -c experiments/android_mcpu_fp16.yaml --verbose
    ```
 
 3. **Inspect results** under `experiments/out/` (CSV/JSON), and logs under `artifacts/`.
@@ -204,8 +204,8 @@ brew install cmake ninja android-platform-tools
 ## Project Layout
 
 ```
-ovbench/
-  cli.py                # Typer CLI (ovbench ...)
+ovmobilebench/
+  cli.py                # Typer CLI (ovmobilebench ...)
   pipeline.py           # Orchestrator
   config/
     schema.py           # Pydantic models for YAML config
@@ -270,7 +270,7 @@ Besides the Android FP16 example (see Quickstart), a Linux ARM config may look l
 
 ```yaml
 project:
-  name: "ovbench-linux-arm"
+  name: "ovmobilebench-linux-arm"
   run_id: "2025-08-14_ov_linux_fp32"
 build:
   enabled: false              # use prebuilts
@@ -287,7 +287,7 @@ device:
   host: "jetson.local"
   user: "ubuntu"
   key_path: "~/.ssh/id_rsa"
-  push_dir: "/home/ubuntu/ovbench"
+  push_dir: "/home/ubuntu/ovmobilebench"
 models:
   - name: "mobilenet_v2"
     path: "models/mobilenet_v2_fp32.xml"
@@ -349,12 +349,12 @@ Archive as `ovbundle_android.tar.gz` and deploy to device.
 ## Deploy to Devices
 
 **Android (ADB)**:
-- Default run dir: `/data/local/tmp/ovbench`
-- Example (performed by OVBench pipeline):
+- Default run dir: `/data/local/tmp/ovmobilebench`
+- Example (performed by OVMobileBench pipeline):
   ```bash
-  adb -s <serial> push ovbundle_android.tar.gz /data/local/tmp/ovbench/bundle.tar.gz
-  adb -s <serial> shell 'cd /data/local/tmp/ovbench && tar -xzf bundle.tar.gz && mv ovbundle/* .'
-  adb -s <serial> shell 'export LD_LIBRARY_PATH=/data/local/tmp/ovbench/lib:$LD_LIBRARY_PATH'
+  adb -s <serial> push ovbundle_android.tar.gz /data/local/tmp/ovmobilebench/bundle.tar.gz
+  adb -s <serial> shell 'cd /data/local/tmp/ovmobilebench && tar -xzf bundle.tar.gz && mv ovbundle/* .'
+  adb -s <serial> shell 'export LD_LIBRARY_PATH=/data/local/tmp/ovmobilebench/lib:$LD_LIBRARY_PATH'
   ```
 
 **Linux ARM (SSH)**:
@@ -364,18 +364,18 @@ Archive as `ovbundle_android.tar.gz` and deploy to device.
 
 ## Run Benchmarks
 
-`ovbench run -c <yaml>` executes the matrix defined in `run.matrix` for each model and device.
+`ovmobilebench run -c <yaml>` executes the matrix defined in `run.matrix` for each model and device.
 
 Under the hood, it builds a `benchmark_app` command like:
 ```bash
-/data/local/tmp/ovbench/bin/benchmark_app   -m /data/local/tmp/ovbench/models/resnet50_fp16.xml   -d CPU -api sync -niter 200 -nireq 2 -nstreams 2 -nthreads 4
+/data/local/tmp/ovmobilebench/bin/benchmark_app   -m /data/local/tmp/ovmobilebench/models/resnet50_fp16.xml   -d CPU -api sync -niter 200 -nireq 2 -nstreams 2 -nthreads 4
 ```
-OVBench repeats runs as configured, captures stdout/stderr, and parses metrics.
+OVMobileBench repeats runs as configured, captures stdout/stderr, and parses metrics.
 
 
 ## Parse & Report
 
-OVBench extracts:
+OVMobileBench extracts:
 - **Throughput** (FPS)
 - **Latency**: min/avg/median/max (ms)
 - **Iterations** (`count`)
@@ -438,8 +438,8 @@ jobs:
       - env: { ANDROID_NDK: ${{ secrets.ANDROID_NDK }} }
         run: |
           export PATH="$ANDROID_NDK:$PATH"
-          poetry run ovbench build -c experiments/android_mcpu_fp16.yaml
-          poetry run ovbench package -c experiments/android_mcpu_fp16.yaml
+          poetry run ovmobilebench build -c experiments/android_mcpu_fp16.yaml
+          poetry run ovmobilebench package -c experiments/android_mcpu_fp16.yaml
       - uses: actions/upload-artifact@v4
         with: { name: ovbundle-android, path: artifacts/**/*, if-no-files-found: error }
 
@@ -464,9 +464,9 @@ jobs:
           with open('experiments/ci.yaml', 'w') as f:
               yaml.safe_dump(cfg, f)
           PY
-          ovbench deploy -c experiments/ci.yaml
-          ovbench run -c experiments/ci.yaml
-          ovbench report -c experiments/ci.yaml
+          ovmobilebench deploy -c experiments/ci.yaml
+          ovmobilebench run -c experiments/ci.yaml
+          ovmobilebench report -c experiments/ci.yaml
       - uses: actions/upload-artifact@v4
         with: { name: results, path: experiments/out/* }
 ```
@@ -508,14 +508,14 @@ A: Use medians across repeats and compare by identical (model, device, threads, 
 
 ## Reference: CLI
 
-Assuming `ovbench = "ovbench.cli:app"` entrypoint:
+Assuming `ovmobilebench = "ovmobilebench.cli:app"` entrypoint:
 
-- `ovbench all -c <yaml> [--verbose]` — full pipeline
-- `ovbench build -c <yaml>` — build OpenVINO + `benchmark_app`
-- `ovbench package -c <yaml>` — assemble device bundle
-- `ovbench deploy -c <yaml>` — push to device(s), prepare env
-- `ovbench run -c <yaml>` — execute matrix + repeats
-- `ovbench report -c <yaml>` — parse, aggregate, export sinks
+- `ovmobilebench all -c <yaml> [--verbose]` — full pipeline
+- `ovmobilebench build -c <yaml>` — build OpenVINO + `benchmark_app`
+- `ovmobilebench package -c <yaml>` — assemble device bundle
+- `ovmobilebench deploy -c <yaml>` — push to device(s), prepare env
+- `ovmobilebench run -c <yaml>` — execute matrix + repeats
+- `ovmobilebench report -c <yaml>` — parse, aggregate, export sinks
 
 
 ## Reference: Config Schema
@@ -551,7 +551,7 @@ class DeviceConfig(BaseModel):
     host: Optional[str] = None
     user: Optional[str] = None
     key_path: Optional[str] = None
-    push_dir: str = "/data/local/tmp/ovbench"
+    push_dir: str = "/data/local/tmp/ovmobilebench"
     use_root: bool = False
 
 class ModelItem(BaseModel):
@@ -605,7 +605,7 @@ A run record typically includes:
 ```json
 {
   "timestamp": "2025-08-14T11:20:05Z",
-  "project_name": "ovbench-mobile",
+  "project_name": "ovmobilebench-mobile",
   "run_id": "2025-08-14_ov_arm_fp16",
   "serial": "R3CN30XXXX",
   "device_name": "R3CN30XXXX",
@@ -625,7 +625,7 @@ A run record typically includes:
   "latency_med_ms": 7.6,
   "iterations": 200,
   "return_code": 0,
-  "cmd": "/data/local/tmp/ovbench/bin/benchmark_app -m models/resnet50_fp16.xml -d CPU -api sync -niter 200 -nireq 2 -nstreams 2 -nthreads 4",
+  "cmd": "/data/local/tmp/ovmobilebench/bin/benchmark_app -m models/resnet50_fp16.xml -d CPU -api sync -niter 200 -nireq 2 -nstreams 2 -nthreads 4",
   "build_type": "RelWithDebInfo",
   "build_commit": "ab12cd34",
   "toolchain_versions": {"ndk":"r26d"},
@@ -657,9 +657,9 @@ A complete `bench.yml` is provided in the All‑Files Bundle. It includes:
 
 ```html
 <!doctype html>
-<html><head><meta charset="utf-8"><title>OVBench Report</title></head>
+<html><head><meta charset="utf-8"><title>OVMobileBench Report</title></head>
 <body>
-<h1>OVBench Report — {{ run_id }}</h1>
+<h1>OVMobileBench Report — {{ run_id }}</h1>
 <table border="1" cellspacing="0" cellpadding="4">
 <tr><th>Model</th><th>Device</th><th>Threads</th><th>nstreams</th><th>FPS median</th></tr>
 {% for row in rows %}
@@ -725,8 +725,8 @@ def median_fps(rows):
 
 Two comprehensive preflight checklists exist (Russian & English) covering repo policies,
 CI gates, device farm, security & more. Use them before publishing or enabling CI:
-- `OVBench_Project_Preflight_Checklist.md` (RU)
-- `OVBench_Project_Preflight_Checklist_EN.md` (EN)
+- `OVMobileBench_Project_Preflight_Checklist.md` (RU)
+- `OVMobileBench_Project_Preflight_Checklist_EN.md` (EN)
 
 
 ## Changelog & Next Steps

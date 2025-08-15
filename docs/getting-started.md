@@ -1,6 +1,6 @@
-# Getting Started with OVBench
+# Getting Started with OVMobileBench
 
-Welcome to OVBench! This guide will help you get up and running with your first benchmark in minutes.
+Welcome to OVMobileBench! This guide will help you get up and running with your first benchmark in minutes.
 
 ## Prerequisites
 
@@ -44,8 +44,8 @@ export PATH=$ANDROID_HOME/platform-tools:$PATH
 ### 2. Verify Installation
 
 ```bash
-# Check OVBench installation
-ovbench --version
+# Check OVMobileBench installation
+ovmobilebench --version
 
 # Check Android tools
 adb --version
@@ -98,7 +98,7 @@ build:
 device:
   kind: "android"
   serials: ["YOUR_DEVICE_SERIAL"]  # From 'adb devices'
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
 
 models:
   - name: "resnet50"
@@ -127,14 +127,14 @@ report:
 
 ```bash
 # Run the complete pipeline
-ovbench all -c experiments/quick_test.yaml --verbose
+ovmobilebench all -c experiments/quick_test.yaml --verbose
 
 # Or run individual stages
-ovbench build -c experiments/quick_test.yaml
-ovbench package -c experiments/quick_test.yaml
-ovbench deploy -c experiments/quick_test.yaml
-ovbench run -c experiments/quick_test.yaml
-ovbench report -c experiments/quick_test.yaml
+ovmobilebench build -c experiments/quick_test.yaml
+ovmobilebench package -c experiments/quick_test.yaml
+ovmobilebench deploy -c experiments/quick_test.yaml
+ovmobilebench run -c experiments/quick_test.yaml
+ovmobilebench report -c experiments/quick_test.yaml
 ```
 
 ### 4. View Results

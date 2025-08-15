@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Dict, Any
 
-from ovbench.core.fs import ensure_dir, atomic_write
+from ovmobilebench.core.fs import ensure_dir, atomic_write
 
 
 class ReportSink(ABC):
