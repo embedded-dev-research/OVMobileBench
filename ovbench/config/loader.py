@@ -2,7 +2,7 @@
 
 import yaml
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Union
 from ovbench.config.schema import Experiment
 
 
@@ -16,8 +16,10 @@ def load_yaml(path: Path) -> Dict[str, Any]:
         return data
 
 
-def load_experiment(config_path: Path) -> Experiment:
+def load_experiment(config_path: Union[Path, str]) -> Experiment:
     """Load and validate experiment configuration."""
+    if isinstance(config_path, str):
+        config_path = Path(config_path)
     data = load_yaml(config_path)
     return Experiment(**data)
 
