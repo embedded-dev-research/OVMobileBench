@@ -4,8 +4,8 @@ import time
 import logging
 from typing import Dict, Any, List, Optional, Callable
 
-from ovbench.devices.base import Device
-from ovbench.config.schema import RunConfig
+from ovmobilebench.devices.base import Device
+from ovmobilebench.config.schema import RunConfig
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class BenchmarkRunner:
         self,
         device: Device,
         config: RunConfig,
-        remote_dir: str = "/data/local/tmp/ovbench",
+        remote_dir: str = "/data/local/tmp/ovmobilebench",
     ):
         self.device = device
         self.config = config

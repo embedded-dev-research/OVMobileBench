@@ -53,7 +53,7 @@ class DeviceConfig(BaseModel):
     host: Optional[str] = Field(None, description="SSH host (Linux)")
     user: Optional[str] = Field(None, description="SSH user (Linux)")
     key_path: Optional[str] = Field(None, description="SSH key path (Linux)")
-    push_dir: str = Field(default="/data/local/tmp/ovbench", description="Remote directory")
+    push_dir: str = Field(default="/data/local/tmp/ovmobilebench", description="Remote directory")
     use_root: bool = Field(default=False, description="Use root access")
 
     @model_validator(mode="after")

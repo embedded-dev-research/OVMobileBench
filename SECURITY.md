@@ -110,4 +110,4 @@ We appreciate responsible disclosure and will acknowledge security researchers w
 - Allow reasonable time for fixes
 - Don't exploit vulnerabilities
 
-Thank you for helping keep OVBench secure!
+Thank you for helping keep OVMobileBench secure!

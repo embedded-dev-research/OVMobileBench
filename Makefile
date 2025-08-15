@@ -4,7 +4,7 @@
 CFG ?= experiments/android_example.yaml
 
 help:
-	@echo "OVBench - OpenVINO Benchmarking Pipeline"
+	@echo "OVMobileBench - OpenVINO Benchmarking Pipeline"
 	@echo ""
 	@echo "Usage: make [target] CFG=path/to/config.yaml"
 	@echo ""
@@ -25,29 +25,29 @@ install:
 	poetry install
 
 build:
-	poetry run ovbench build -c $(CFG) --verbose
+	poetry run ovmobilebench build -c $(CFG) --verbose
 
 package:
-	poetry run ovbench package -c $(CFG) --verbose
+	poetry run ovmobilebench package -c $(CFG) --verbose
 
 deploy:
-	poetry run ovbench deploy -c $(CFG) --verbose
+	poetry run ovmobilebench deploy -c $(CFG) --verbose
 
 run:
-	poetry run ovbench run -c $(CFG) --verbose
+	poetry run ovmobilebench run -c $(CFG) --verbose
 
 report:
-	poetry run ovbench report -c $(CFG) --verbose
+	poetry run ovmobilebench report -c $(CFG) --verbose
 
 all:
-	poetry run ovbench all -c $(CFG) --verbose
+	poetry run ovmobilebench all -c $(CFG) --verbose
 
 devices:
-	poetry run ovbench list-devices
+	poetry run ovmobilebench list-devices
 
 lint:
-	poetry run ruff ovbench
-	poetry run mypy ovbench
+	poetry run ruff ovmobilebench
+	poetry run mypy ovmobilebench
 
 test:
 	poetry run pytest tests/ -v

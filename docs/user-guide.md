@@ -1,4 +1,4 @@
-# OVBench User Guide
+# OVMobileBench User Guide
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@
 
 ## Introduction
 
-OVBench is a comprehensive benchmarking pipeline for OpenVINO inference on mobile devices. It automates the entire workflow from building the runtime to generating performance reports.
+OVMobileBench is a comprehensive benchmarking pipeline for OpenVINO inference on mobile devices. It automates the entire workflow from building the runtime to generating performance reports.
 
 ### Key Features
 
@@ -101,36 +101,36 @@ source $INTEL_OPENVINO_DIR/setupvars.sh
 ### Running a Complete Pipeline
 
 ```bash
-ovbench all -c experiments/config.yaml --verbose
+ovmobilebench all -c experiments/config.yaml --verbose
 ```
 
 ### Running Individual Stages
 
 ```bash
 # Build OpenVINO
-ovbench build -c experiments/config.yaml
+ovmobilebench build -c experiments/config.yaml
 
 # Create deployment package
-ovbench package -c experiments/config.yaml
+ovmobilebench package -c experiments/config.yaml
 
 # Deploy to devices
-ovbench deploy -c experiments/config.yaml
+ovmobilebench deploy -c experiments/config.yaml
 
 # Run benchmarks
-ovbench run -c experiments/config.yaml
+ovmobilebench run -c experiments/config.yaml
 
 # Generate reports
-ovbench report -c experiments/config.yaml
+ovmobilebench report -c experiments/config.yaml
 ```
 
 ### Command-Line Options
 
 ```bash
-ovbench --help                    # Show help
-ovbench all --help                # Show help for 'all' command
-ovbench all -c config.yaml        # Run with config
-ovbench all -c config.yaml -v     # Verbose output
-ovbench all -c config.yaml --dry-run  # Preview without execution
+ovmobilebench --help                    # Show help
+ovmobilebench all --help                # Show help for 'all' command
+ovmobilebench all -c config.yaml        # Run with config
+ovmobilebench all -c config.yaml -v     # Verbose output
+ovmobilebench all -c config.yaml --dry-run  # Preview without execution
 ```
 
 ## Advanced Usage
@@ -163,7 +163,7 @@ build:
 device:
   kind: "android"
   serials: ["device1", "device2", "device3"]
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
 ```
 
 ### Complex Run Matrices
@@ -238,7 +238,7 @@ models:
 ls -la models/
 
 # Verify model files
-ovbench validate-models -c experiments/config.yaml
+ovmobilebench validate-models -c experiments/config.yaml
 
 # Calculate checksums
 sha256sum models/*.xml models/*.bin > models/checksums.txt
@@ -266,7 +266,7 @@ adb shell getprop ro.board.platform
 device:
   kind: "android"
   serials: ["R3CN30XXXX"]
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
   use_root: false
 ```
 
@@ -288,7 +288,7 @@ device:
   host: "192.168.1.100"
   user: "ubuntu"
   key_path: "~/.ssh/id_rsa"
-  push_dir: "/home/ubuntu/ovbench"
+  push_dir: "/home/ubuntu/ovmobilebench"
 ```
 
 ### Device Stabilization

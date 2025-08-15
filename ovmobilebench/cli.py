@@ -1,7 +1,7 @@
-"""Command-line interface for OVBench."""
+"""Command-line interface for OVMobileBench."""
 
 # Apply typer compatibility patch
-from ovbench import typer_patch  # noqa: F401
+from ovmobilebench import typer_patch  # noqa: F401
 
 import typer
 from pathlib import Path
@@ -9,11 +9,11 @@ from typing import Optional
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from ovbench.config.loader import load_experiment
-from ovbench.pipeline import Pipeline
+from ovmobilebench.config.loader import load_experiment
+from ovmobilebench.pipeline import Pipeline
 
 app = typer.Typer(
-    name="ovbench",
+    name="ovmobilebench",
     help="End-to-end benchmarking pipeline for OpenVINO on mobile devices",
     add_completion=False,
     pretty_exceptions_enable=False,  # Disable pretty exceptions
@@ -133,7 +133,7 @@ def all(
 @app.command()
 def list_devices():
     """List available ADB devices."""
-    from ovbench.devices.android import list_android_devices
+    from ovmobilebench.devices.android import list_android_devices
 
     devices = list_android_devices()
     if not devices:

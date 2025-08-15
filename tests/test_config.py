@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from ovbench.config.schema import (
+from ovmobilebench.config.schema import (
     Experiment,
     DeviceConfig,
     ModelItem,
@@ -39,7 +39,7 @@ class TestDeviceConfig:
     def test_android_device_valid(self):
         """Test valid Android device configuration."""
         device = DeviceConfig(
-            kind="android", serials=["12345678"], push_dir="/data/local/tmp/ovbench"
+            kind="android", serials=["12345678"], push_dir="/data/local/tmp/ovmobilebench"
         )
         assert device.kind == "android"
         assert device.serials == ["12345678"]

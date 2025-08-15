@@ -1,4 +1,4 @@
-name: OVBench CI
+name: OVMobileBench CI
 
 on:
   push:
@@ -39,16 +39,16 @@ jobs:
         run: poetry install
       
       - name: Run Black
-        run: poetry run black --check ovbench tests
+        run: poetry run black --check ovmobilebench tests
       
       - name: Run Ruff
-        run: poetry run ruff check ovbench tests
+        run: poetry run ruff check ovmobilebench tests
       
       - name: Run MyPy
-        run: poetry run mypy ovbench
+        run: poetry run mypy ovmobilebench
       
       - name: Run tests
-        run: poetry run pytest tests/ -v --cov=ovbench --cov-report=xml
+        run: poetry run pytest tests/ -v --cov=ovmobilebench --cov-report=xml
       
       - name: Upload coverage
         uses: codecov/codecov-action@v3
@@ -103,13 +103,13 @@ jobs:
       
       - name: Validate example config
         run: |
-          poetry run python -c "from ovbench.config.loader import load_experiment; load_experiment('experiments/android_example.yaml')"
+          poetry run python -c "from ovmobilebench.config.loader import load_experiment; load_experiment('experiments/android_example.yaml')"
       
       - name: CLI help test
         run: |
-          poetry run ovbench --help
-          poetry run ovbench build --help
-          poetry run ovbench run --help
+          poetry run ovmobilebench --help
+          poetry run ovmobilebench build --help
+          poetry run ovmobilebench run --help
 
   # Optional: Run on self-hosted runner with real device
   device-test:
@@ -139,9 +139,9 @@ jobs:
         env:
           DEVICE_SERIAL: ${{ github.event.inputs.device_serial || 'emulator-5554' }}
         run: |
-          poetry run ovbench list-devices
+          poetry run ovmobilebench list-devices
           # Uncomment when ready:
-          # poetry run ovbench all -c experiments/android_example.yaml --dry-run
+          # poetry run ovmobilebench all -c experiments/android_example.yaml --dry-run
       
       - name: Upload results
         if: always()

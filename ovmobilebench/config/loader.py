@@ -3,7 +3,7 @@
 import yaml
 from pathlib import Path
 from typing import Dict, Any, Union
-from ovbench.config.schema import Experiment
+from ovmobilebench.config.schema import Experiment
 
 
 def load_yaml(path: Path) -> Dict[str, Any]:

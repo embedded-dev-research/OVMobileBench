@@ -1,6 +1,6 @@
 # API Reference
 
-Complete API documentation for OVBench Python modules.
+Complete API documentation for OVMobileBench Python modules.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ Complete API documentation for OVBench Python modules.
 
 ## Pipeline API
 
-### `ovbench.pipeline`
+### `ovmobilebench.pipeline`
 
 Main orchestration module for running benchmarks.
 
@@ -67,7 +67,7 @@ class Pipeline:
 #### Example Usage
 
 ```python
-from ovbench.pipeline import Pipeline
+from ovmobilebench.pipeline import Pipeline
 
 # Create pipeline from config file
 pipeline = Pipeline("experiments/config.yaml")
@@ -85,7 +85,7 @@ benchmark_result = pipeline.run_benchmarks()
 
 ## Configuration API
 
-### `ovbench.config.schema`
+### `ovmobilebench.config.schema`
 
 Pydantic models for configuration validation.
 
@@ -156,7 +156,7 @@ class RunConfig(BaseModel):
 #### Example Usage
 
 ```python
-from ovbench.config.schema import Experiment
+from ovmobilebench.config.schema import Experiment
 
 # Load configuration
 config = Experiment.from_yaml("config.yaml")
@@ -185,7 +185,7 @@ modified = config.override(overrides)
 
 ## Device API
 
-### `ovbench.devices.base`
+### `ovmobilebench.devices.base`
 
 Base class for device implementations.
 
@@ -232,7 +232,7 @@ class Device(ABC):
         """Get device information"""
 ```
 
-### `ovbench.devices.android`
+### `ovmobilebench.devices.android`
 
 Android device implementation using ADB.
 
@@ -267,7 +267,7 @@ class AndroidDevice(Device):
 #### Example Usage
 
 ```python
-from ovbench.devices.android import AndroidDevice
+from ovmobilebench.devices.android import AndroidDevice
 
 # Create device connection
 device = AndroidDevice("R3CN30XXXX")
@@ -275,7 +275,7 @@ device.connect()
 
 # Transfer files
 device.push(Path("model.xml"), "/data/local/tmp/model.xml")
-device.mkdir("/data/local/tmp/ovbench")
+device.mkdir("/data/local/tmp/ovmobilebench")
 
 # Execute commands
 result = device.shell("ls -la /data/local/tmp")
@@ -295,7 +295,7 @@ device.disconnect()
 
 ## Builder API
 
-### `ovbench.builders.openvino`
+### `ovmobilebench.builders.openvino`
 
 OpenVINO build management.
 
@@ -329,8 +329,8 @@ class OpenVINOBuilder:
 #### Example Usage
 
 ```python
-from ovbench.builders.openvino import OpenVINOBuilder
-from ovbench.config.schema import BuildConfig
+from ovmobilebench.builders.openvino import OpenVINOBuilder
+from ovmobilebench.config.schema import BuildConfig
 
 config = BuildConfig(
     openvino_repo="/path/to/openvino",
@@ -348,7 +348,7 @@ package = builder.package(Path("output"))
 
 ## Runner API
 
-### `ovbench.runners.benchmark`
+### `ovmobilebench.runners.benchmark`
 
 Benchmark execution management.
 
@@ -402,8 +402,8 @@ class BenchmarkResult:
 #### Example Usage
 
 ```python
-from ovbench.runners.benchmark import BenchmarkRunner
-from ovbench.devices.android import AndroidDevice
+from ovmobilebench.runners.benchmark import BenchmarkRunner
+from ovmobilebench.devices.android import AndroidDevice
 
 device = AndroidDevice("R3CN30XXXX")
 runner = BenchmarkRunner(device, run_config)
@@ -425,7 +425,7 @@ results = runner.run_matrix(model_item)
 
 ## Parser API
 
-### `ovbench.parsers.benchmark_parser`
+### `ovmobilebench.parsers.benchmark_parser`
 
 Parse benchmark_app output.
 
@@ -460,7 +460,7 @@ class BenchmarkParser:
 #### Example Usage
 
 ```python
-from ovbench.parsers.benchmark_parser import BenchmarkParser
+from ovmobilebench.parsers.benchmark_parser import BenchmarkParser
 
 parser = BenchmarkParser()
 
@@ -483,7 +483,7 @@ print(f"Median latency: {metrics.latency_median_ms}")
 
 ## Report API
 
-### `ovbench.report.sink`
+### `ovmobilebench.report.sink`
 
 Report generation and output.
 
@@ -524,7 +524,7 @@ class CSVSink(ReportSink):
         """Write results as CSV"""
 ```
 
-### `ovbench.report.summarize`
+### `ovmobilebench.report.summarize`
 
 Statistical summarization of results.
 
@@ -549,7 +549,7 @@ class Summarizer:
 #### Example Usage
 
 ```python
-from ovbench.report import JSONSink, CSVSink, Summarizer
+from ovmobilebench.report import JSONSink, CSVSink, Summarizer
 
 # Write to different formats
 json_sink = JSONSink(Path("results.json"))
@@ -571,7 +571,7 @@ print(f"Performance change: {comparison.throughput_change:.1%}")
 
 ## Utilities
 
-### `ovbench.core.shell`
+### `ovmobilebench.core.shell`
 
 Shell command execution utilities.
 
@@ -600,7 +600,7 @@ def run_command(
     """
 ```
 
-### `ovbench.core.fs`
+### `ovmobilebench.core.fs`
 
 File system utilities.
 
@@ -623,7 +623,7 @@ def find_files(root: Path, pattern: str) -> List[Path]:
     """Find files matching pattern"""
 ```
 
-### `ovbench.core.artifacts`
+### `ovmobilebench.core.artifacts`
 
 Artifact management utilities.
 
@@ -652,7 +652,7 @@ class ArtifactManager:
 #### Example Usage
 
 ```python
-from ovbench.core import shell, fs, artifacts
+from ovmobilebench.core import shell, fs, artifacts
 
 # Execute command
 result = shell.run_command("cmake --version")
@@ -672,7 +672,7 @@ artifact = manager.create_artifact("build_output", build_result)
 ### Creating Custom Device
 
 ```python
-from ovbench.devices.base import Device, DeviceInfo
+from ovmobilebench.devices.base import Device, DeviceInfo
 
 class CustomDevice(Device):
     """Custom device implementation"""
@@ -694,7 +694,7 @@ class CustomDevice(Device):
 ### Creating Custom Parser
 
 ```python
-from ovbench.parsers.base import Parser
+from ovmobilebench.parsers.base import Parser
 
 class CustomParser(Parser):
     """Custom output parser"""
@@ -709,7 +709,7 @@ class CustomParser(Parser):
 ### Creating Custom Report Format
 
 ```python
-from ovbench.report.sink import ReportSink
+from ovmobilebench.report.sink import ReportSink
 
 class HTMLSink(ReportSink):
     """Generate HTML reports"""
@@ -727,29 +727,29 @@ class HTMLSink(ReportSink):
 All API methods may raise these exceptions:
 
 ```python
-class OVBenchError(Exception):
-    """Base exception for OVBench"""
+class OVMobileBenchError(Exception):
+    """Base exception for OVMobileBench"""
 
-class ConfigurationError(OVBenchError):
+class ConfigurationError(OVMobileBenchError):
     """Configuration validation error"""
 
-class DeviceError(OVBenchError):
+class DeviceError(OVMobileBenchError):
     """Device operation error"""
 
-class BuildError(OVBenchError):
+class BuildError(OVMobileBenchError):
     """Build process error"""
 
-class BenchmarkError(OVBenchError):
+class BenchmarkError(OVMobileBenchError):
     """Benchmark execution error"""
 
-class ParserError(OVBenchError):
+class ParserError(OVMobileBenchError):
     """Output parsing error"""
 ```
 
 Example error handling:
 
 ```python
-from ovbench.exceptions import DeviceError, BenchmarkError
+from ovmobilebench.exceptions import DeviceError, BenchmarkError
 
 try:
     device = AndroidDevice("invalid_serial")

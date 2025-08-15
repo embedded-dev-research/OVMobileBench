@@ -1,6 +1,6 @@
 # Device Setup Guide
 
-This guide covers setting up Android and Linux ARM devices for benchmarking with OVBench.
+This guide covers setting up Android and Linux ARM devices for benchmarking with OVMobileBench.
 
 ## Table of Contents
 
@@ -59,11 +59,11 @@ adb shell getprop ro.build.version.release
 
 ```bash
 # Create working directory
-adb shell mkdir -p /data/local/tmp/ovbench
+adb shell mkdir -p /data/local/tmp/ovmobilebench
 
 # Verify write permissions
-adb shell touch /data/local/tmp/ovbench/test.txt
-adb shell rm /data/local/tmp/ovbench/test.txt
+adb shell touch /data/local/tmp/ovmobilebench/test.txt
+adb shell rm /data/local/tmp/ovmobilebench/test.txt
 
 # Check available storage
 adb shell df -h /data/local/tmp
@@ -75,10 +75,10 @@ adb shell df -h /data/local/tmp
 device:
   kind: "android"
   serials: ["R3CN30XXXX"]  # From 'adb devices'
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
   use_root: false
   env_vars:
-    LD_LIBRARY_PATH: "/data/local/tmp/ovbench/lib:$LD_LIBRARY_PATH"
+    LD_LIBRARY_PATH: "/data/local/tmp/ovmobilebench/lib:$LD_LIBRARY_PATH"
 ```
 
 ### Common Android Devices
@@ -132,7 +132,7 @@ ssh user@device.local "echo 'Connection successful'"
 
 ```bash
 # Create working directory
-ssh user@device.local "mkdir -p ~/ovbench"
+ssh user@device.local "mkdir -p ~/ovmobilebench"
 
 # Install dependencies
 ssh user@device.local "sudo apt-get update && sudo apt-get install -y \
@@ -154,9 +154,9 @@ device:
   port: 22
   user: "ubuntu"
   key_path: "~/.ssh/id_rsa"
-  push_dir: "/home/ubuntu/ovbench"
+  push_dir: "/home/ubuntu/ovmobilebench"
   env_vars:
-    LD_LIBRARY_PATH: "/home/ubuntu/ovbench/lib:$LD_LIBRARY_PATH"
+    LD_LIBRARY_PATH: "/home/ubuntu/ovmobilebench/lib:$LD_LIBRARY_PATH"
 ```
 
 ### Common Linux ARM Devices
@@ -309,7 +309,7 @@ device:
     - "R3CN30XXXX"  # Pixel 6
     - "1234567890"  # Galaxy S21
     - "ABCDEF1234"  # OnePlus 9
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
 ```
 
 #### Device Identification Script
@@ -370,7 +370,7 @@ adb shell getenforce
 adb shell setenforce 0
 
 # Use alternative directory
-adb shell mkdir -p /sdcard/ovbench
+adb shell mkdir -p /sdcard/ovmobilebench
 ```
 
 #### Insufficient Storage
@@ -382,7 +382,7 @@ adb shell df -h
 adb shell pm clear com.android.systemui
 
 # Use external storage
-adb shell mkdir -p /sdcard/Android/data/ovbench
+adb shell mkdir -p /sdcard/Android/data/ovmobilebench
 ```
 
 ### Linux SSH Issues

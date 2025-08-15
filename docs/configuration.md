@@ -2,7 +2,7 @@
 
 ## Overview
 
-OVBench uses YAML configuration files to define experiments. This document provides a complete reference for all configuration options.
+OVMobileBench uses YAML configuration files to define experiments. This document provides a complete reference for all configuration options.
 
 ## Configuration Structure
 
@@ -175,10 +175,10 @@ Android devices:
 device:
   kind: "android"
   serials: ["R3CN30XXXX", "emulator-5554"]
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
   use_root: false
   env_vars:
-    LD_LIBRARY_PATH: "/data/local/tmp/ovbench/lib"
+    LD_LIBRARY_PATH: "/data/local/tmp/ovmobilebench/lib"
 ```
 
 Linux SSH device:
@@ -188,7 +188,7 @@ device:
   host: "192.168.1.100"
   user: "ubuntu"
   key_path: "~/.ssh/id_rsa"
-  push_dir: "/home/ubuntu/ovbench"
+  push_dir: "/home/ubuntu/ovmobilebench"
   setup_commands:
     - "sudo cpupower frequency-set -g performance"
 ```
@@ -401,9 +401,9 @@ package:
 device:
   kind: "android"
   serials: ["R3CN30XXXX"]
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
   env_vars:
-    LD_LIBRARY_PATH: "/data/local/tmp/ovbench/lib"
+    LD_LIBRARY_PATH: "/data/local/tmp/ovmobilebench/lib"
   setup_commands:
     - "settings put global window_animation_scale 0"
     - "input keyevent 26"  # Screen off
@@ -466,7 +466,7 @@ device:
 
 ## Configuration Validation
 
-OVBench validates configurations using Pydantic schemas. Common validation errors:
+OVMobileBench validates configurations using Pydantic schemas. Common validation errors:
 
 - **Missing required fields**: Ensure all required fields are present
 - **Invalid types**: Check that values match expected types

@@ -1,8 +1,8 @@
-# OVBench — Complete Repo Bundle (All Files in One Markdown)
+# OVMobileBench — Complete Repo Bundle (All Files in One Markdown)
 
 _Generated: 2025-08-15T15:24:59_
 
-This Markdown contains every file needed to create a working OVBench repo. 
+This Markdown contains every file needed to create a working OVMobileBench repo. 
 Copy the **Bootstrap Script** to a shell and run it; it will materialize all files.
 
 ## Bootstrap Script
@@ -14,18 +14,18 @@ mkdir -p '.github/workflows'
 mkdir -p 'docs'
 mkdir -p 'experiments'
 mkdir -p 'models'
-mkdir -p 'ovbench'
-mkdir -p 'ovbench/config'
-mkdir -p 'ovbench/core'
-mkdir -p 'ovbench/devices'
-mkdir -p 'ovbench/parsers'
-mkdir -p 'ovbench/report'
-mkdir -p 'ovbench/runners'
+mkdir -p 'ovmobilebench'
+mkdir -p 'ovmobilebench/config'
+mkdir -p 'ovmobilebench/core'
+mkdir -p 'ovmobilebench/devices'
+mkdir -p 'ovmobilebench/parsers'
+mkdir -p 'ovmobilebench/report'
+mkdir -p 'ovmobilebench/runners'
 mkdir -p 'tests'
 cat > 'README.md' << '__OVBENCH_EOF_1__'
-# OVBench
+# OVMobileBench
 
-OVBench automates building OpenVINO and running `benchmark_app` on mobile devices (Android via ADB), packaging,
+OVMobileBench automates building OpenVINO and running `benchmark_app` on mobile devices (Android via ADB), packaging,
 deployment, execution, parsing, and reporting — end-to-end.
 
 - Quickstart: see `experiments/android_mcpu_fp16.yaml`
@@ -33,7 +33,7 @@ deployment, execution, parsing, and reporting — end-to-end.
 - Preflight checklists: `docs/CHECKLIST_RU.md`, `docs/CHECKLIST_EN.md`
 
 ```bash
-ovbench all -c experiments/android_mcpu_fp16.yaml
+ovmobilebench all -c experiments/android_mcpu_fp16.yaml
 ```
 
 __OVBENCH_EOF_1__
@@ -50,9 +50,9 @@ cat > 'docs/CHECKLIST_RU.md' << '__OVBENCH_EOF_3__'
 
 __OVBENCH_EOF_3__
 cat > 'docs/CHECKLIST_EN.md' << '__OVBENCH_EOF_4__'
-# OVBench — Repository Preflight Checklist for Publication and CI Launch
+# OVMobileBench — Repository Preflight Checklist for Publication and CI Launch
 
-> **Purpose**: This document is a detailed preflight checklist to prepare the **OVBench**
+> **Purpose**: This document is a detailed preflight checklist to prepare the **OVMobileBench**
 > repository (automation for building OpenVINO, packaging, deploying to mobile devices,
 > and running `benchmark_app`) for public/internal release and stable CI/CD operation.
 >
@@ -94,7 +94,7 @@ cat > 'docs/CHECKLIST_EN.md' << '__OVBENCH_EOF_4__'
 - [ ] **Consistency**: same structure, tooling and commands locally and in CI.
 - [ ] **Reproducibility**: pin NDK, CMake, Python deps, and model versions.
 - [ ] **Observability**: JSONL logs, artifacts, build/device metadata.
-- [ ] **Simplicity**: `ovbench all -c <yaml>` should work without manual steps.
+- [ ] **Simplicity**: `ovmobilebench all -c <yaml>` should work without manual steps.
 - [ ] **Least privilege**: secrets and access are locked down to minimum.
 - [ ] **Transparency**: docs cover end-to-end scenarios and incident SOPs.
 - [ ] **Quality-by-default**: linters, formatters, typing, tests — mandatory and fast.
@@ -107,7 +107,7 @@ cat > 'docs/CHECKLIST_EN.md' << '__OVBENCH_EOF_4__'
 ## Fast Start: Top 10 Must-Haves
 
 1. [ ] License chosen and added (MIT/Apache-2.0/etc.).
-2. [ ] `pyproject.toml` + `ovbench` package with `ovbench.cli:app` entrypoint.
+2. [ ] `pyproject.toml` + `ovmobilebench` package with `ovmobilebench.cli:app` entrypoint.
 3. [ ] `pre-commit` with Black, Ruff, Mypy, end-of-file-fixer.
 4. [ ] CI badges in README, working `bench.yml` workflow.
 5. [ ] `.gitignore`, `.gitattributes`, `CODEOWNERS`, `CONTRIBUTING.md`.
@@ -135,12 +135,12 @@ cat > 'docs/CHECKLIST_EN.md' << '__OVBENCH_EOF_4__'
   - [ ] no merge on red statuses.
 - [ ] **Sign-off** (DCO) or GPG-signed commits policy.
 - [ ] Enable **secret scanning** (GH Advanced Security/Trufflehog if available).
-- [ ] Define **CODEOWNERS** for critical dirs (`ovbench/core`, `devices/*`, workflows).
+- [ ] Define **CODEOWNERS** for critical dirs (`ovmobilebench/core`, `devices/*`, workflows).
 - [ ] Add `SECURITY.md` (contacts, vulnerability disclosure policy).
 
 ## Directory Structure & Required Files
 
-- [ ] `ovbench/` — sources
+- [ ] `ovmobilebench/` — sources
   - [ ] `cli.py` — Typer/Click CLI
   - [ ] `pipeline.py` — orchestrator
   - [ ] `config/` — schemas/loader/defaults
@@ -165,19 +165,19 @@ cat > 'docs/CHECKLIST_EN.md' << '__OVBENCH_EOF_4__'
 ## Python Package: pyproject, Dependencies, Extras
 
 - [ ] Package via `pyproject.toml` (Poetry or PEP 621):
-  - [ ] `name = "ovbench"`, `version`, `readme`, `scripts`.
+  - [ ] `name = "ovmobilebench"`, `version`, `readme`, `scripts`.
   - [ ] Runtime deps: `typer`, `pydantic`, `pyyaml`, `paramiko`, `pandas`, `rich`.
   - [ ] Dev deps: `pytest`, `pytest-cov`, `mypy`, `ruff`, `black`.
   - [ ] Extras: `[dev]`, `[ssh]`, `[viz]` as needed.
 - [ ] Minimum Python version: 3.11 (pinned in CI).
 - [ ] Dependency pinning strategy: `^` / `~` / exact.
-- [ ] Commands: `ovbench build|package|deploy|run|report|all`.
-- [ ] `entry_points`: `ovbench = "ovbench.cli:app"`.
+- [ ] Commands: `ovmobilebench build|package|deploy|run|report|all`.
+- [ ] `entry_points`: `ovmobilebench = "ovmobilebench.cli:app"`.
 
 ## Code Quality: Formatting, Linting, Typing, Hooks
 
 - [ ] **Black** (formatting) and **Ruff** (linting) configured.
-- [ ] **Mypy** (strict options for `ovbench/core`, `devices/*`).
+- [ ] **Mypy** (strict options for `ovmobilebench/core`, `devices/*`).
 - [ ] `pre-commit` with black, ruff, mypy, trailing-whitespace, end-of-file-fixer.
 - [ ] Quality badges in README (lint/type/test).
 - [ ] Ruff profiles for excluding dirs (e.g., `artifacts/`).
@@ -447,8 +447,8 @@ build/
 ### CODEOWNERS (example)
 ```
 *                 @team/owners
-/ovbench/core/    @team/core
-/ovbench/devices/ @team/devices
+/ovmobilebench/core/    @team/core
+/ovmobilebench/devices/ @team/devices
 /.github/         @team/ci
 ```
 
@@ -903,7 +903,7 @@ cat > 'SECURITY.md' << '__OVBENCH_EOF_6__'
 Please report vulnerabilities privately via security@example.com. We will acknowledge within 72 hours.
 
 ## Scope
-Source under /ovbench/**, CI workflows, and published artifacts.
+Source under /ovmobilebench/**, CI workflows, and published artifacts.
 
 __OVBENCH_EOF_6__
 cat > 'CODE_OF_CONDUCT.md' << '__OVBENCH_EOF_7__'
@@ -920,7 +920,7 @@ cat > 'CONTRIBUTING.md' << '__OVBENCH_EOF_8__'
 
 ## Tests & Lint
 - `pytest -q`
-- `ruff ovbench && black --check ovbench && mypy ovbench`
+- `ruff ovmobilebench && black --check ovmobilebench && mypy ovmobilebench`
 
 __OVBENCH_EOF_8__
 cat > '.gitignore' << '__OVBENCH_EOF_9__'
@@ -971,12 +971,12 @@ repos:
 __OVBENCH_EOF_11__
 cat > 'pyproject.toml' << '__OVBENCH_EOF_12__'
 [tool.poetry]
-name = "ovbench"
+name = "ovmobilebench"
 version = "0.1.0"
 description = "End-to-end benchmarking pipeline for OpenVINO on mobile devices"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{ include = "ovbench" }]
+packages = [{ include = "ovmobilebench" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -996,7 +996,7 @@ black = "^24.4.2"
 pre-commit = "^3.7.1"
 
 [tool.poetry.scripts]
-ovbench = "ovbench.cli:app"
+ovmobilebench = "ovmobilebench.cli:app"
 
 [build-system]
 requires = ["poetry-core"]
@@ -1011,31 +1011,31 @@ help:
 	@echo "Targets: build package deploy run report all lint fmt type test clean"
 
 build:
-	ovbench build -c $(CFG)
+	ovmobilebench build -c $(CFG)
 
 package:
-	ovbench package -c $(CFG)
+	ovmobilebench package -c $(CFG)
 
 deploy:
-	ovbench deploy -c $(CFG)
+	ovmobilebench deploy -c $(CFG)
 
 run:
-	ovbench run -c $(CFG)
+	ovmobilebench run -c $(CFG)
 
 report:
-	ovbench report -c $(CFG)
+	ovmobilebench report -c $(CFG)
 
 all:
-	ovbench all -c $(CFG)
+	ovmobilebench all -c $(CFG)
 
 lint:
-	ruff ovbench
+	ruff ovmobilebench
 
 fmt:
-	black ovbench
+	black ovmobilebench
 
 type:
-	mypy ovbench
+	mypy ovmobilebench
 
 test:
 	pytest -q
@@ -1051,17 +1051,17 @@ skipsdist = true
 
 [testenv]
 deps = pytest pytest-cov
-commands = pytest --cov=ovbench --cov-report=term-missing -q
+commands = pytest --cov=ovmobilebench --cov-report=term-missing -q
 
 [testenv:lint]
 deps = ruff black
 commands =
-    ruff ovbench
-    black --check ovbench
+    ruff ovmobilebench
+    black --check ovmobilebench
 
 [testenv:type]
 deps = mypy
-commands = mypy ovbench
+commands = mypy ovmobilebench
 
 __OVBENCH_EOF_14__
 cat > 'Dockerfile.dev' << '__OVBENCH_EOF_15__'
@@ -1070,12 +1070,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \    git cmake 
 RUN curl -sSL https://dl.google.com/android/repository/platform-tools-latest-linux.zip -o /tmp/pt.zip && \    unzip /tmp/pt.zip -d /opt && rm /tmp/pt.zip && \    ln -s /opt/platform-tools/adb /usr/local/bin/adb
 WORKDIR /workspace
 COPY pyproject.toml README.md ./
-COPY ovbench ./ovbench
+COPY ovmobilebench ./ovmobilebench
 RUN pip install -U pip && pip install .[dev]
 
 __OVBENCH_EOF_15__
 cat > '.github/workflows/bench.yml' << '__OVBENCH_EOF_16__'
-name: ovbench-mobile
+name: ovmobilebench-mobile
 on:
   workflow_dispatch:
   push:
@@ -1096,8 +1096,8 @@ jobs:
           ANDROID_NDK: ${{ secrets.ANDROID_NDK }}
         run: |
           export PATH="$ANDROID_NDK:$PATH"
-          poetry run ovbench build -c experiments/android_mcpu_fp16.yaml
-          poetry run ovbench package -c experiments/android_mcpu_fp16.yaml
+          poetry run ovmobilebench build -c experiments/android_mcpu_fp16.yaml
+          poetry run ovmobilebench package -c experiments/android_mcpu_fp16.yaml
       - uses: actions/upload-artifact@v4
         with:
           name: ovbundle-android
@@ -1128,9 +1128,9 @@ jobs:
           with open('experiments/ci.yaml','w') as f:
             yaml.safe_dump(cfg, f)
           PY
-          ovbench deploy -c experiments/ci.yaml
-          ovbench run -c experiments/ci.yaml
-          ovbench report -c experiments/ci.yaml
+          ovmobilebench deploy -c experiments/ci.yaml
+          ovmobilebench run -c experiments/ci.yaml
+          ovmobilebench report -c experiments/ci.yaml
       - uses: actions/upload-artifact@v4
         with:
           name: results
@@ -1139,7 +1139,7 @@ jobs:
 __OVBENCH_EOF_16__
 cat > 'experiments/android_mcpu_fp16.yaml' << '__OVBENCH_EOF_17__'
 project:
-  name: "ovbench-mobile"
+  name: "ovmobilebench-mobile"
   run_id: "2025-08-14_ov_arm_fp16"
 build:
   enabled: true
@@ -1162,7 +1162,7 @@ package:
 device:
   kind: "android"
   serials: ["R3CN30XXXX"]
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
   use_root: false
 models:
   - name: "resnet50"
@@ -1191,14 +1191,14 @@ __OVBENCH_EOF_17__
 cat > 'models/.gitkeep' << '__OVBENCH_EOF_18__'
 
 __OVBENCH_EOF_18__
-cat > 'ovbench/__init__.py' << '__OVBENCH_EOF_19__'
+cat > 'ovmobilebench/__init__.py' << '__OVBENCH_EOF_19__'
 __all__ = []
 
 __OVBENCH_EOF_19__
-cat > 'ovbench/cli.py' << '__OVBENCH_EOF_20__'
+cat > 'ovmobilebench/cli.py' << '__OVBENCH_EOF_20__'
 import typer
-from ovbench.pipeline import run_all
-from ovbench.config.schema import Experiment
+from ovmobilebench.pipeline import run_all
+from ovmobilebench.config.schema import Experiment
 import yaml
 
 app = typer.Typer(add_completion=False)
@@ -1239,15 +1239,15 @@ if __name__ == "__main__":
     app()
 
 __OVBENCH_EOF_20__
-cat > 'ovbench/pipeline.py' << '__OVBENCH_EOF_21__'
-from ovbench.config.schema import Experiment
+cat > 'ovmobilebench/pipeline.py' << '__OVBENCH_EOF_21__'
+from ovmobilebench.config.schema import Experiment
 
 def run_all(cfg: Experiment):
     # Placeholder orchestrator to be replaced with real steps
     print("Running full pipeline for", cfg.project.name, "run_id:", cfg.project.run_id)
 
 __OVBENCH_EOF_21__
-cat > 'ovbench/config/schema.py' << '__OVBENCH_EOF_22__'
+cat > 'ovmobilebench/config/schema.py' << '__OVBENCH_EOF_22__'
 
 from pydantic import BaseModel, Field
 from typing import List, Literal, Optional, Dict, Any
@@ -1282,7 +1282,7 @@ class DeviceConfig(BaseModel):
     host: Optional[str] = None
     user: Optional[str] = None
     key_path: Optional[str] = None
-    push_dir: str = "/data/local/tmp/ovbench"
+    push_dir: str = "/data/local/tmp/ovmobilebench"
     use_root: bool = False
 
 class ModelItem(BaseModel):
@@ -1328,7 +1328,7 @@ class Experiment(BaseModel):
     report: ReportConfig
 
 __OVBENCH_EOF_22__
-cat > 'ovbench/devices/base.py' << '__OVBENCH_EOF_23__'
+cat > 'ovmobilebench/devices/base.py' << '__OVBENCH_EOF_23__'
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Tuple
@@ -1349,7 +1349,7 @@ class Device(ABC):
     def info(self) -> dict: ...
 
 __OVBENCH_EOF_23__
-cat > 'ovbench/devices/android.py' << '__OVBENCH_EOF_24__'
+cat > 'ovmobilebench/devices/android.py' << '__OVBENCH_EOF_24__'
 import subprocess
 from pathlib import Path
 from .base import Device
@@ -1382,7 +1382,7 @@ class AndroidDevice(Device):
         return {"os": "Android", "props": props, "serial": self.serial}
 
 __OVBENCH_EOF_24__
-cat > 'ovbench/parsers/benchmark_parser.py' << '__OVBENCH_EOF_25__'
+cat > 'ovmobilebench/parsers/benchmark_parser.py' << '__OVBENCH_EOF_25__'
 import re
 
 RE = {
@@ -1413,7 +1413,7 @@ def parse_metrics(text: str) -> dict:
     }
 
 __OVBENCH_EOF_25__
-cat > 'ovbench/runners/benchmark.py' << '__OVBENCH_EOF_26__'
+cat > 'ovmobilebench/runners/benchmark.py' << '__OVBENCH_EOF_26__'
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -1439,7 +1439,7 @@ def build_cmd(push_dir: str, spec: RunSpec) -> str:
     return " ".join(parts)
 
 __OVBENCH_EOF_26__
-cat > 'ovbench/report/sink.py' << '__OVBENCH_EOF_27__'
+cat > 'ovmobilebench/report/sink.py' << '__OVBENCH_EOF_27__'
 import json, csv
 from pathlib import Path
 
@@ -1455,7 +1455,7 @@ def write_csv(rows: list[dict], path: Path):
         w.writeheader(); w.writerows(rows)
 
 __OVBENCH_EOF_27__
-cat > 'ovbench/core/shell.py' << '__OVBENCH_EOF_28__'
+cat > 'ovmobilebench/core/shell.py' << '__OVBENCH_EOF_28__'
 import subprocess, shlex, time
 from dataclasses import dataclass
 
@@ -1479,13 +1479,13 @@ def run(cmd, timeout=None, env=None, cwd=None) -> CommandResult:
     return CommandResult(proc.returncode, out, err, time.time() - start)
 
 __OVBENCH_EOF_28__
-cat > 'ovbench/core/fs.py' << '__OVBENCH_EOF_29__'
+cat > 'ovmobilebench/core/fs.py' << '__OVBENCH_EOF_29__'
 from pathlib import Path
 def ensure_dir(p: Path) -> None:
     p.mkdir(parents=True, exist_ok=True)
 
 __OVBENCH_EOF_29__
-cat > 'ovbench/core/artifacts.py' << '__OVBENCH_EOF_30__'
+cat > 'ovmobilebench/core/artifacts.py' << '__OVBENCH_EOF_30__'
 from dataclasses import dataclass
 
 @dataclass
@@ -1496,7 +1496,7 @@ class ArtifactRef:
 
 __OVBENCH_EOF_30__
 cat > 'tests/test_parser.py' << '__OVBENCH_EOF_31__'
-from ovbench.parsers.benchmark_parser import parse_metrics
+from ovmobilebench.parsers.benchmark_parser import parse_metrics
 
 SAMPLE = """
 [ INFO ] Throughput: 245.67 FPS
@@ -1521,8 +1521,8 @@ def test_parse_basic():
 __OVBENCH_EOF_31__
 cat > 'CODEOWNERS' << '__OVBENCH_EOF_32__'
 *                 @team/owners
-/ovbench/core/    @team/core
-/ovbench/devices/ @team/devices
+/ovmobilebench/core/    @team/core
+/ovmobilebench/devices/ @team/devices
 /.github/         @team/ci
 
 __OVBENCH_EOF_32__
@@ -1550,18 +1550,18 @@ docs/CHECKLIST_EN.md
 docs/CHECKLIST_RU.md
 experiments/android_mcpu_fp16.yaml
 models/.gitkeep
-ovbench/__init__.py
-ovbench/cli.py
-ovbench/config/schema.py
-ovbench/core/artifacts.py
-ovbench/core/fs.py
-ovbench/core/shell.py
-ovbench/devices/android.py
-ovbench/devices/base.py
-ovbench/parsers/benchmark_parser.py
-ovbench/pipeline.py
-ovbench/report/sink.py
-ovbench/runners/benchmark.py
+ovmobilebench/__init__.py
+ovmobilebench/cli.py
+ovmobilebench/config/schema.py
+ovmobilebench/core/artifacts.py
+ovmobilebench/core/fs.py
+ovmobilebench/core/shell.py
+ovmobilebench/devices/android.py
+ovmobilebench/devices/base.py
+ovmobilebench/parsers/benchmark_parser.py
+ovmobilebench/pipeline.py
+ovmobilebench/report/sink.py
+ovmobilebench/runners/benchmark.py
 pyproject.toml
 tests/test_parser.py
 tox.ini
@@ -1572,9 +1572,9 @@ tox.ini
 ### `README.md`
 
 ```markdown
-# OVBench
+# OVMobileBench
 
-OVBench automates building OpenVINO and running `benchmark_app` on mobile devices (Android via ADB), packaging,
+OVMobileBench automates building OpenVINO and running `benchmark_app` on mobile devices (Android via ADB), packaging,
 deployment, execution, parsing, and reporting — end-to-end.
 
 - Quickstart: see `experiments/android_mcpu_fp16.yaml`
@@ -1582,7 +1582,7 @@ deployment, execution, parsing, and reporting — end-to-end.
 - Preflight checklists: `docs/CHECKLIST_RU.md`, `docs/CHECKLIST_EN.md`
 
 ```bash
-ovbench all -c experiments/android_mcpu_fp16.yaml
+ovmobilebench all -c experiments/android_mcpu_fp16.yaml
 ```
 
 ```
@@ -1605,9 +1605,9 @@ ovbench all -c experiments/android_mcpu_fp16.yaml
 ### `docs/CHECKLIST_EN.md`
 
 ```markdown
-# OVBench — Repository Preflight Checklist for Publication and CI Launch
+# OVMobileBench — Repository Preflight Checklist for Publication and CI Launch
 
-> **Purpose**: This document is a detailed preflight checklist to prepare the **OVBench**
+> **Purpose**: This document is a detailed preflight checklist to prepare the **OVMobileBench**
 > repository (automation for building OpenVINO, packaging, deploying to mobile devices,
 > and running `benchmark_app`) for public/internal release and stable CI/CD operation.
 >
@@ -1649,7 +1649,7 @@ ovbench all -c experiments/android_mcpu_fp16.yaml
 - [ ] **Consistency**: same structure, tooling and commands locally and in CI.
 - [ ] **Reproducibility**: pin NDK, CMake, Python deps, and model versions.
 - [ ] **Observability**: JSONL logs, artifacts, build/device metadata.
-- [ ] **Simplicity**: `ovbench all -c <yaml>` should work without manual steps.
+- [ ] **Simplicity**: `ovmobilebench all -c <yaml>` should work without manual steps.
 - [ ] **Least privilege**: secrets and access are locked down to minimum.
 - [ ] **Transparency**: docs cover end-to-end scenarios and incident SOPs.
 - [ ] **Quality-by-default**: linters, formatters, typing, tests — mandatory and fast.
@@ -1662,7 +1662,7 @@ ovbench all -c experiments/android_mcpu_fp16.yaml
 ## Fast Start: Top 10 Must-Haves
 
 1. [ ] License chosen and added (MIT/Apache-2.0/etc.).
-2. [ ] `pyproject.toml` + `ovbench` package with `ovbench.cli:app` entrypoint.
+2. [ ] `pyproject.toml` + `ovmobilebench` package with `ovmobilebench.cli:app` entrypoint.
 3. [ ] `pre-commit` with Black, Ruff, Mypy, end-of-file-fixer.
 4. [ ] CI badges in README, working `bench.yml` workflow.
 5. [ ] `.gitignore`, `.gitattributes`, `CODEOWNERS`, `CONTRIBUTING.md`.
@@ -1690,12 +1690,12 @@ ovbench all -c experiments/android_mcpu_fp16.yaml
   - [ ] no merge on red statuses.
 - [ ] **Sign-off** (DCO) or GPG-signed commits policy.
 - [ ] Enable **secret scanning** (GH Advanced Security/Trufflehog if available).
-- [ ] Define **CODEOWNERS** for critical dirs (`ovbench/core`, `devices/*`, workflows).
+- [ ] Define **CODEOWNERS** for critical dirs (`ovmobilebench/core`, `devices/*`, workflows).
 - [ ] Add `SECURITY.md` (contacts, vulnerability disclosure policy).
 
 ## Directory Structure & Required Files
 
-- [ ] `ovbench/` — sources
+- [ ] `ovmobilebench/` — sources
   - [ ] `cli.py` — Typer/Click CLI
   - [ ] `pipeline.py` — orchestrator
   - [ ] `config/` — schemas/loader/defaults
@@ -1720,19 +1720,19 @@ ovbench all -c experiments/android_mcpu_fp16.yaml
 ## Python Package: pyproject, Dependencies, Extras
 
 - [ ] Package via `pyproject.toml` (Poetry or PEP 621):
-  - [ ] `name = "ovbench"`, `version`, `readme`, `scripts`.
+  - [ ] `name = "ovmobilebench"`, `version`, `readme`, `scripts`.
   - [ ] Runtime deps: `typer`, `pydantic`, `pyyaml`, `paramiko`, `pandas`, `rich`.
   - [ ] Dev deps: `pytest`, `pytest-cov`, `mypy`, `ruff`, `black`.
   - [ ] Extras: `[dev]`, `[ssh]`, `[viz]` as needed.
 - [ ] Minimum Python version: 3.11 (pinned in CI).
 - [ ] Dependency pinning strategy: `^` / `~` / exact.
-- [ ] Commands: `ovbench build|package|deploy|run|report|all`.
-- [ ] `entry_points`: `ovbench = "ovbench.cli:app"`.
+- [ ] Commands: `ovmobilebench build|package|deploy|run|report|all`.
+- [ ] `entry_points`: `ovmobilebench = "ovmobilebench.cli:app"`.
 
 ## Code Quality: Formatting, Linting, Typing, Hooks
 
 - [ ] **Black** (formatting) and **Ruff** (linting) configured.
-- [ ] **Mypy** (strict options for `ovbench/core`, `devices/*`).
+- [ ] **Mypy** (strict options for `ovmobilebench/core`, `devices/*`).
 - [ ] `pre-commit` with black, ruff, mypy, trailing-whitespace, end-of-file-fixer.
 - [ ] Quality badges in README (lint/type/test).
 - [ ] Ruff profiles for excluding dirs (e.g., `artifacts/`).
@@ -2002,8 +2002,8 @@ build/
 ### CODEOWNERS (example)
 ```
 *                 @team/owners
-/ovbench/core/    @team/core
-/ovbench/devices/ @team/devices
+/ovmobilebench/core/    @team/core
+/ovmobilebench/devices/ @team/devices
 /.github/         @team/ci
 ```
 
@@ -2462,7 +2462,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy
 Please report vulnerabilities privately via security@example.com. We will acknowledge within 72 hours.
 
 ## Scope
-Source under /ovbench/**, CI workflows, and published artifacts.
+Source under /ovmobilebench/**, CI workflows, and published artifacts.
 
 ```
 ### `CODE_OF_CONDUCT.md`
@@ -2483,7 +2483,7 @@ We follow the Contributor Covenant. Be respectful, inclusive, and constructive.
 
 ## Tests & Lint
 - `pytest -q`
-- `ruff ovbench && black --check ovbench && mypy ovbench`
+- `ruff ovmobilebench && black --check ovmobilebench && mypy ovmobilebench`
 
 ```
 ### `.gitignore`
@@ -2542,12 +2542,12 @@ repos:
 
 ```toml
 [tool.poetry]
-name = "ovbench"
+name = "ovmobilebench"
 version = "0.1.0"
 description = "End-to-end benchmarking pipeline for OpenVINO on mobile devices"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{ include = "ovbench" }]
+packages = [{ include = "ovmobilebench" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -2567,7 +2567,7 @@ black = "^24.4.2"
 pre-commit = "^3.7.1"
 
 [tool.poetry.scripts]
-ovbench = "ovbench.cli:app"
+ovmobilebench = "ovmobilebench.cli:app"
 
 [build-system]
 requires = ["poetry-core"]
@@ -2584,31 +2584,31 @@ help:
 	@echo "Targets: build package deploy run report all lint fmt type test clean"
 
 build:
-	ovbench build -c $(CFG)
+	ovmobilebench build -c $(CFG)
 
 package:
-	ovbench package -c $(CFG)
+	ovmobilebench package -c $(CFG)
 
 deploy:
-	ovbench deploy -c $(CFG)
+	ovmobilebench deploy -c $(CFG)
 
 run:
-	ovbench run -c $(CFG)
+	ovmobilebench run -c $(CFG)
 
 report:
-	ovbench report -c $(CFG)
+	ovmobilebench report -c $(CFG)
 
 all:
-	ovbench all -c $(CFG)
+	ovmobilebench all -c $(CFG)
 
 lint:
-	ruff ovbench
+	ruff ovmobilebench
 
 fmt:
-	black ovbench
+	black ovmobilebench
 
 type:
-	mypy ovbench
+	mypy ovmobilebench
 
 test:
 	pytest -q
@@ -2626,17 +2626,17 @@ skipsdist = true
 
 [testenv]
 deps = pytest pytest-cov
-commands = pytest --cov=ovbench --cov-report=term-missing -q
+commands = pytest --cov=ovmobilebench --cov-report=term-missing -q
 
 [testenv:lint]
 deps = ruff black
 commands =
-    ruff ovbench
-    black --check ovbench
+    ruff ovmobilebench
+    black --check ovmobilebench
 
 [testenv:type]
 deps = mypy
-commands = mypy ovbench
+commands = mypy ovmobilebench
 
 ```
 ### `Dockerfile.dev`
@@ -2647,14 +2647,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \    git cmake 
 RUN curl -sSL https://dl.google.com/android/repository/platform-tools-latest-linux.zip -o /tmp/pt.zip && \    unzip /tmp/pt.zip -d /opt && rm /tmp/pt.zip && \    ln -s /opt/platform-tools/adb /usr/local/bin/adb
 WORKDIR /workspace
 COPY pyproject.toml README.md ./
-COPY ovbench ./ovbench
+COPY ovmobilebench ./ovmobilebench
 RUN pip install -U pip && pip install .[dev]
 
 ```
 ### `.github/workflows/bench.yml`
 
 ```yaml
-name: ovbench-mobile
+name: ovmobilebench-mobile
 on:
   workflow_dispatch:
   push:
@@ -2675,8 +2675,8 @@ jobs:
           ANDROID_NDK: ${{ secrets.ANDROID_NDK }}
         run: |
           export PATH="$ANDROID_NDK:$PATH"
-          poetry run ovbench build -c experiments/android_mcpu_fp16.yaml
-          poetry run ovbench package -c experiments/android_mcpu_fp16.yaml
+          poetry run ovmobilebench build -c experiments/android_mcpu_fp16.yaml
+          poetry run ovmobilebench package -c experiments/android_mcpu_fp16.yaml
       - uses: actions/upload-artifact@v4
         with:
           name: ovbundle-android
@@ -2707,9 +2707,9 @@ jobs:
           with open('experiments/ci.yaml','w') as f:
             yaml.safe_dump(cfg, f)
           PY
-          ovbench deploy -c experiments/ci.yaml
-          ovbench run -c experiments/ci.yaml
-          ovbench report -c experiments/ci.yaml
+          ovmobilebench deploy -c experiments/ci.yaml
+          ovmobilebench run -c experiments/ci.yaml
+          ovmobilebench report -c experiments/ci.yaml
       - uses: actions/upload-artifact@v4
         with:
           name: results
@@ -2720,7 +2720,7 @@ jobs:
 
 ```yaml
 project:
-  name: "ovbench-mobile"
+  name: "ovmobilebench-mobile"
   run_id: "2025-08-14_ov_arm_fp16"
 build:
   enabled: true
@@ -2743,7 +2743,7 @@ package:
 device:
   kind: "android"
   serials: ["R3CN30XXXX"]
-  push_dir: "/data/local/tmp/ovbench"
+  push_dir: "/data/local/tmp/ovmobilebench"
   use_root: false
 models:
   - name: "resnet50"
@@ -2774,18 +2774,18 @@ report:
 ```text
 
 ```
-### `ovbench/__init__.py`
+### `ovmobilebench/__init__.py`
 
 ```python
 __all__ = []
 
 ```
-### `ovbench/cli.py`
+### `ovmobilebench/cli.py`
 
 ```python
 import typer
-from ovbench.pipeline import run_all
-from ovbench.config.schema import Experiment
+from ovmobilebench.pipeline import run_all
+from ovmobilebench.config.schema import Experiment
 import yaml
 
 app = typer.Typer(add_completion=False)
@@ -2826,17 +2826,17 @@ if __name__ == "__main__":
     app()
 
 ```
-### `ovbench/pipeline.py`
+### `ovmobilebench/pipeline.py`
 
 ```python
-from ovbench.config.schema import Experiment
+from ovmobilebench.config.schema import Experiment
 
 def run_all(cfg: Experiment):
     # Placeholder orchestrator to be replaced with real steps
     print("Running full pipeline for", cfg.project.name, "run_id:", cfg.project.run_id)
 
 ```
-### `ovbench/config/schema.py`
+### `ovmobilebench/config/schema.py`
 
 ```python
 
@@ -2873,7 +2873,7 @@ class DeviceConfig(BaseModel):
     host: Optional[str] = None
     user: Optional[str] = None
     key_path: Optional[str] = None
-    push_dir: str = "/data/local/tmp/ovbench"
+    push_dir: str = "/data/local/tmp/ovmobilebench"
     use_root: bool = False
 
 class ModelItem(BaseModel):
@@ -2919,7 +2919,7 @@ class Experiment(BaseModel):
     report: ReportConfig
 
 ```
-### `ovbench/devices/base.py`
+### `ovmobilebench/devices/base.py`
 
 ```python
 from abc import ABC, abstractmethod
@@ -2942,7 +2942,7 @@ class Device(ABC):
     def info(self) -> dict: ...
 
 ```
-### `ovbench/devices/android.py`
+### `ovmobilebench/devices/android.py`
 
 ```python
 import subprocess
@@ -2977,7 +2977,7 @@ class AndroidDevice(Device):
         return {"os": "Android", "props": props, "serial": self.serial}
 
 ```
-### `ovbench/parsers/benchmark_parser.py`
+### `ovmobilebench/parsers/benchmark_parser.py`
 
 ```python
 import re
@@ -3010,7 +3010,7 @@ def parse_metrics(text: str) -> dict:
     }
 
 ```
-### `ovbench/runners/benchmark.py`
+### `ovmobilebench/runners/benchmark.py`
 
 ```python
 from dataclasses import dataclass
@@ -3038,7 +3038,7 @@ def build_cmd(push_dir: str, spec: RunSpec) -> str:
     return " ".join(parts)
 
 ```
-### `ovbench/report/sink.py`
+### `ovmobilebench/report/sink.py`
 
 ```python
 import json, csv
@@ -3056,7 +3056,7 @@ def write_csv(rows: list[dict], path: Path):
         w.writeheader(); w.writerows(rows)
 
 ```
-### `ovbench/core/shell.py`
+### `ovmobilebench/core/shell.py`
 
 ```python
 import subprocess, shlex, time
@@ -3082,7 +3082,7 @@ def run(cmd, timeout=None, env=None, cwd=None) -> CommandResult:
     return CommandResult(proc.returncode, out, err, time.time() - start)
 
 ```
-### `ovbench/core/fs.py`
+### `ovmobilebench/core/fs.py`
 
 ```python
 from pathlib import Path
@@ -3090,7 +3090,7 @@ def ensure_dir(p: Path) -> None:
     p.mkdir(parents=True, exist_ok=True)
 
 ```
-### `ovbench/core/artifacts.py`
+### `ovmobilebench/core/artifacts.py`
 
 ```python
 from dataclasses import dataclass
@@ -3105,7 +3105,7 @@ class ArtifactRef:
 ### `tests/test_parser.py`
 
 ```python
-from ovbench.parsers.benchmark_parser import parse_metrics
+from ovmobilebench.parsers.benchmark_parser import parse_metrics
 
 SAMPLE = """
 [ INFO ] Throughput: 245.67 FPS
@@ -3132,8 +3132,8 @@ def test_parse_basic():
 
 ```text
 *                 @team/owners
-/ovbench/core/    @team/core
-/ovbench/devices/ @team/devices
+/ovmobilebench/core/    @team/core
+/ovmobilebench/devices/ @team/devices
 /.github/         @team/ci
 
 ```

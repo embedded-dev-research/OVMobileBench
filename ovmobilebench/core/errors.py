@@ -1,37 +1,37 @@
 """Custom exception types."""
 
 
-class OVBenchError(Exception):
-    """Base exception for OVBench."""
+class OVMobileBenchError(Exception):
+    """Base exception for OVMobileBench."""
 
     pass
 
 
-class BuildError(OVBenchError):
+class BuildError(OVMobileBenchError):
     """Build-related errors."""
 
     pass
 
 
-class DeviceError(OVBenchError):
+class DeviceError(OVMobileBenchError):
     """Device-related errors."""
 
     pass
 
 
-class RunError(OVBenchError):
+class RunError(OVMobileBenchError):
     """Runtime errors during benchmark execution."""
 
     pass
 
 
-class ConfigError(OVBenchError):
+class ConfigError(OVMobileBenchError):
     """Configuration-related errors."""
 
     pass
 
 
-class ParseError(OVBenchError):
+class ParseError(OVMobileBenchError):
     """Parser-related errors."""
 
     pass

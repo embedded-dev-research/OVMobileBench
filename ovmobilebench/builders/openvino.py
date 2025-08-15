@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import Dict
 import logging
 
-from ovbench.config.schema import BuildConfig
-from ovbench.core.shell import run
-from ovbench.core.fs import ensure_dir
-from ovbench.core.errors import BuildError
+from ovmobilebench.config.schema import BuildConfig
+from ovmobilebench.core.shell import run
+from ovmobilebench.core.fs import ensure_dir
+from ovmobilebench.core.errors import BuildError
 
 logger = logging.getLogger(__name__)
 
