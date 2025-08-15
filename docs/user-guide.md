@@ -77,10 +77,10 @@ cd OVMobileBench
 pip install -e .[dev]
 ```
 
-#### Using Poetry
+#### Using pip with requirements
 ```bash
-poetry install
-poetry shell
+pip install -r requirements.txt
+pip install -e .
 ```
 
 ### Environment Setup

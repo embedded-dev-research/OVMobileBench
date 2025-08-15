@@ -8,7 +8,7 @@ Before you begin, ensure you have:
 
 - **Python 3.11+** installed
 - **Git** for cloning repositories
-- **Android SDK Platform Tools** (for Android benchmarking)
+- **Android device** with USB debugging enabled
 - **Android NDK r26d+** (for building from source)
 - **CMake 3.24+** and **Ninja 1.11+** (for building)
 
@@ -22,13 +22,13 @@ cd OVMobileBench
 pip install -e .[dev]
 ```
 
-### Method 2: Using Poetry
+### Method 2: Using pip with requirements
 
 ```bash
 git clone https://github.com/embedded-dev-research/OVMobileBench.git
 cd OVMobileBench
-poetry install
-poetry shell
+pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Quick Setup
@@ -47,8 +47,7 @@ export PATH=$ANDROID_HOME/platform-tools:$PATH
 # Check OVMobileBench installation
 ovmobilebench --version
 
-# Check Android tools
-adb --version
+# Check build tools
 cmake --version
 ninja --version
 ```
@@ -57,15 +56,17 @@ ninja --version
 
 For Android devices:
 
-```bash
-# Enable Developer Options and USB Debugging on your device
-# Connect via USB
-adb devices
+1. Enable Developer Options and USB Debugging on your device
+2. Connect via USB
+3. Run OVMobileBench to list devices:
 
-# You should see your device listed
+```bash
+ovmobilebench list-devices
+
 # Example output:
-# List of devices attached
-# R3CN30XXXX  device
+# Available Android devices:
+# - R3CN30XXXX (device)
+# - emulator-5554 (device)
 ```
 
 ## Your First Benchmark
@@ -97,7 +98,7 @@ build:
 
 device:
   kind: "android"
-  serials: ["YOUR_DEVICE_SERIAL"]  # From 'adb devices'
+  serials: ["YOUR_DEVICE_SERIAL"]  # From 'ovmobilebench list-devices'
   push_dir: "/data/local/tmp/ovmobilebench"
 
 models:

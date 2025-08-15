@@ -132,17 +132,24 @@ def all(
 
 @app.command()
 def list_devices():
-    """List available ADB devices."""
+    """List available Android devices."""
     from ovmobilebench.devices.android import list_android_devices
+
+    console.print("[bold blue]Searching for Android devices...[/bold blue]")
 
     devices = list_android_devices()
     if not devices:
-        console.print("[yellow]No devices found[/yellow]")
+        console.print("[yellow]No Android devices found[/yellow]")
+        console.print("\nMake sure:")
+        console.print("  • USB debugging is enabled on your device")
+        console.print("  • Device is connected via USB")
+        console.print("  • You have authorized this computer on the device")
         return
 
-    console.print("[bold]Available devices:[/bold]")
+    console.print("[bold green]Available Android devices:[/bold green]")
     for serial, status in devices:
-        console.print(f"  • {serial} [{status}]")
+        status_color = "green" if status == "device" else "yellow"
+        console.print(f"  • {serial} [[{status_color}]{status}[/{status_color}]]")
 
 
 if __name__ == "__main__":

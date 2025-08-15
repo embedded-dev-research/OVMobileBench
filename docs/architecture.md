@@ -24,7 +24,7 @@ OVMobileBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devi
      │         │       │       │       │       │
 ┌────▼─────────▼───────▼───────▼───────▼───────▼─────┐
 │              Device Abstraction Layer               │
-│         (Android/ADB, Linux/SSH, iOS/stub)          │
+│      (Android/adbutils, Linux/SSH, iOS/stub)        │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -74,7 +74,7 @@ OVMobileBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devi
 **Purpose**: Uniform interface for different device types.
 
 **Implementations**:
-- `AndroidDevice`: ADB-based Android device control
+- `AndroidDevice`: Python adbutils-based Android device control (no external ADB binary needed)
 - `LinuxDevice`: SSH-based Linux device control (planned)
 - `iOSDevice`: iOS device control (stub)
 
@@ -181,7 +181,7 @@ Build Artifacts + Models → Tar Archive → Checksum Generation
 
 ### 4. Deployment Flow
 ```
-Bundle → ADB/SSH Push → Remote Extraction → Permission Setup
+Bundle → Device Push → Remote Extraction → Permission Setup
 ```
 
 ### 5. Execution Flow
@@ -239,7 +239,7 @@ report:
 - SSH key-based authentication
 
 ### Device Security
-- ADB authorization required
+- USB debugging authorization required
 - Limited command set execution
 - Temporary file cleanup
 
@@ -348,7 +348,7 @@ report:
 - Ninja 1.11+
 
 ### Development
-- poetry: Dependency management
+- pip: Dependency management
 - pytest: Testing framework
 - black: Code formatting
 - ruff: Linting

@@ -57,9 +57,9 @@ cat experiments/results/*.csv
 - **Python**: 3.11+
 - **For Android targets**:
   - Android NDK r26d+
-  - Android SDK Platform Tools (adb)
   - CMake 3.24+
   - Ninja 1.11+
+  - Android device with USB debugging enabled
 - **For Linux ARM targets**:
   - SSH access to device
   - Cross-compilation toolchain

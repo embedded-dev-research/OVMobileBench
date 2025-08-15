@@ -1535,7 +1535,7 @@ Example (JSON):
 # Supplemental Sections Added — 2025-08-15 14:15:15
 
 > The following sections extend the original design with concrete, ready-to-use assets:
-> GitHub Actions pipelines, Makefile, Poetry project file, tox config, devcontainer/Dockerfile,
+> GitHub Actions pipelines, Makefile, pyproject.toml project file, tox config, devcontainer/Dockerfile,
 > unit tests (pytest) for parsers and devices, SQLite sink and schema, regression detection,
 > parallel execution guidance, models acquisition, device farm design, baseline management,
 > visualization cookbook, and advanced Android stabilization controls.
@@ -1552,14 +1552,10 @@ Example (JSON):
 
 ### Installation
 ```bash
-# Using Poetry
-pipx install poetry
-poetry install
-poetry run ovmobilebench --help
-
-# Or editable install
+# Install dependencies and package
 python -m venv .venv && source .venv/bin/activate
 pip install -U pip wheel
+pip install -r requirements.txt
 pip install -e .[dev]
 ovmobilebench --help
 ```
@@ -1576,36 +1572,45 @@ ovmobilebench all -c experiments/local.yaml --verbose
 ## pyproject.toml (Reference)
 
 ```toml
-[tool.poetry]
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "ovmobilebench"
 version = "0.1.0"
 description = "End-to-end benchmarking pipeline for OpenVINO on mobile devices"
-authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{ include = "ovmobilebench" }]
+requires-python = ">=3.11"
+authors = [
+    {name = "Embedded Dev Research Team"},
+]
+dependencies = [
+    "typer>=0.9.0",
+    "click>=8.1.0",
+    "pydantic>=2.8.2",
+    "pyyaml>=6.0.2",
+    "paramiko>=3.4.0",
+    "pandas>=2.2.2",
+    "rich>=13.7.1",
+    "adbutils>=2.0.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-typer = "^0.12.3"
-pydantic = "^2.8.2"
-pyyaml = "^6.0.2"
-paramiko = "^3.4.0"
-pandas = "^2.2.2"
-rich = "^13.7.1"
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-cov>=5.0.0",
+    "mypy>=1.10.0",
+    "ruff>=0.5.0",
+    "black>=24.4.2",
+    "types-PyYAML>=6.0.12",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.2.0"
-pytest-cov = "^5.0.0"
-mypy = "^1.10.0"
-ruff = "^0.5.0"
-black = "^24.4.2"
-
-[tool.poetry.scripts]
+[project.scripts]
 ovmobilebench = "ovmobilebench.cli:app"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.setuptools.packages.find]
+include = ["ovmobilebench*"]
 ```
 
 ---
@@ -1619,32 +1624,32 @@ help:
 	@echo "Targets: build package deploy run report all lint fmt test clean"
 
 build:
-	poetry run ovmobilebench build -c $(CFG)
+	ovmobilebench build -c $(CFG)
 
 package:
-	poetry run ovmobilebench package -c $(CFG)
+	ovmobilebench package -c $(CFG)
 
 deploy:
-	poetry run ovmobilebench deploy -c $(CFG)
+	ovmobilebench deploy -c $(CFG)
 
 run:
-	poetry run ovmobilebench run -c $(CFG)
+	ovmobilebench run -c $(CFG)
 
 report:
-	poetry run ovmobilebench report -c $(CFG)
+	ovmobilebench report -c $(CFG)
 
 all:
-	poetry run ovmobilebench all -c $(CFG)
+	ovmobilebench all -c $(CFG)
 
 lint:
-	poetry run ruff ovmobilebench
-	poetry run mypy ovmobilebench
+	ruff check ovmobilebench
+	mypy ovmobilebench
 
 fmt:
-	poetry run black ovmobilebench
+	black ovmobilebench
 
 test:
-	poetry run pytest -q
+	pytest -q
 
 clean:
 	rm -rf artifacts/ .pytest_cache .mypy_cache .ruff_cache dist build
@@ -1723,16 +1728,16 @@ jobs:
           python-version: "3.11"
       - name: Install deps
         run: |
-          pip install -U pip
-          pip install poetry
-          poetry install
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
       - name: Build OpenVINO bundle
         env:
           ANDROID_NDK: ${{ secrets.ANDROID_NDK }}
         run: |
           export PATH="$ANDROID_NDK:$PATH"
-          poetry run ovmobilebench build -c experiments/android_mcpu_fp16.yaml
-          poetry run ovmobilebench package -c experiments/android_mcpu_fp16.yaml
+          ovmobilebench build -c experiments/android_mcpu_fp16.yaml
+          ovmobilebench package -c experiments/android_mcpu_fp16.yaml
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
