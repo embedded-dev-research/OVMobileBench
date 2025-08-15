@@ -42,7 +42,7 @@ jobs:
         run: poetry run black --check ovbench tests
       
       - name: Run Ruff
-        run: poetry run ruff ovbench tests
+        run: poetry run ruff check ovbench tests
       
       - name: Run MyPy
         run: poetry run mypy ovbench
