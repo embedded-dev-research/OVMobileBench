@@ -15,6 +15,7 @@ def patched_format_help(self, ctx, formatter):
 # Fix get_help_record for TyperOption to pass ctx to make_metavar
 def patched_get_help_record_option(self, ctx):
     """Fixed get_help_record that properly passes ctx to make_metavar."""
+
     def _write_opts(opts):
         rv = ", ".join(opts)
         if self.secondary_opts:
@@ -49,7 +50,7 @@ def patched_get_help_record_argument(self, ctx):
 
 
 # Apply patches
-typer.core.TyperCommand.format_help = patched_format_help
-typer.core.TyperGroup.format_help = patched_format_help
-typer.core.TyperOption.get_help_record = patched_get_help_record_option
-typer.core.TyperArgument.get_help_record = patched_get_help_record_argument
+typer.core.TyperCommand.format_help = patched_format_help  # type: ignore[method-assign]
+typer.core.TyperGroup.format_help = patched_format_help  # type: ignore[method-assign]
+typer.core.TyperOption.get_help_record = patched_get_help_record_option  # type: ignore[method-assign]
+typer.core.TyperArgument.get_help_record = patched_get_help_record_argument  # type: ignore[method-assign]
