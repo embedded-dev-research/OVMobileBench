@@ -152,5 +152,27 @@ def list_devices():
         console.print(f"  • {serial} [[{status_color}]{status}[/{status_color}]]")
 
 
+@app.command("list-ssh-devices")
+def list_ssh_devices():
+    """List available SSH devices."""
+    from .devices.linux_ssh import list_ssh_devices as list_ssh
+    from rich.console import Console
+
+    console = Console()
+    devices = list_ssh()
+    
+    if not devices:
+        console.print("[yellow]No SSH devices configured[/yellow]")
+        console.print("\nTo configure SSH devices, add them to your experiment YAML")
+        return
+    
+    console.print("[bold green]Available SSH devices:[/bold green]")
+    for device in devices:
+        status_color = "green" if device.get("status") == "available" else "yellow"
+        serial = device.get("serial", "unknown")
+        status = device.get("status", "unknown")
+        console.print(f"  • {serial} [[{status_color}]{status}[/{status_color}]]")
+
+
 if __name__ == "__main__":
     app()

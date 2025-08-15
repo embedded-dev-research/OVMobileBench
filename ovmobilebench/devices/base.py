@@ -59,3 +59,7 @@ class Device(ABC):
         """Clean up temporary files on device."""
         if self.exists(remote_path):
             self.rm(remote_path, recursive=True)
+    
+    def get_env(self) -> Dict[str, str]:
+        """Get environment variables for benchmark execution."""
+        return {}

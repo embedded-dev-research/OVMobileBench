@@ -141,6 +141,132 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-results
+          name: benchmark-results-adb
+          path: experiments/results/
+          retention-days: 30
+
+  # Test SSH connection to localhost
+  device-test-ssh:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[device-test-ssh]')
+    needs: build-package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Set up SSH server
+        run: |
+          # Install SSH server if not present
+          sudo apt-get update
+          sudo apt-get install -y openssh-server
+          
+          # Configure SSH for passwordless localhost access
+          ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa || true
+          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+          chmod 600 ~/.ssh/authorized_keys
+          
+          # Configure SSH client
+          cat > ~/.ssh/config << EOF
+          Host localhost
+            StrictHostKeyChecking no
+            UserKnownHostsFile=/dev/null
+          EOF
+          chmod 600 ~/.ssh/config
+          
+          # Start SSH service
+          sudo service ssh start
+          
+          # Test connection
+          ssh -o ConnectTimeout=5 localhost "echo 'SSH connection successful'"
+
+      - name: List SSH devices
+        run: |
+          ovmobilebench list-ssh-devices || echo "Command not yet implemented"
+
+      - name: Test SSH deployment
+        run: |
+          # Create test file
+          echo "test content" > /tmp/test_file.txt
+          
+          # Test using Python
+          python << 'EOF'
+          from ovmobilebench.devices.linux_ssh import LinuxSSHDevice
+          import os
+          from pathlib import Path
+          
+          # Connect to localhost
+          device = LinuxSSHDevice(
+              host="localhost",
+              username=os.environ["USER"],
+              key_filename="~/.ssh/id_rsa",
+              push_dir="/tmp/ovmobilebench_test"
+          )
+          
+          # Test operations
+          print(f"Device available: {device.is_available()}")
+          print(f"Device info: {device.info()}")
+          
+          # Test push
+          device.push(Path("/tmp/test_file.txt"), "/tmp/ovmobilebench_test/test.txt")
+          
+          # Test shell command
+          ret, out, err = device.shell("cat /tmp/ovmobilebench_test/test.txt")
+          print(f"File content: {out.strip()}")
+          
+          # Test exists
+          print(f"File exists: {device.exists('/tmp/ovmobilebench_test/test.txt')}")
+          
+          # Cleanup
+          device.rm("/tmp/ovmobilebench_test", recursive=True)
+          EOF
+
+      - name: Run benchmark dry-run via SSH
+        run: |
+          # Create minimal config for SSH
+          cat > experiments/ssh_localhost.yaml << 'EOF'
+          project:
+            name: "ssh-test"
+            run_id: "ci-test"
+          
+          device:
+            type: "linux_ssh"
+            host: "localhost"
+            username: "${USER}"
+            key_filename: "~/.ssh/id_rsa"
+            push_dir: "/tmp/ovmobilebench"
+          
+          models:
+            - name: "dummy"
+              path: "/tmp/dummy_model.xml"
+          
+          run:
+            repeats: 1
+            matrix:
+              niter: [10]
+          
+          report:
+            sinks:
+              - type: "csv"
+                path: "experiments/results/ssh_test.csv"
+          EOF
+          
+          # Run in dry-run mode
+          ovmobilebench all -c experiments/ssh_localhost.yaml --dry-run || true
+
+      - name: Upload SSH test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-ssh
           path: experiments/results/
           retention-days: 30

@@ -1,0 +1,44 @@
+# SSH localhost test configuration
+project:
+  name: "ssh-localhost-test"
+  run_id: "local-test"
+
+# SSH device configuration
+device:
+  type: "linux_ssh"
+  host: "localhost"
+  username: "${USER}"  # Will use current user
+  # key_filename: "~/.ssh/id_rsa"  # Optional, will use SSH agent
+  push_dir: "/tmp/ovmobilebench"
+
+# Build configuration (optional for testing)
+build:
+  enabled: false
+  openvino_repo: "/tmp/openvino"  # Dummy path, not used when disabled
+
+# Models for testing
+models:
+  - name: "dummy_model"
+    path: "/tmp/dummy_model.xml"
+    precision: "FP32"
+
+# Run configuration
+run:
+  repeats: 1
+  warmup: 0
+  cooldown_sec: 0
+  matrix:
+    niter: [10]
+    nstreams: ["1"]
+    device: ["CPU"]
+
+# Reporting
+report:
+  sinks:
+    - type: "csv"
+      path: "experiments/results/ssh_test.csv"
+    - type: "json"
+      path: "experiments/results/ssh_test.json"
+  tags:
+    test_type: "ssh_localhost"
+    ci: false

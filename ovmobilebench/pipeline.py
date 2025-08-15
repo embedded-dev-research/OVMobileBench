@@ -1,6 +1,7 @@
 """Main orchestration pipeline."""
 
 import logging
+import os
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Union
 
@@ -192,12 +193,25 @@ class Pipeline:
             sink.write(aggregated, path)
             logger.info(f"Report written to: {path}")
 
-    def _get_device(self, serial: str) -> AndroidDevice:
+    def _get_device(self, serial: str):
         """Get device instance."""
         if self.config.device.kind == "android":
+            from .devices.android import AndroidDevice
             return AndroidDevice(serial, self.config.device.push_dir)
+        elif self.config.device.type == "linux_ssh":
+            from .devices.linux_ssh import LinuxSSHDevice
+            # Parse SSH config from device section
+            device_config = self.config.device.model_dump()
+            return LinuxSSHDevice(
+                host=device_config.get("host", "localhost"),
+                username=device_config.get("username", os.environ.get("USER", "user")),
+                password=device_config.get("password"),
+                key_filename=device_config.get("key_filename"),
+                port=device_config.get("port", 22),
+                push_dir=device_config.get("push_dir", "/tmp/ovmobilebench")
+            )
         else:
-            raise OVMobileBenchError(f"Unsupported device kind: {self.config.device.kind}")
+            raise OVMobileBenchError(f"Unsupported device kind/type: {self.config.device.kind}/{getattr(self.config.device, 'type', 'unknown')}")
 
     def _prepare_device(self, device: AndroidDevice) -> None:
         """Prepare device for benchmarking."""

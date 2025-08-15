@@ -37,7 +37,7 @@ cat experiments/results/*.csv
 
 - 🔨 **Automated Build** - Cross-compile OpenVINO for Android/Linux ARM
 - 📦 **Smart Packaging** - Bundle runtime, libraries, and models
-- 🚀 **Multi-Device** - Deploy via ADB (Android) or SSH (Linux)
+- 🚀 **Multi-Device** - Deploy via ADB (Android) or SSH (Linux using paramiko)
 - ⚡ **Matrix Testing** - Test multiple configurations automatically
 - 📊 **Rich Reports** - JSON/CSV output with detailed metrics
 - 🌡️ **Device Control** - Temperature monitoring, performance tuning
@@ -48,8 +48,8 @@ cat experiments/results/*.csv
 
 | Platform | Architecture | Transport | Status |
 |----------|-------------|-----------|--------|
-| Android | ARM64 (arm64-v8a) | ADB | ✅ Stable |
-| Linux | ARM64/ARM32 | SSH | ✅ Stable |
+| Android | ARM64 (arm64-v8a) | ADB (adbutils) | ✅ Stable |
+| Linux | ARM64/ARM32 | SSH (paramiko) | ✅ Stable |
 | iOS | ARM64 | USB | 🚧 Planned |
 
 ## 📋 Requirements

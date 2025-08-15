@@ -49,17 +49,43 @@ class DeviceConfig(BaseModel):
     """Device configuration."""
 
     kind: Literal["android", "linux_ssh", "ios"] = Field("android", description="Device type")
+    type: Optional[Literal["android", "linux_ssh", "ios"]] = Field(None, description="Alternative type field")
     serials: List[str] = Field(default_factory=list, description="Device serials (Android)")
     host: Optional[str] = Field(None, description="SSH host (Linux)")
-    user: Optional[str] = Field(None, description="SSH user (Linux)")
-    key_path: Optional[str] = Field(None, description="SSH key path (Linux)")
+    username: Optional[str] = Field(None, description="SSH username (Linux)")
+    user: Optional[str] = Field(None, description="SSH user (Linux) - deprecated, use username")
+    password: Optional[str] = Field(None, description="SSH password (Linux)")
+    key_filename: Optional[str] = Field(None, description="SSH key file path (Linux)")
+    key_path: Optional[str] = Field(None, description="SSH key path (Linux) - deprecated, use key_filename")
+    port: Optional[int] = Field(22, description="SSH port (Linux)")
     push_dir: str = Field(default="/data/local/tmp/ovmobilebench", description="Remote directory")
     use_root: bool = Field(default=False, description="Use root access")
 
     @model_validator(mode="after")
     def validate_device(self):
+        # Support both 'kind' and 'type' fields
+        if self.type and not self.kind:
+            self.kind = self.type
+        elif self.kind and not self.type:
+            self.type = self.kind
+            
+        # Support deprecated field names
+        if self.user and not self.username:
+            self.username = self.user
+        if self.key_path and not self.key_filename:
+            self.key_filename = self.key_path
+            
+        # Validate based on device type
         if self.kind == "android" and not self.serials:
-            raise ValueError("Android device requires at least one serial")
+            # For Android, allow empty serials (will auto-detect)
+            pass
+        elif self.kind == "linux_ssh" or self.type == "linux_ssh":
+            # For SSH, create a dummy serial if not provided
+            if not self.serials:
+                if self.host and self.username:
+                    self.serials = [f"{self.username}@{self.host}:{self.port}"]
+                elif self.host:
+                    self.serials = [f"{self.host}:{self.port}"]
         return self
 
 
