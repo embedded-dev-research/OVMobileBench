@@ -42,10 +42,10 @@ class CSVSink(ReportSink):
         flat_data = [self._flatten_dict(row) for row in data]
 
         # Get all field names
-        fieldnames = set()
+        fieldnames_set: set[str] = set()
         for row in flat_data:
-            fieldnames.update(row.keys())
-        fieldnames = sorted(fieldnames)
+            fieldnames_set.update(row.keys())
+        fieldnames = sorted(fieldnames_set)
 
         # Write CSV
         with open(path, "w", newline="") as f:
@@ -55,7 +55,7 @@ class CSVSink(ReportSink):
 
     def _flatten_dict(self, d: Dict[str, Any], parent_key: str = "") -> Dict[str, Any]:
         """Flatten nested dictionary."""
-        items = []
+        items: List[tuple[str, Any]] = []
         for k, v in d.items():
             new_key = f"{parent_key}_{k}" if parent_key else k
             if isinstance(v, dict):

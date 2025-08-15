@@ -60,13 +60,13 @@ class BenchmarkParser:
 
         return parsed
 
-    def aggregate_results(self, results: list) -> Dict[str, Any]:
+    def aggregate_results(self, results: list) -> list:
         """Aggregate multiple runs of the same configuration."""
         if not results:
-            return {}
+            return []
 
         # Group by configuration
-        grouped = {}
+        grouped: Dict[str, list] = {}
         for result in results:
             key = self._get_config_key(result)
             if key not in grouped:

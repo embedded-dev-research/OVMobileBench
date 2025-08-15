@@ -1,6 +1,6 @@
 """Configuration schema definitions using Pydantic."""
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import List, Literal, Optional, Dict, Any
 
 
@@ -30,14 +30,14 @@ class BuildConfig(BaseModel):
     openvino_repo: str = Field(..., description="Path to OpenVINO repository")
     openvino_commit: str = Field("HEAD", description="Git commit/tag to build")
     build_type: Literal["Release", "RelWithDebInfo", "Debug"] = "RelWithDebInfo"
-    toolchain: Toolchain = Field(default_factory=Toolchain)
-    options: BuildOptions = Field(default_factory=BuildOptions)
+    toolchain: Toolchain = Field(default_factory=lambda: Toolchain())
+    options: BuildOptions = Field(default_factory=lambda: BuildOptions())
 
 
 class PackageConfig(BaseModel):
     """Package configuration."""
 
-    include_symbols: bool = Field(False, description="Include debug symbols")
+    include_symbols: bool = Field(default=False, description="Include debug symbols")
     extra_files: List[str] = Field(default_factory=list, description="Additional files to include")
 
 
@@ -49,14 +49,14 @@ class DeviceConfig(BaseModel):
     host: Optional[str] = Field(None, description="SSH host (Linux)")
     user: Optional[str] = Field(None, description="SSH user (Linux)")
     key_path: Optional[str] = Field(None, description="SSH key path (Linux)")
-    push_dir: str = Field("/data/local/tmp/ovbench", description="Remote directory")
-    use_root: bool = Field(False, description="Use root access")
+    push_dir: str = Field(default="/data/local/tmp/ovbench", description="Remote directory")
+    use_root: bool = Field(default=False, description="Use root access")
 
-    @validator("serials")
-    def validate_serials(cls, v, values):
-        if values.get("kind") == "android" and not v:
+    @model_validator(mode="after")
+    def validate_device(self):
+        if self.kind == "android" and not self.serials:
             raise ValueError("Android device requires at least one serial")
-        return v
+        return self
 
 
 class ModelItem(BaseModel):
@@ -67,7 +67,8 @@ class ModelItem(BaseModel):
     precision: Optional[str] = Field(None, description="Model precision")
     tags: Dict[str, Any] = Field(default_factory=dict, description="Additional tags")
 
-    @validator("path")
+    @field_validator("path")
+    @classmethod
     def validate_model_path(cls, v):
         if not v.endswith(".xml"):
             raise ValueError("Model path must be an XML file")
@@ -89,11 +90,11 @@ class RunMatrix(BaseModel):
 class RunConfig(BaseModel):
     """Run configuration."""
 
-    repeats: int = Field(3, description="Number of repeats per configuration")
-    matrix: RunMatrix = Field(default_factory=RunMatrix)
-    cooldown_sec: int = Field(0, description="Cooldown between runs in seconds")
+    repeats: int = Field(default=3, description="Number of repeats per configuration")
+    matrix: RunMatrix = Field(default_factory=lambda: RunMatrix())
+    cooldown_sec: int = Field(default=0, description="Cooldown between runs in seconds")
     timeout_sec: Optional[int] = Field(None, description="Timeout per run in seconds")
-    warmup: bool = Field(False, description="Perform warmup run")
+    warmup: bool = Field(default=False, description="Perform warmup run")
 
 
 class SinkItem(BaseModel):
@@ -108,8 +109,8 @@ class ReportConfig(BaseModel):
 
     sinks: List[SinkItem] = Field(..., description="Output sinks")
     tags: Dict[str, Any] = Field(default_factory=dict, description="Additional tags")
-    aggregate: bool = Field(True, description="Aggregate results")
-    include_raw: bool = Field(False, description="Include raw output")
+    aggregate: bool = Field(default=True, description="Aggregate results")
+    include_raw: bool = Field(default=False, description="Include raw output")
 
 
 class ProjectConfig(BaseModel):
@@ -125,10 +126,10 @@ class Experiment(BaseModel):
 
     project: ProjectConfig
     build: BuildConfig
-    package: PackageConfig = Field(default_factory=PackageConfig)
+    package: PackageConfig = Field(default_factory=lambda: PackageConfig())
     device: DeviceConfig
     models: List[ModelItem]
-    run: RunConfig = Field(default_factory=RunConfig)
+    run: RunConfig = Field(default_factory=lambda: RunConfig())
     report: ReportConfig
 
     def expand_matrix_for_model(self, model: ModelItem) -> List[Dict[str, Any]]:

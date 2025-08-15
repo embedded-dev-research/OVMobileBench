@@ -59,8 +59,8 @@ class AndroidDevice(Device):
 
     def exists(self, remote_path: str) -> bool:
         """Check if path exists on device."""
-        rc, _, _ = self.shell(f"test -e {shlex.quote(remote_path)} && echo 1 || echo 0")
-        return rc == 0 and "1" in _
+        rc, out, _ = self.shell(f"test -e {shlex.quote(remote_path)} && echo 1 || echo 0")
+        return rc == 0 and "1" in out
 
     def mkdir(self, remote_path: str) -> None:
         """Create directory on device."""

@@ -2,7 +2,7 @@
 
 import time
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Callable
 
 from ovbench.devices.base import Device
 from ovbench.config.schema import RunConfig
@@ -55,7 +55,7 @@ class BenchmarkRunner:
     def run_matrix(
         self,
         matrix_specs: List[Dict[str, Any]],
-        progress_callback: Optional[callable] = None,
+        progress_callback: Optional[Callable] = None,
     ) -> List[Dict[str, Any]]:
         """Run complete matrix of configurations."""
         results = []
