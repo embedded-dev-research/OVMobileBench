@@ -160,12 +160,12 @@ def list_ssh_devices():
 
     console = Console()
     devices = list_ssh()
-    
+
     if not devices:
         console.print("[yellow]No SSH devices configured[/yellow]")
         console.print("\nTo configure SSH devices, add them to your experiment YAML")
         return
-    
+
     console.print("[bold green]Available SSH devices:[/bold green]")
     for device in devices:
         status_color = "green" if device.get("status") == "available" else "yellow"

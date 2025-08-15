@@ -197,9 +197,11 @@ class Pipeline:
         """Get device instance."""
         if self.config.device.kind == "android":
             from .devices.android import AndroidDevice
+
             return AndroidDevice(serial, self.config.device.push_dir)
         elif self.config.device.type == "linux_ssh":
             from .devices.linux_ssh import LinuxSSHDevice
+
             # Parse SSH config from device section
             device_config = self.config.device.model_dump()
             return LinuxSSHDevice(
@@ -208,10 +210,12 @@ class Pipeline:
                 password=device_config.get("password"),
                 key_filename=device_config.get("key_filename"),
                 port=device_config.get("port", 22),
-                push_dir=device_config.get("push_dir", "/tmp/ovmobilebench")
+                push_dir=device_config.get("push_dir", "/tmp/ovmobilebench"),
             )
         else:
-            raise OVMobileBenchError(f"Unsupported device kind/type: {self.config.device.kind}/{getattr(self.config.device, 'type', 'unknown')}")
+            raise OVMobileBenchError(
+                f"Unsupported device kind/type: {self.config.device.kind}/{getattr(self.config.device, 'type', 'unknown')}"
+            )
 
     def _prepare_device(self, device: AndroidDevice) -> None:
         """Prepare device for benchmarking."""

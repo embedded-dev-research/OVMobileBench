@@ -45,10 +45,10 @@ class TestDeviceConfig:
         assert device.serials == ["12345678"]
 
     def test_android_device_no_serial(self):
-        """Test Android device without serial."""
-        with pytest.raises(ValidationError) as exc_info:
-            DeviceConfig(kind="android", serials=[])  # Empty serials for Android
-        assert "Android device requires at least one serial" in str(exc_info.value)
+        """Test Android device without serial - should be allowed for auto-detect."""
+        device = DeviceConfig(kind="android", serials=[])
+        assert device.kind == "android"
+        assert device.serials == []  # Empty serials allowed for auto-detect
 
     def test_linux_ssh_device(self):
         """Test Linux SSH device configuration."""

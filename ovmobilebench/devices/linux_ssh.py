@@ -24,7 +24,7 @@ class LinuxSSHDevice(Device):
         push_dir: str = "/tmp/ovmobilebench",
     ):
         """Initialize SSH device.
-        
+
         Args:
             host: Hostname or IP address
             username: SSH username
@@ -50,14 +50,14 @@ class LinuxSSHDevice(Device):
         try:
             self.client = paramiko.SSHClient()
             self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            
+
             # Prepare connection kwargs
             connect_kwargs = {
                 "hostname": self.host,
                 "port": self.port,
                 "username": self.username,
             }
-            
+
             if self.key_filename:
                 # Expand ~ in key path
                 key_path = os.path.expanduser(self.key_filename)
@@ -73,7 +73,7 @@ class LinuxSSHDevice(Device):
                 # Try to use SSH agent or default keys
                 connect_kwargs["look_for_keys"] = True
                 connect_kwargs["allow_agent"] = True
-            
+
             self.client.connect(**connect_kwargs)
             self.sftp = self.client.open_sftp()
             logger.info(f"Connected to {self.serial}")
@@ -84,16 +84,16 @@ class LinuxSSHDevice(Device):
         """Push file to device via SFTP."""
         if not self.sftp:
             raise DeviceError("SFTP connection not established")
-        
+
         try:
             # Create remote directory if needed
             remote_dir = str(Path(remote).parent)
             self._mkdir_p(remote_dir)
-            
+
             # Upload file
             self.sftp.put(str(local), remote)
             logger.debug(f"Pushed {local} to {remote}")
-            
+
             # Make executable if it's a binary
             if local.suffix in ["", ".sh"]:
                 self.shell(f"chmod +x {remote}")
@@ -104,34 +104,34 @@ class LinuxSSHDevice(Device):
         """Pull file from device via SFTP."""
         if not self.sftp:
             raise DeviceError("SFTP connection not established")
-        
+
         try:
             # Create local directory if needed
             local.parent.mkdir(parents=True, exist_ok=True)
-            
+
             # Download file
             self.sftp.get(remote, str(local))
             logger.debug(f"Pulled {remote} to {local}")
         except Exception as e:
             raise DeviceError(f"Failed to pull {remote}: {e}")
 
-    def shell(self, cmd: str, timeout: int = 120) -> tuple[int, str, str]:
+    def shell(self, cmd: str, timeout: Optional[int] = 120) -> tuple[int, str, str]:
         """Execute command on device via SSH."""
         if not self.client:
             raise DeviceError("SSH connection not established")
-        
+
         try:
             # Execute command
             stdin, stdout, stderr = self.client.exec_command(cmd, timeout=timeout)
-            
+
             # Read output
             stdout_text = stdout.read().decode("utf-8", errors="replace")
             stderr_text = stderr.read().decode("utf-8", errors="replace")
             returncode = stdout.channel.recv_exit_status()
-            
+
             logger.debug(f"Command: {cmd}")
             logger.debug(f"Return code: {returncode}")
-            
+
             return returncode, stdout_text, stderr_text
         except Exception as e:
             raise DeviceError(f"Failed to execute command: {e}")
@@ -156,7 +156,7 @@ class LinuxSSHDevice(Device):
         """Create directory recursively (like mkdir -p)."""
         if not self.sftp:
             raise DeviceError("SFTP connection not established")
-        
+
         try:
             # Check if already exists
             self.sftp.stat(path)
@@ -166,7 +166,7 @@ class LinuxSSHDevice(Device):
             parent = str(Path(path).parent)
             if parent != "/" and parent != ".":
                 self._mkdir_p(parent)
-            
+
             # Create this directory
             try:
                 self.sftp.mkdir(path)
@@ -181,7 +181,7 @@ class LinuxSSHDevice(Device):
             cmd = f"rm -rf {path}"
         else:
             cmd = f"rm -f {path}"
-        
+
         returncode, _, stderr = self.shell(cmd)
         if returncode != 0 and stderr:
             logger.warning(f"Failed to remove {path}: {stderr}")
@@ -194,43 +194,45 @@ class LinuxSSHDevice(Device):
             "port": self.port,
             "username": self.username,
         }
-        
+
         # Get system info
         try:
             # OS info
             ret, stdout, _ = self.shell("uname -a")
             if ret == 0:
                 info["kernel"] = stdout.strip()
-            
+
             # CPU info
             ret, stdout, _ = self.shell("nproc")
             if ret == 0:
                 info["cpu_cores"] = int(stdout.strip())
-            
+
             # Memory info
             ret, stdout, _ = self.shell("free -h | grep Mem | awk '{print $2}'")
             if ret == 0:
                 info["memory"] = stdout.strip()
-            
+
             # Architecture
             ret, stdout, _ = self.shell("uname -m")
             if ret == 0:
                 info["arch"] = stdout.strip()
-            
+
             # Hostname
             ret, stdout, _ = self.shell("hostname")
             if ret == 0:
                 info["hostname"] = stdout.strip()
         except Exception as e:
             logger.warning(f"Failed to get device info: {e}")
-        
+
         return info
 
     def is_available(self) -> bool:
         """Check if device is available."""
         try:
-            if self.client and self.client.get_transport():
-                return self.client.get_transport().is_active()
+            if self.client:
+                transport = self.client.get_transport()
+                if transport:
+                    return bool(transport.is_active())
         except Exception:
             pass
         return False
@@ -238,11 +240,11 @@ class LinuxSSHDevice(Device):
     def get_env(self) -> Dict[str, str]:
         """Get environment variables for benchmark execution."""
         env = super().get_env()
-        
+
         # Add LD_LIBRARY_PATH for shared libraries
         lib_path = f"{self.push_dir}/lib"
         env["LD_LIBRARY_PATH"] = f"{lib_path}:$LD_LIBRARY_PATH"
-        
+
         return env
 
     def __del__(self):
@@ -258,41 +260,46 @@ class LinuxSSHDevice(Device):
 
 def list_ssh_devices(config_file: Optional[str] = None) -> List[Dict[str, Any]]:
     """List configured SSH devices.
-    
+
     Args:
         config_file: Optional path to SSH hosts config file
-        
+
     Returns:
         List of SSH device info dictionaries
     """
     devices = []
-    
+
     # Try to connect to localhost as a test
     try:
         import socket
+
         hostname = socket.gethostname()
         username = os.environ.get("USER", "user")
-        
-        devices.append({
-            "serial": f"{username}@localhost:22",
-            "host": "localhost",
-            "port": 22,
-            "username": username,
-            "status": "available",
-            "type": "linux_ssh"
-        })
-        
-        # Also add actual hostname
-        if hostname != "localhost":
-            devices.append({
-                "serial": f"{username}@{hostname}:22",
-                "host": hostname,
+
+        devices.append(
+            {
+                "serial": f"{username}@localhost:22",
+                "host": "localhost",
                 "port": 22,
                 "username": username,
                 "status": "available",
-                "type": "linux_ssh"
-            })
+                "type": "linux_ssh",
+            }
+        )
+
+        # Also add actual hostname
+        if hostname != "localhost":
+            devices.append(
+                {
+                    "serial": f"{username}@{hostname}:22",
+                    "host": hostname,
+                    "port": 22,
+                    "username": username,
+                    "status": "available",
+                    "type": "linux_ssh",
+                }
+            )
     except Exception as e:
         logger.warning(f"Failed to detect SSH devices: {e}")
-    
+
     return devices
