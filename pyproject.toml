@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "ovbench"
+version = "0.1.0"
+description = "End-to-end benchmarking pipeline for OpenVINO on mobile devices"
+authors = ["Embedded Dev Research Team"]
+readme = "README.md"
+packages = [{ include = "ovbench" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+typer = "^0.12.3"
+pydantic = "^2.8.2"
+pyyaml = "^6.0.2"
+paramiko = "^3.4.0"
+pandas = "^2.2.2"
+rich = "^13.7.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0"
+pytest-cov = "^5.0.0"
+mypy = "^1.10.0"
+ruff = "^0.5.0"
+black = "^24.4.2"
+
+[tool.poetry.scripts]
+ovbench = "ovbench.cli:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
