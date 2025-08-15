@@ -11,7 +11,7 @@ from ovbench.core.fs import ensure_dir, atomic_write
 
 class ReportSink(ABC):
     """Abstract base class for report sinks."""
-    
+
     @abstractmethod
     def write(self, data: List[Dict[str, Any]], path: Path):
         """Write data to sink."""
@@ -20,7 +20,7 @@ class ReportSink(ABC):
 
 class JSONSink(ReportSink):
     """JSON format sink."""
-    
+
     def write(self, data: List[Dict[str, Any]], path: Path):
         """Write data as JSON."""
         ensure_dir(path.parent)
@@ -30,30 +30,30 @@ class JSONSink(ReportSink):
 
 class CSVSink(ReportSink):
     """CSV format sink."""
-    
+
     def write(self, data: List[Dict[str, Any]], path: Path):
         """Write data as CSV."""
         if not data:
             return
-        
+
         ensure_dir(path.parent)
-        
+
         # Flatten nested dictionaries
         flat_data = [self._flatten_dict(row) for row in data]
-        
+
         # Get all field names
         fieldnames = set()
         for row in flat_data:
             fieldnames.update(row.keys())
         fieldnames = sorted(fieldnames)
-        
+
         # Write CSV
-        with open(path, 'w', newline='') as f:
+        with open(path, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(flat_data)
-    
-    def _flatten_dict(self, d: Dict[str, Any], parent_key: str = '') -> Dict[str, Any]:
+
+    def _flatten_dict(self, d: Dict[str, Any], parent_key: str = "") -> Dict[str, Any]:
         """Flatten nested dictionary."""
         items = []
         for k, v in d.items():

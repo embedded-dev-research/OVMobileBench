@@ -10,8 +10,8 @@ def load_yaml(path: Path) -> Dict[str, Any]:
     """Load YAML configuration file."""
     if not path.exists():
         raise FileNotFoundError(f"Configuration file not found: {path}")
-    
-    with open(path, 'r') as f:
+
+    with open(path, "r") as f:
         return yaml.safe_load(f)
 
 
@@ -23,5 +23,5 @@ def load_experiment(config_path: Path) -> Experiment:
 
 def save_experiment(experiment: Experiment, path: Path):
     """Save experiment configuration to YAML."""
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
         yaml.safe_dump(experiment.model_dump(), f, default_flow_style=False, sort_keys=False)

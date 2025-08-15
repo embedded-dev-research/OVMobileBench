@@ -4,7 +4,7 @@ import hashlib
 import tempfile
 import shutil
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union
 
 
 def ensure_dir(path: Union[str, Path]) -> Path:
@@ -14,11 +14,11 @@ def ensure_dir(path: Union[str, Path]) -> Path:
     return path
 
 
-def atomic_write(path: Union[str, Path], content: str, mode: str = 'w'):
+def atomic_write(path: Union[str, Path], content: str, mode: str = "w"):
     """Write file atomically using temporary file and rename."""
     path = Path(path)
     ensure_dir(path.parent)
-    
+
     with tempfile.NamedTemporaryFile(
         mode=mode,
         dir=path.parent,
@@ -29,19 +29,19 @@ def atomic_write(path: Union[str, Path], content: str, mode: str = 'w'):
         tmp.write(content)
         tmp.flush()
         temp_path = Path(tmp.name)
-    
+
     temp_path.replace(path)
 
 
-def get_digest(path: Union[str, Path], algorithm: str = 'sha256') -> str:
+def get_digest(path: Union[str, Path], algorithm: str = "sha256") -> str:
     """Calculate file digest."""
     path = Path(path)
     hasher = hashlib.new(algorithm)
-    
-    with open(path, 'rb') as f:
-        for chunk in iter(lambda: f.read(65536), b''):
+
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
             hasher.update(chunk)
-    
+
     return hasher.hexdigest()
 
 
@@ -49,10 +49,10 @@ def copy_tree(src: Union[str, Path], dst: Union[str, Path], symlinks: bool = Fal
     """Copy directory tree."""
     src = Path(src)
     dst = Path(dst)
-    
+
     if not src.exists():
         raise FileNotFoundError(f"Source not found: {src}")
-    
+
     if src.is_file():
         ensure_dir(dst.parent)
         shutil.copy2(src, dst)
@@ -63,10 +63,10 @@ def copy_tree(src: Union[str, Path], dst: Union[str, Path], symlinks: bool = Fal
 def clean_dir(path: Union[str, Path], keep_root: bool = True):
     """Clean directory contents."""
     path = Path(path)
-    
+
     if not path.exists():
         return
-    
+
     if keep_root:
         for item in path.iterdir():
             if item.is_dir():
@@ -80,12 +80,12 @@ def clean_dir(path: Union[str, Path], keep_root: bool = True):
 def get_size(path: Union[str, Path]) -> int:
     """Get file or directory size in bytes."""
     path = Path(path)
-    
+
     if path.is_file():
         return path.stat().st_size
-    
+
     total = 0
-    for item in path.rglob('*'):
+    for item in path.rglob("*"):
         if item.is_file():
             total += item.stat().st_size
     return total
@@ -93,7 +93,7 @@ def get_size(path: Union[str, Path]) -> int:
 
 def format_size(size_bytes: int) -> str:
     """Format size in human-readable format."""
-    for unit in ['B', 'KB', 'MB', 'GB']:
+    for unit in ["B", "KB", "MB", "GB"]:
         if size_bytes < 1024.0:
             return f"{size_bytes:.2f} {unit}"
         size_bytes /= 1024.0
