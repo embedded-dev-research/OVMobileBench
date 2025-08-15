@@ -17,16 +17,16 @@ Before you begin, ensure you have:
 ### Method 1: Install from Source (Recommended)
 
 ```bash
-git clone https://github.com/embedded-dev-research/openvino_remote_benchmark.git
-cd openvino_remote_benchmark
+git clone https://github.com/embedded-dev-research/OVMobileBench.git
+cd OVMobileBench
 pip install -e .[dev]
 ```
 
 ### Method 2: Using Poetry
 
 ```bash
-git clone https://github.com/embedded-dev-research/openvino_remote_benchmark.git
-cd openvino_remote_benchmark
+git clone https://github.com/embedded-dev-research/OVMobileBench.git
+cd OVMobileBench
 poetry install
 poetry shell
 ```
@@ -208,7 +208,7 @@ run:
 ## Getting Help
 
 - Check the [Troubleshooting Guide](troubleshooting.md)
-- File issues on [GitHub](https://github.com/embedded-dev-research/openvino_remote_benchmark/issues)
+- File issues on [GitHub](https://github.com/embedded-dev-research/OVMobileBench/issues)
 - See [FAQ](user-guide.md#faq) for common questions
 
 ## Tips for Success

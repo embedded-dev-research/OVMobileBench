@@ -72,8 +72,8 @@ The run matrix defines parameter combinations to test:
 
 #### From Source
 ```bash
-git clone https://github.com/embedded-dev-research/openvino_remote_benchmark.git
-cd openvino_remote_benchmark
+git clone https://github.com/embedded-dev-research/OVMobileBench.git
+cd OVMobileBench
 pip install -e .[dev]
 ```
 
@@ -504,7 +504,7 @@ df.to_excel('results.xlsx', index=False)
 
 ## Getting Help
 
-- [GitHub Issues](https://github.com/embedded-dev-research/openvino_remote_benchmark/issues) - Bug reports and feature requests
-- [Documentation](https://github.com/embedded-dev-research/openvino_remote_benchmark/tree/main/docs) - This guide and API reference
-- [Discussions](https://github.com/embedded-dev-research/openvino_remote_benchmark/discussions) - Project discussions
+- [GitHub Issues](https://github.com/embedded-dev-research/OVMobileBench/issues) - Bug reports and feature requests
+- [Documentation](https://github.com/embedded-dev-research/OVMobileBench/tree/main/docs) - This guide and API reference
+- [Discussions](https://github.com/embedded-dev-research/OVMobileBench/discussions) - Project discussions
 - Email: nesterov.alexander@outlook.com

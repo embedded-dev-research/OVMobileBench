@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![CI](https://github.com/embedded-dev-research/openvino_remote_benchmark/actions/workflows/bench.yml/badge.svg)](https://github.com/embedded-dev-research/openvino_remote_benchmark/actions)
+[![CI](https://github.com/embedded-dev-research/OVMobileBench/actions/workflows/bench.yml/badge.svg)](https://github.com/embedded-dev-research/OVMobileBench/actions)
 
 **OVMobileBench** is an end-to-end automation pipeline for benchmarking OpenVINO inference performance on mobile devices. It handles the complete workflow from building OpenVINO runtime, packaging models, deploying to devices, executing benchmarks, and generating comprehensive reports.
 
@@ -10,8 +10,8 @@
 
 ```bash
 # Install from source
-git clone https://github.com/embedded-dev-research/openvino_remote_benchmark.git
-cd openvino_remote_benchmark
+git clone https://github.com/embedded-dev-research/OVMobileBench.git
+cd OVMobileBench
 pip install -e .
 
 # Run complete benchmark pipeline
@@ -89,6 +89,6 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## 💬 Support
 
-- 📝 [GitHub Issues](https://github.com/embedded-dev-research/openvino_remote_benchmark/issues) - Bug reports and feature requests
-- 💡 [Discussions](https://github.com/embedded-dev-research/openvino_remote_benchmark/discussions) - Questions and ideas
+- 📝 [GitHub Issues](https://github.com/embedded-dev-research/OVMobileBench/issues) - Bug reports and feature requests
+- 💡 [Discussions](https://github.com/embedded-dev-research/OVMobileBench/discussions) - Questions and ideas
 - 📧 Contact: nesterov.alexander@outlook.com
