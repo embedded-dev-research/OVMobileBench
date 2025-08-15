@@ -2,136 +2,93 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![CI](https://github.com/embedded-dev-research/openvino_remote_benchmark/actions/workflows/bench.yml/badge.svg)](https://github.com/embedded-dev-research/openvino_remote_benchmark/actions)
 
-End-to-end benchmarking pipeline for OpenVINO on mobile devices (Android, Linux ARM). Automates building, packaging, deployment, execution, and reporting of benchmark_app performance metrics.
+**OVBench** is an end-to-end automation pipeline for benchmarking OpenVINO inference performance on mobile devices. It handles the complete workflow from building OpenVINO runtime, packaging models, deploying to devices, executing benchmarks, and generating comprehensive reports.
 
-## Features
-
-- 🔨 **Automated Build**: Build OpenVINO runtime and benchmark_app for Android (arm64-v8a)
-- 📦 **Smart Packaging**: Bundle runtime, libraries, and models into deployable packages
-- 🚀 **Easy Deployment**: Deploy to devices via ADB (Android) or SSH (Linux)
-- ⚡ **Matrix Testing**: Run benchmarks with multiple configurations (threads, streams, batch sizes)
-- 📊 **Rich Reports**: Generate CSV/JSON reports with performance metrics
-- 🌡️ **Device Optimization**: Automatic device preparation (disable animations, screen off, temperature monitoring)
-
-## Requirements
-
-- Python 3.11+
-- Android NDK r26d+ (for building)
-- Android SDK Platform Tools (adb)
-- CMake 3.24+
-- Ninja 1.11+
-- OpenVINO source code
-- Android device with USB debugging enabled
-
-## Installation
+## 🚀 Quick Start
 
 ```bash
-# Install with Poetry
-poetry install
-
-# Or with pip
+# Install from source
+git clone https://github.com/embedded-dev-research/openvino_remote_benchmark.git
+cd openvino_remote_benchmark
 pip install -e .
-```
 
-## Quick Start
-
-1. **Configure your experiment** by editing `experiments/android_example.yaml`:
-   - Set path to OpenVINO repository
-   - Set path to Android NDK
-   - Add your device serial (from `adb devices`)
-   - Specify model paths
-
-2. **Run the complete pipeline**:
-```bash
-make all CFG=experiments/android_example.yaml
-```
-
-Or run individual stages:
-```bash
-make build    # Build OpenVINO
-make package  # Create deployment bundle
-make deploy   # Deploy to device
-make run      # Execute benchmarks
-make report   # Generate reports
-```
-
-## CLI Commands
-
-```bash
-# List available devices
-ovbench list-devices
-
-# Run complete pipeline
+# Run complete benchmark pipeline
 ovbench all -c experiments/android_example.yaml
 
-# Run individual stages
-ovbench build -c config.yaml
-ovbench package -c config.yaml
-ovbench deploy -c config.yaml
-ovbench run -c config.yaml
-ovbench report -c config.yaml
+# View results
+cat experiments/results/*.csv
 ```
 
-## Configuration
+## 📚 Documentation
 
-See `experiments/android_example.yaml` for a complete configuration example. Key settings:
+- **[Getting Started Guide](docs/getting-started.md)** - Installation and first benchmark
+- **[User Guide](docs/user-guide.md)** - Complete usage documentation
+- **[Configuration Reference](docs/configuration.md)** - YAML configuration schema
+- **[Device Setup](docs/device-setup.md)** - Android/Linux device preparation
+- **[Build Guide](docs/build-guide.md)** - Building OpenVINO for mobile
+- **[Benchmarking Guide](docs/benchmarking.md)** - Running and interpreting benchmarks
+- **[CI/CD Integration](docs/ci-cd.md)** - GitHub Actions and automation
+- **[API Reference](docs/api-reference.md)** - Python API documentation
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 
-```yaml
-build:
-  openvino_repo: /path/to/openvino
-  toolchain:
-    android_ndk: /path/to/android-ndk-r26d
+## ✨ Key Features
 
-device:
-  serials: ["YOUR_DEVICE_SERIAL"]
+- 🔨 **Automated Build** - Cross-compile OpenVINO for Android/Linux ARM
+- 📦 **Smart Packaging** - Bundle runtime, libraries, and models
+- 🚀 **Multi-Device** - Deploy via ADB (Android) or SSH (Linux)
+- ⚡ **Matrix Testing** - Test multiple configurations automatically
+- 📊 **Rich Reports** - JSON/CSV output with detailed metrics
+- 🌡️ **Device Control** - Temperature monitoring, performance tuning
+- 🔄 **CI/CD Ready** - GitHub Actions integration included
+- 📈 **Reproducible** - Full provenance tracking of builds and runs
 
-models:
-  - name: resnet50
-    path: models/resnet50_fp16.xml
+## 🔧 Supported Platforms
 
-run:
-  matrix:
-    threads: [2, 4]
-    nstreams: ["1", "2"]
-```
+| Platform | Architecture | Transport | Status |
+|----------|-------------|-----------|--------|
+| Android | ARM64 (arm64-v8a) | ADB | ✅ Stable |
+| Linux | ARM64/ARM32 | SSH | ✅ Stable |
+| iOS | ARM64 | USB | 🚧 Planned |
 
-## Project Structure
+## 📋 Requirements
 
-```
-ovbench/
-├── cli.py           # CLI interface
-├── pipeline.py      # Main orchestration
-├── config/          # Configuration schemas
-├── devices/         # Device abstractions (Android, Linux)
-├── builders/        # OpenVINO build system
-├── packaging/       # Bundle creation
-├── runners/         # Benchmark execution
-├── parsers/         # Output parsing
-└── report/          # Report generation
-```
+- **Python**: 3.11+
+- **For Android targets**:
+  - Android NDK r26d+
+  - Android SDK Platform Tools (adb)
+  - CMake 3.24+
+  - Ninja 1.11+
+- **For Linux ARM targets**:
+  - SSH access to device
+  - Cross-compilation toolchain
 
-## Development
+## 🎯 Use Cases
 
-```bash
-# Run linters
-make lint
+- **Performance Testing** - Measure inference speed across devices
+- **Regression Detection** - Track performance changes over time
+- **Hardware Evaluation** - Compare different SoCs and configurations
+- **Model Optimization** - Find optimal runtime parameters
+- **CI/CD Integration** - Automated testing in development pipelines
 
-# Run tests
-make test
+## 📖 Learn More
 
-# Clean artifacts
-make clean
-```
+- [Architecture Overview](docs/architecture.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
 
-## License
+## 📄 License
 
-Apache License 2.0. See [LICENSE](LICENSE) file.
+Apache License 2.0 - See [LICENSE](LICENSE) for details.
 
-## Contributing
+## 🤝 Contributing
 
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-## Support
+## 💬 Support
 
-For issues and questions, please use GitHub Issues.
+- 📝 [GitHub Issues](https://github.com/embedded-dev-research/openvino_remote_benchmark/issues) - Bug reports and feature requests
+- 💡 [Discussions](https://github.com/embedded-dev-research/openvino_remote_benchmark/discussions) - Questions and ideas
+- 📧 Contact: nesterov.alexander@outlook.com

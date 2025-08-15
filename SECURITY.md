@@ -12,7 +12,7 @@
 We take security seriously. If you discover a security vulnerability, please follow these steps:
 
 1. **DO NOT** create a public GitHub issue
-2. Email security report to: security@ovbench.example.com (replace with actual email)
+2. Email security report to: nesterov.alexander@outlook.com
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
