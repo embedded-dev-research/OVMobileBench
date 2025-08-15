@@ -1,5 +1,8 @@
 """Command-line interface for OVBench."""
 
+# Apply typer compatibility patch
+from ovbench import typer_patch  # noqa: F401
+
 import typer
 from pathlib import Path
 from typing import Optional
@@ -13,6 +16,8 @@ app = typer.Typer(
     name="ovbench",
     help="End-to-end benchmarking pipeline for OpenVINO on mobile devices",
     add_completion=False,
+    pretty_exceptions_enable=False,  # Disable pretty exceptions
+    rich_markup_mode=None,  # Disable Rich formatting
 )
 console = Console()
 
@@ -104,7 +109,7 @@ def all(
     ) as progress:
         cfg = load_experiment(config)
         pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
-        
+
         stages = [
             ("Building OpenVINO runtime...", pipeline.build),
             ("Packaging bundle...", pipeline.package),
@@ -112,7 +117,7 @@ def all(
             ("Running benchmarks...", lambda: pipeline.run(timeout, cooldown)),
             ("Generating reports...", pipeline.report),
         ]
-        
+
         for description, stage_func in stages:
             task = progress.add_task(description, total=None)
             try:
@@ -121,7 +126,7 @@ def all(
             except Exception as e:
                 console.print(f"[bold red]✗ {description} failed: {e}[/bold red]")
                 raise
-    
+
     console.print("[bold green]✓ Pipeline completed successfully[/bold green]")
 
 
@@ -129,12 +134,12 @@ def all(
 def list_devices():
     """List available ADB devices."""
     from ovbench.devices.android import list_android_devices
-    
+
     devices = list_android_devices()
     if not devices:
         console.print("[yellow]No devices found[/yellow]")
         return
-    
+
     console.print("[bold]Available devices:[/bold]")
     for serial, status in devices:
         console.print(f"  • {serial} [{status}]")

@@ -42,7 +42,7 @@ jobs:
         run: poetry run black --check ovbench tests
       
       - name: Run Ruff
-        run: poetry run ruff ovbench tests
+        run: poetry run ruff check ovbench tests
       
       - name: Run MyPy
         run: poetry run mypy ovbench
@@ -76,7 +76,7 @@ jobs:
         run: poetry build
       
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
@@ -145,7 +145,7 @@ jobs:
       
       - name: Upload results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: benchmark-results
           path: experiments/results/

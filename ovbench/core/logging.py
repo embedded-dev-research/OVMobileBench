@@ -3,13 +3,13 @@
 import logging
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
 class JSONFormatter(logging.Formatter):
     """JSON log formatter."""
-    
+
     def format(self, record):
         log_obj = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -19,13 +19,13 @@ class JSONFormatter(logging.Formatter):
             "module": record.module,
             "line": record.lineno,
         }
-        
+
         if record.exc_info:
             log_obj["exception"] = self.formatException(record.exc_info)
-        
-        if hasattr(record, 'extra'):
+
+        if hasattr(record, "extra"):
             log_obj.update(record.extra)
-        
+
         return json.dumps(log_obj)
 
 
@@ -36,9 +36,9 @@ def setup_logging(
 ):
     """Configure logging."""
     log_level = getattr(logging, level.upper(), logging.INFO)
-    
-    handlers = []
-    
+
+    handlers: List[logging.Handler] = []
+
     # Console handler
     console_handler = logging.StreamHandler()
     if json_format:
@@ -51,13 +51,13 @@ def setup_logging(
             )
         )
     handlers.append(console_handler)
-    
+
     # File handler
     if log_file:
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(JSONFormatter())
         handlers.append(file_handler)
-    
+
     logging.basicConfig(
         level=log_level,
         handlers=handlers,

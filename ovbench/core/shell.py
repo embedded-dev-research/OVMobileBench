@@ -11,13 +11,13 @@ from pathlib import Path
 @dataclass
 class CommandResult:
     """Result of command execution."""
-    
+
     returncode: int
     stdout: str
     stderr: str
     duration_sec: float
     cmd: str
-    
+
     @property
     def success(self) -> bool:
         return self.returncode == 0
@@ -33,7 +33,7 @@ def run(
     verbose: bool = False,
 ) -> CommandResult:
     """Execute shell command with timeout and error handling.
-    
+
     Args:
         cmd: Command to execute (string or list)
         timeout: Timeout in seconds
@@ -42,7 +42,7 @@ def run(
         check: Raise exception on non-zero return code
         capture: Capture stdout/stderr
         verbose: Print command before execution
-    
+
     Returns:
         CommandResult with execution details
     """
@@ -51,13 +51,13 @@ def run(
         cmd_str = cmd
     else:
         args = list(cmd)
-        cmd_str = ' '.join(shlex.quote(arg) for arg in args)
-    
+        cmd_str = " ".join(shlex.quote(arg) for arg in args)
+
     if verbose:
         print(f"Executing: {cmd_str}")
-    
+
     start = time.time()
-    
+
     try:
         proc = subprocess.Popen(
             args,
@@ -67,7 +67,7 @@ def run(
             env=env,
             cwd=cwd,
         )
-        
+
         try:
             stdout, stderr = proc.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
@@ -83,7 +83,7 @@ def run(
             if check:
                 raise TimeoutError(f"Command timed out after {timeout}s: {cmd_str}")
             return result
-        
+
     except Exception as e:
         result = CommandResult(
             returncode=-1,
@@ -95,7 +95,7 @@ def run(
         if check:
             raise
         return result
-    
+
     result = CommandResult(
         returncode=proc.returncode,
         stdout=stdout or "",
@@ -103,7 +103,7 @@ def run(
         duration_sec=time.time() - start,
         cmd=cmd_str,
     )
-    
+
     if check and proc.returncode != 0:
         raise subprocess.CalledProcessError(
             proc.returncode,
@@ -111,5 +111,5 @@ def run(
             output=stdout,
             stderr=stderr,
         )
-    
+
     return result
