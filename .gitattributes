@@ -1,0 +1,36 @@
+# Git attributes for OVBench
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Force LF for specific files
+*.py text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.sh text eol=lf
+Makefile text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.bin binary
+*.xml binary
+*.onnx binary
+*.pb binary
+*.tflite binary
+*.tar binary
+*.tar.gz binary
+*.zip binary
+
+# Exclude from archives
+.gitignore export-ignore
+.gitattributes export-ignore
+.pre-commit-config.yaml export-ignore
+tests/ export-ignore
+docs/ export-ignore
+*.md export-ignore

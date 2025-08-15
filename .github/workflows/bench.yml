@@ -1,0 +1,152 @@
+name: OVBench CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      device_serial:
+        description: 'Android device serial'
+        required: false
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Install dependencies
+        run: poetry install
+      
+      - name: Run Black
+        run: poetry run black --check ovbench tests
+      
+      - name: Run Ruff
+        run: poetry run ruff ovbench tests
+      
+      - name: Run MyPy
+        run: poetry run mypy ovbench
+      
+      - name: Run tests
+        run: poetry run pytest tests/ -v --cov=ovbench --cov-report=xml
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  build-package:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Build package
+        run: poetry build
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  dry-run:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Install dependencies
+        run: poetry install
+      
+      - name: Validate example config
+        run: |
+          poetry run python -c "from ovbench.config.loader import load_experiment; load_experiment('experiments/android_example.yaml')"
+      
+      - name: CLI help test
+        run: |
+          poetry run ovbench --help
+          poetry run ovbench build --help
+          poetry run ovbench run --help
+
+  # Optional: Run on self-hosted runner with real device
+  device-test:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[device-test]')
+    needs: build-package
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Install dependencies
+        run: poetry install
+      
+      - name: Check ADB devices
+        run: adb devices
+      
+      - name: Run minimal benchmark
+        env:
+          DEVICE_SERIAL: ${{ github.event.inputs.device_serial || 'emulator-5554' }}
+        run: |
+          poetry run ovbench list-devices
+          # Uncomment when ready:
+          # poetry run ovbench all -c experiments/android_example.yaml --dry-run
+      
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: experiments/results/
+          retention-days: 30

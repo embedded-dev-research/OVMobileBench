@@ -1,0 +1,43 @@
+# CODEOWNERS file for OVBench
+# These owners will be the default owners for everything in the repo.
+
+# Global owners
+*                           @ovbench/maintainers
+
+# Core modules
+/ovbench/core/              @ovbench/core-team
+/ovbench/config/            @ovbench/core-team
+
+# Device implementations
+/ovbench/devices/           @ovbench/device-team
+/ovbench/devices/android.py @ovbench/android-team
+
+# Build and packaging
+/ovbench/builders/          @ovbench/build-team
+/ovbench/packaging/         @ovbench/build-team
+
+# Benchmarking and reporting
+/ovbench/runners/           @ovbench/perf-team
+/ovbench/parsers/           @ovbench/perf-team
+/ovbench/report/            @ovbench/perf-team
+
+# CLI and pipeline
+/ovbench/cli.py             @ovbench/maintainers
+/ovbench/pipeline.py        @ovbench/maintainers
+
+# CI/CD
+/.github/                   @ovbench/devops-team
+/Makefile                   @ovbench/devops-team
+/.pre-commit-config.yaml    @ovbench/devops-team
+
+# Documentation
+/README.md                  @ovbench/docs-team
+/CONTRIBUTING.md            @ovbench/docs-team
+/ARCHITECTURE.md            @ovbench/architects
+/SECURITY.md                @ovbench/security-team
+
+# Tests
+/tests/                     @ovbench/qa-team
+
+# Configuration examples
+/experiments/               @ovbench/maintainers
