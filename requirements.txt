@@ -14,3 +14,4 @@ mypy>=1.10.0
 ruff>=0.5.0
 black>=24.4.2
 types-PyYAML>=6.0.12
+types-paramiko>=3.4.0
