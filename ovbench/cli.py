@@ -1,5 +1,8 @@
 """Command-line interface for OVBench."""
 
+# Apply typer compatibility patch
+from ovbench import typer_patch  # noqa: F401
+
 import typer
 from pathlib import Path
 from typing import Optional
@@ -13,6 +16,8 @@ app = typer.Typer(
     name="ovbench",
     help="End-to-end benchmarking pipeline for OpenVINO on mobile devices",
     add_completion=False,
+    pretty_exceptions_enable=False,  # Disable pretty exceptions
+    rich_markup_mode=None,  # Disable Rich formatting
 )
 console = Console()
 
