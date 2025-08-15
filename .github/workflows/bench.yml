@@ -16,12 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Cache pip
         uses: actions/cache@v3
         with:
@@ -29,27 +29,25 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-      
+
       - name: Install dependencies
-        run: poetry install
-      
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
       - name: Run Black
-        run: poetry run black --check ovmobilebench tests
-      
+        run: black --check ovmobilebench tests
+
       - name: Run Ruff
-        run: poetry run ruff check ovmobilebench tests
-      
+        run: ruff check ovmobilebench tests
+
       - name: Run MyPy
-        run: poetry run mypy ovmobilebench
-      
+        run: mypy ovmobilebench --ignore-missing-imports
+
       - name: Run tests
-        run: poetry run pytest tests/ -v --cov=ovmobilebench --cov-report=xml
-      
+        run: pytest tests/ -v --cov=ovmobilebench --cov-report=xml
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
@@ -61,20 +59,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
-      - name: Install Poetry
+
+      - name: Install build dependencies
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-      
+          pip install --upgrade pip
+          pip install build setuptools wheel
+
       - name: Build package
-        run: poetry build
-      
+        run: python -m build
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -87,62 +85,58 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-      
+
       - name: Install dependencies
-        run: poetry install
-      
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
       - name: Validate example config
         run: |
-          poetry run python -c "from ovmobilebench.config.loader import load_experiment; load_experiment('experiments/android_example.yaml')"
-      
+          python -c "from ovmobilebench.config.loader import load_experiment; load_experiment('experiments/android_example.yaml')"
+
       - name: CLI help test
         run: |
-          poetry run ovmobilebench --help
-          poetry run ovmobilebench build --help
-          poetry run ovmobilebench run --help
+          ovmobilebench --help
+          ovmobilebench build --help
+          ovmobilebench run --help
 
-  # Optional: Run on self-hosted runner with real device
-  device-test:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[device-test]')
+  # Optional: Run on a self-hosted runner with a real device
+  device-test-adb:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[device-test-adb]')
     needs: build-package
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-      
+
       - name: Install dependencies
-        run: poetry install
-      
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
       - name: Check ADB devices
         run: adb devices
-      
+
       - name: Run minimal benchmark
         env:
           DEVICE_SERIAL: ${{ github.event.inputs.device_serial || 'emulator-5554' }}
         run: |
-          poetry run ovmobilebench list-devices
+          ovmobilebench list-devices
           # Uncomment when ready:
-          # poetry run ovmobilebench all -c experiments/android_example.yaml --dry-run
-      
+          # ovmobilebench all -c experiments/android_example.yaml --dry-run
+
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4

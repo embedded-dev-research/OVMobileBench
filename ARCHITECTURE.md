@@ -348,7 +348,7 @@ report:
 - Ninja 1.11+
 
 ### Development
-- poetry: Dependency management
+- pip: Dependency management
 - pytest: Testing framework
 - black: Code formatting
 - ruff: Linting

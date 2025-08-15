@@ -32,7 +32,8 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 3. **Set Up Development Environment**
    ```bash
-   poetry install
+   pip install -r requirements.txt
+   pip install -e .
    pre-commit install
    ```
 
@@ -44,16 +45,16 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 5. **Run Quality Checks**
    ```bash
    # Format code
-   poetry run black ovmobilebench tests
+   black ovmobilebench tests
    
    # Lint
-   poetry run ruff ovmobilebench tests
+   ruff ovmobilebench tests
    
    # Type check
-   poetry run mypy ovmobilebench
+   mypy ovmobilebench --ignore-missing-imports
    
    # Run tests
-   poetry run pytest tests/
+   pytest tests/
    ```
 
 6. **Commit Changes**

@@ -9,7 +9,7 @@ help:
 	@echo "Usage: make [target] CFG=path/to/config.yaml"
 	@echo ""
 	@echo "Targets:"
-	@echo "  install    - Install dependencies using poetry"
+	@echo "  install    - Install dependencies using pip"
 	@echo "  build      - Build OpenVINO runtime"
 	@echo "  package    - Create deployment package"
 	@echo "  deploy     - Deploy to device(s)"
@@ -22,35 +22,36 @@ help:
 	@echo "  devices    - List available devices"
 
 install:
-	poetry install
+	pip install -r requirements.txt
+	pip install -e .
 
 build:
-	poetry run ovmobilebench build -c $(CFG) --verbose
+	ovmobilebench build -c $(CFG) --verbose
 
 package:
-	poetry run ovmobilebench package -c $(CFG) --verbose
+	ovmobilebench package -c $(CFG) --verbose
 
 deploy:
-	poetry run ovmobilebench deploy -c $(CFG) --verbose
+	ovmobilebench deploy -c $(CFG) --verbose
 
 run:
-	poetry run ovmobilebench run -c $(CFG) --verbose
+	ovmobilebench run -c $(CFG) --verbose
 
 report:
-	poetry run ovmobilebench report -c $(CFG) --verbose
+	ovmobilebench report -c $(CFG) --verbose
 
 all:
-	poetry run ovmobilebench all -c $(CFG) --verbose
+	ovmobilebench all -c $(CFG) --verbose
 
 devices:
-	poetry run ovmobilebench list-devices
+	ovmobilebench list-devices
 
 lint:
-	poetry run ruff ovmobilebench
-	poetry run mypy ovmobilebench
+	ruff check ovmobilebench
+	mypy ovmobilebench --ignore-missing-imports
 
 test:
-	poetry run pytest tests/ -v
+	pytest tests/ -v
 
 clean:
 	rm -rf artifacts/

@@ -50,20 +50,20 @@ pip install -e .[dev]
 pip install typer pydantic pyyaml
 ```
 
-### Poetry Installation Issues
+### Package Installation Issues
 
-**Problem**: `Poetry: command not found`
+**Problem**: `ovmobilebench: command not found`
 
 **Solution**:
 ```bash
-# Install Poetry
-curl -sSL https://install.python-poetry.org | python3 -
+# Install package in development mode
+pip install -e .
 
-# Add to PATH
-export PATH="$HOME/.local/bin:$PATH"
+# Or install from requirements
+pip install -r requirements.txt
 
 # Verify installation
-poetry --version
+ovmobilebench --help
 ```
 
 ## Build Errors

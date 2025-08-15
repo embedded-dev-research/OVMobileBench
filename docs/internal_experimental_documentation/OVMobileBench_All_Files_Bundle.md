@@ -164,7 +164,7 @@ cat > 'docs/CHECKLIST_EN.md' << '__OVBENCH_EOF_4__'
 
 ## Python Package: pyproject, Dependencies, Extras
 
-- [ ] Package via `pyproject.toml` (Poetry or PEP 621):
+- [ ] Package via `pyproject.toml` (PEP 621):
   - [ ] `name = "ovmobilebench"`, `version`, `readme`, `scripts`.
   - [ ] Runtime deps: `typer`, `pydantic`, `pyyaml`, `paramiko`, `pandas`, `rich`.
   - [ ] Dev deps: `pytest`, `pytest-cov`, `mypy`, `ruff`, `black`.
@@ -207,7 +207,7 @@ cat > 'docs/CHECKLIST_EN.md' << '__OVBENCH_EOF_4__'
   - [ ] **build-android**: build & package; upload artifact.
   - [ ] **run-on-device** (self-hosted): download artifact, deploy, run, report.
 - [ ] PR gates: lint → type → unit → build → (opt) smoke run on device.
-- [ ] Caching: pip/poetry and CMake/Ninja (actions/cache).
+- [ ] Caching: pip and CMake/Ninja (actions/cache).
 - [ ] Artifact retention: ≥ 7–30 days; name with `run_id` and `commit`.
 - [ ] Publishing results: artifacts, S3/GCS, PR comments with FPS tables.
 - [ ] Parallelism control: `concurrency.group` to avoid race conditions.
@@ -915,8 +915,8 @@ cat > 'CONTRIBUTING.md' << '__OVBENCH_EOF_8__'
 # Contributing
 
 ## Dev Setup
-- Python 3.11+, Poetry or pip
-- `poetry install` or `pip install -e .[dev]`
+- Python 3.11+, pip
+- `pip install -r requirements.txt && pip install -e .[dev]`
 
 ## Tests & Lint
 - `pytest -q`
@@ -970,37 +970,46 @@ repos:
 
 __OVBENCH_EOF_11__
 cat > 'pyproject.toml' << '__OVBENCH_EOF_12__'
-[tool.poetry]
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "ovmobilebench"
 version = "0.1.0"
 description = "End-to-end benchmarking pipeline for OpenVINO on mobile devices"
-authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{ include = "ovmobilebench" }]
+requires-python = ">=3.11"
+authors = [
+    {name = "Embedded Dev Research Team"},
+]
+dependencies = [
+    "typer>=0.9.0",
+    "click>=8.1.0",
+    "pydantic>=2.8.2",
+    "pyyaml>=6.0.2",
+    "paramiko>=3.4.0",
+    "pandas>=2.2.2",
+    "rich>=13.7.1",
+    "adbutils>=2.0.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-typer = "^0.12.3"
-pydantic = "^2.8.2"
-pyyaml = "^6.0.2"
-paramiko = "^3.4.0"
-pandas = "^2.2.2"
-rich = "^13.7.1"
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-cov>=5.0.0",
+    "mypy>=1.10.0",
+    "ruff>=0.5.0",
+    "black>=24.4.2",
+    "types-PyYAML>=6.0.12",
+    "pre-commit>=3.7.1",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.2.0"
-pytest-cov = "^5.0.0"
-mypy = "^1.10.0"
-ruff = "^0.5.0"
-black = "^24.4.2"
-pre-commit = "^3.7.1"
-
-[tool.poetry.scripts]
+[project.scripts]
 ovmobilebench = "ovmobilebench.cli:app"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.setuptools.packages.find]
+include = ["ovmobilebench*"]
 
 __OVBENCH_EOF_12__
 cat > 'Makefile' << '__OVBENCH_EOF_13__'
@@ -1090,14 +1099,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -U pip poetry && poetry install
+      - run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
       - name: Build & Package
         env:
           ANDROID_NDK: ${{ secrets.ANDROID_NDK }}
         run: |
           export PATH="$ANDROID_NDK:$PATH"
-          poetry run ovmobilebench build -c experiments/android_mcpu_fp16.yaml
-          poetry run ovmobilebench package -c experiments/android_mcpu_fp16.yaml
+          ovmobilebench build -c experiments/android_mcpu_fp16.yaml
+          ovmobilebench package -c experiments/android_mcpu_fp16.yaml
       - uses: actions/upload-artifact@v4
         with:
           name: ovbundle-android
@@ -1719,7 +1731,7 @@ ovmobilebench all -c experiments/android_mcpu_fp16.yaml
 
 ## Python Package: pyproject, Dependencies, Extras
 
-- [ ] Package via `pyproject.toml` (Poetry or PEP 621):
+- [ ] Package via `pyproject.toml` (PEP 621):
   - [ ] `name = "ovmobilebench"`, `version`, `readme`, `scripts`.
   - [ ] Runtime deps: `typer`, `pydantic`, `pyyaml`, `paramiko`, `pandas`, `rich`.
   - [ ] Dev deps: `pytest`, `pytest-cov`, `mypy`, `ruff`, `black`.
@@ -1762,7 +1774,7 @@ ovmobilebench all -c experiments/android_mcpu_fp16.yaml
   - [ ] **build-android**: build & package; upload artifact.
   - [ ] **run-on-device** (self-hosted): download artifact, deploy, run, report.
 - [ ] PR gates: lint → type → unit → build → (opt) smoke run on device.
-- [ ] Caching: pip/poetry and CMake/Ninja (actions/cache).
+- [ ] Caching: pip and CMake/Ninja (actions/cache).
 - [ ] Artifact retention: ≥ 7–30 days; name with `run_id` and `commit`.
 - [ ] Publishing results: artifacts, S3/GCS, PR comments with FPS tables.
 - [ ] Parallelism control: `concurrency.group` to avoid race conditions.
@@ -2478,8 +2490,8 @@ We follow the Contributor Covenant. Be respectful, inclusive, and constructive.
 # Contributing
 
 ## Dev Setup
-- Python 3.11+, Poetry or pip
-- `poetry install` or `pip install -e .[dev]`
+- Python 3.11+, pip
+- `pip install -r requirements.txt && pip install -e .[dev]`
 
 ## Tests & Lint
 - `pytest -q`
@@ -2541,37 +2553,46 @@ repos:
 ### `pyproject.toml`
 
 ```toml
-[tool.poetry]
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "ovmobilebench"
 version = "0.1.0"
 description = "End-to-end benchmarking pipeline for OpenVINO on mobile devices"
-authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{ include = "ovmobilebench" }]
+requires-python = ">=3.11"
+authors = [
+    {name = "Embedded Dev Research Team"},
+]
+dependencies = [
+    "typer>=0.9.0",
+    "click>=8.1.0",
+    "pydantic>=2.8.2",
+    "pyyaml>=6.0.2",
+    "paramiko>=3.4.0",
+    "pandas>=2.2.2",
+    "rich>=13.7.1",
+    "adbutils>=2.0.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-typer = "^0.12.3"
-pydantic = "^2.8.2"
-pyyaml = "^6.0.2"
-paramiko = "^3.4.0"
-pandas = "^2.2.2"
-rich = "^13.7.1"
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-cov>=5.0.0",
+    "mypy>=1.10.0",
+    "ruff>=0.5.0",
+    "black>=24.4.2",
+    "types-PyYAML>=6.0.12",
+    "pre-commit>=3.7.1",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.2.0"
-pytest-cov = "^5.0.0"
-mypy = "^1.10.0"
-ruff = "^0.5.0"
-black = "^24.4.2"
-pre-commit = "^3.7.1"
-
-[tool.poetry.scripts]
+[project.scripts]
 ovmobilebench = "ovmobilebench.cli:app"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.setuptools.packages.find]
+include = ["ovmobilebench*"]
 
 ```
 ### `Makefile`
@@ -2669,14 +2690,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -U pip poetry && poetry install
+      - run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
       - name: Build & Package
         env:
           ANDROID_NDK: ${{ secrets.ANDROID_NDK }}
         run: |
           export PATH="$ANDROID_NDK:$PATH"
-          poetry run ovmobilebench build -c experiments/android_mcpu_fp16.yaml
-          poetry run ovmobilebench package -c experiments/android_mcpu_fp16.yaml
+          ovmobilebench build -c experiments/android_mcpu_fp16.yaml
+          ovmobilebench package -c experiments/android_mcpu_fp16.yaml
       - uses: actions/upload-artifact@v4
         with:
           name: ovbundle-android

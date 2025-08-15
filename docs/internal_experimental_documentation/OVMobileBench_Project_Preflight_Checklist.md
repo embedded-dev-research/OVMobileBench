@@ -155,7 +155,7 @@
   - [ ] **build-android**: build & package; upload artifact.
   - [ ] **run-on-device** (self-hosted): download artifact, deploy, run, report.
 - [ ] PR gates: lint → type → unit → build → (opt) smoke run on device.
-- [ ] Caching: pip/poetry and CMake/Ninja (actions/cache).
+- [ ] Caching: pip and CMake/Ninja (actions/cache).
 - [ ] Artifact retention: ≥ 7–30 days; name with `run_id` and `commit`.
 - [ ] Publishing results: artifacts, S3/GCS, PR comments with FPS tables.
 - [ ] Parallelism control: `concurrency.group` to avoid race conditions.

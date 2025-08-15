@@ -434,12 +434,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - run: pip install -U pip poetry && poetry install
+      - run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
       - env: { ANDROID_NDK: ${{ secrets.ANDROID_NDK }} }
         run: |
           export PATH="$ANDROID_NDK:$PATH"
-          poetry run ovmobilebench build -c experiments/android_mcpu_fp16.yaml
-          poetry run ovmobilebench package -c experiments/android_mcpu_fp16.yaml
+          ovmobilebench build -c experiments/android_mcpu_fp16.yaml
+          ovmobilebench package -c experiments/android_mcpu_fp16.yaml
       - uses: actions/upload-artifact@v4
         with: { name: ovbundle-android, path: artifacts/**/*, if-no-files-found: error }
 

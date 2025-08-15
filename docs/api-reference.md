@@ -234,13 +234,13 @@ class Device(ABC):
 
 ### `ovmobilebench.devices.android`
 
-Android device implementation using ADB.
+Android device implementation using Python adbutils library for direct device control.
 
 #### `AndroidDevice`
 
 ```python
 class AndroidDevice(Device):
-    """Android device via ADB"""
+    """Android device via adbutils Python library"""
     
     def __init__(self, serial: str, use_root: bool = False):
         """
