@@ -3,7 +3,7 @@
 import logging
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -37,7 +37,7 @@ def setup_logging(
     """Configure logging."""
     log_level = getattr(logging, level.upper(), logging.INFO)
 
-    handlers = []
+    handlers: List[logging.Handler] = []
 
     # Console handler
     console_handler = logging.StreamHandler()

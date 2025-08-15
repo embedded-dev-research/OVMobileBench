@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 
 from ovbench.config.schema import Experiment
 from ovbench.devices.android import AndroidDevice
@@ -30,7 +30,7 @@ class Pipeline:
         self.verbose = verbose
         self.dry_run = dry_run
         self.artifacts_dir = ensure_dir(Path("artifacts") / config.project.run_id)
-        self.results = []
+        self.results: List[Dict[str, Any]] = []
 
     def build(self) -> Optional[Path]:
         """Build OpenVINO runtime."""
@@ -180,6 +180,7 @@ class Pipeline:
         for sink_config in self.config.report.sinks:
             path = Path(sink_config.path)
 
+            sink: Union[JSONSink, CSVSink]
             if sink_config.type == "json":
                 sink = JSONSink()
             elif sink_config.type == "csv":

@@ -6,7 +6,7 @@ from typing import Dict, Any
 
 def parse_metrics(output: str) -> Dict[str, Any]:
     """Parse benchmark_app output to extract metrics."""
-    metrics = {}
+    metrics: Dict[str, Any] = {}
 
     # Parse throughput
     throughput_match = re.search(r"Throughput:\s*([\d.]+)\s*FPS", output)

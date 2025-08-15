@@ -98,7 +98,8 @@ class ArtifactManager:
             return {}
 
         with open(self.metadata_file, "r") as f:
-            return json.load(f)
+            data: Dict[str, Any] = json.load(f)
+            return data
 
     def register_artifact(
         self, artifact_type: str, path: Path, metadata: Optional[Dict[str, Any]] = None
@@ -117,7 +118,7 @@ class ArtifactManager:
         artifact_id = self._calculate_checksum(path)
 
         # Prepare artifact record
-        record = {
+        record: Dict[str, Any] = {
             "type": artifact_type,
             "path": str(path.relative_to(self.base_dir)),
             "size": path.stat().st_size if path.is_file() else None,
@@ -145,7 +146,8 @@ class ArtifactManager:
             Artifact record or None
         """
         artifacts = self.load_metadata().get("artifacts", {})
-        return artifacts.get(artifact_id)
+        result: Optional[Dict[str, Any]] = artifacts.get(artifact_id)
+        return result
 
     def list_artifacts(
         self, artifact_type: Optional[str] = None, since: Optional[datetime] = None

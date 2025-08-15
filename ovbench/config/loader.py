@@ -12,7 +12,8 @@ def load_yaml(path: Path) -> Dict[str, Any]:
         raise FileNotFoundError(f"Configuration file not found: {path}")
 
     with open(path, "r") as f:
-        return yaml.safe_load(f)
+        data: Dict[str, Any] = yaml.safe_load(f)
+        return data
 
 
 def load_experiment(config_path: Path) -> Experiment:

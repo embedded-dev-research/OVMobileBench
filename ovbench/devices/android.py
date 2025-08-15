@@ -77,7 +77,7 @@ class AndroidDevice(Device):
 
     def info(self) -> Dict[str, Any]:
         """Get device information."""
-        info = {
+        info: Dict[str, Any] = {
             "serial": self.serial,
             "os": "Android",
         }

@@ -30,7 +30,11 @@ class BuildConfig(BaseModel):
     openvino_repo: str = Field(..., description="Path to OpenVINO repository")
     openvino_commit: str = Field("HEAD", description="Git commit/tag to build")
     build_type: Literal["Release", "RelWithDebInfo", "Debug"] = "RelWithDebInfo"
-    toolchain: Toolchain = Field(default_factory=lambda: Toolchain())
+    toolchain: Toolchain = Field(
+        default_factory=lambda: Toolchain(
+            android_ndk=None, abi="arm64-v8a", api_level=24, cmake="cmake", ninja="ninja"
+        )
+    )
     options: BuildOptions = Field(default_factory=lambda: BuildOptions())
 
 
@@ -91,7 +95,17 @@ class RunConfig(BaseModel):
     """Run configuration."""
 
     repeats: int = Field(default=3, description="Number of repeats per configuration")
-    matrix: RunMatrix = Field(default_factory=lambda: RunMatrix())
+    matrix: RunMatrix = Field(
+        default_factory=lambda: RunMatrix(
+            niter=[200],
+            api=["sync"],
+            nireq=[1],
+            nstreams=["1"],
+            device=["CPU"],
+            infer_precision=["FP16"],
+            threads=[4],
+        )
+    )
     cooldown_sec: int = Field(default=0, description="Cooldown between runs in seconds")
     timeout_sec: Optional[int] = Field(None, description="Timeout per run in seconds")
     warmup: bool = Field(default=False, description="Perform warmup run")
@@ -129,7 +143,23 @@ class Experiment(BaseModel):
     package: PackageConfig = Field(default_factory=lambda: PackageConfig())
     device: DeviceConfig
     models: List[ModelItem]
-    run: RunConfig = Field(default_factory=lambda: RunConfig())
+    run: RunConfig = Field(
+        default_factory=lambda: RunConfig(
+            repeats=3,
+            matrix=RunMatrix(
+                niter=[200],
+                api=["sync"],
+                nireq=[1],
+                nstreams=["1"],
+                device=["CPU"],
+                infer_precision=["FP16"],
+                threads=[4],
+            ),
+            cooldown_sec=0,
+            timeout_sec=None,
+            warmup=False,
+        )
+    )
     report: ReportConfig
 
     def expand_matrix_for_model(self, model: ModelItem) -> List[Dict[str, Any]]:
@@ -164,4 +194,4 @@ class Experiment(BaseModel):
         total = 0
         for model in self.models:
             total += len(self.expand_matrix_for_model(model)) * self.run.repeats
-        return total * len(self.device.serials or [1])
+        return total * len(self.device.serials or ["default"])
