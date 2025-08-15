@@ -13,7 +13,7 @@ from ovmobilebench.config.loader import load_experiment
 from ovmobilebench.pipeline import Pipeline
 
 app = typer.Typer(
-    name="ovbench",
+    name="ovmobilebench",
     help="End-to-end benchmarking pipeline for OpenVINO on mobile devices",
     add_completion=False,
     pretty_exceptions_enable=False,  # Disable pretty exceptions
