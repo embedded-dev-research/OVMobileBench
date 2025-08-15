@@ -110,7 +110,9 @@ jobs:
   # Optional: Run on a self-hosted runner with a real device
   device-test-adb:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[device-test-adb]')
-    needs: build-package
+    needs:
+      - build-package
+      - dry-run
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -147,7 +149,9 @@ jobs:
 
   # Test SSH connection to localhost
   device-test-ssh:
-    needs: build-package
+    needs:
+      - build-package
+      - dry-run
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -165,28 +169,9 @@ jobs:
 
       - name: Set up SSH server
         run: |
-          # Install SSH server if not present
-          sudo apt-get update
-          sudo apt-get install -y openssh-server
-          
-          # Configure SSH for passwordless localhost access
-          ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa || true
-          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-          chmod 600 ~/.ssh/authorized_keys
-          
-          # Configure SSH client
-          cat > ~/.ssh/config << EOF
-          Host localhost
-            StrictHostKeyChecking no
-            UserKnownHostsFile=/dev/null
-          EOF
-          chmod 600 ~/.ssh/config
-          
-          # Start SSH service
-          sudo service ssh start
-          
-          # Test connection
-          ssh -o ConnectTimeout=5 localhost "echo 'SSH connection successful'"
+          # Generate and run SSH setup script
+          python scripts/generate_ssh_config.py --type setup
+          bash scripts/setup_ssh_ci.sh
 
       - name: List SSH devices
         run: |
@@ -194,73 +179,17 @@ jobs:
 
       - name: Test SSH deployment
         run: |
-          # Create test file
-          echo "test content" > /tmp/test_file.txt
-          
-          # Test using Python
-          python << 'EOF'
-          from ovmobilebench.devices.linux_ssh import LinuxSSHDevice
-          import os
-          from pathlib import Path
-          
-          # Connect to localhost
-          device = LinuxSSHDevice(
-              host="localhost",
-              username=os.environ["USER"],
-              key_filename="~/.ssh/id_rsa",
-              push_dir="/tmp/ovmobilebench_test"
-          )
-          
-          # Test operations
-          print(f"Device available: {device.is_available()}")
-          print(f"Device info: {device.info()}")
-          
-          # Test push
-          device.push(Path("/tmp/test_file.txt"), "/tmp/ovmobilebench_test/test.txt")
-          
-          # Test shell command
-          ret, out, err = device.shell("cat /tmp/ovmobilebench_test/test.txt")
-          print(f"File content: {out.strip()}")
-          
-          # Test exists
-          print(f"File exists: {device.exists('/tmp/ovmobilebench_test/test.txt')}")
-          
-          # Cleanup
-          device.rm("/tmp/ovmobilebench_test", recursive=True)
-          EOF
+          # Generate and run SSH test script
+          python scripts/generate_ssh_config.py --type test
+          python scripts/test_ssh_device_ci.py
 
       - name: Run benchmark dry-run via SSH
         run: |
-          # Create minimal config for SSH
-          cat > experiments/ssh_localhost.yaml << 'EOF'
-          project:
-            name: "ssh-test"
-            run_id: "ci-test"
-          
-          device:
-            type: "linux_ssh"
-            host: "localhost"
-            username: "${USER}"
-            key_filename: "~/.ssh/id_rsa"
-            push_dir: "/tmp/ovmobilebench"
-          
-          models:
-            - name: "dummy"
-              path: "/tmp/dummy_model.xml"
-          
-          run:
-            repeats: 1
-            matrix:
-              niter: [10]
-          
-          report:
-            sinks:
-              - type: "csv"
-                path: "experiments/results/ssh_test.csv"
-          EOF
+          # Generate SSH config using Python script
+          python scripts/generate_ssh_config.py --type config
           
           # Run in dry-run mode
-          ovmobilebench all -c experiments/ssh_localhost.yaml --dry-run || true
+          ovmobilebench all -c experiments/ssh_localhost_ci.yaml --dry-run || true
 
       - name: Upload SSH test results
         if: always()
