@@ -147,17 +147,26 @@ ssh user@device.local "uname -a && lscpu"
 
 ### Linux SSH Configuration
 
+OVMobileBench uses the **paramiko** library for SSH connections, providing secure and reliable communication with Linux devices. Paramiko supports both password and key-based authentication.
+
 ```yaml
 device:
-  kind: "linux_ssh"
+  type: "linux_ssh"  # or kind: "linux_ssh"
   host: "192.168.1.100"  # Or hostname
   port: 22
-  user: "ubuntu"
-  key_path: "~/.ssh/id_rsa"
+  username: "ubuntu"  # SSH username (or 'user' for compatibility)
+  password: "optional"  # Optional if using key authentication
+  key_filename: "~/.ssh/id_rsa"  # Path to SSH private key (or 'key_path')
   push_dir: "/home/ubuntu/ovmobilebench"
   env_vars:
     LD_LIBRARY_PATH: "/home/ubuntu/ovmobilebench/lib:$LD_LIBRARY_PATH"
 ```
+
+**Note:** The SSH implementation uses paramiko for all operations including:
+- Secure SSH connections
+- SFTP file transfers
+- Remote command execution
+- Automatic retry with exponential backoff
 
 ### Common Linux ARM Devices
 

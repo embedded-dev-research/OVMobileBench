@@ -234,7 +234,7 @@ class Device(ABC):
 
 ### `ovmobilebench.devices.android`
 
-Android device implementation using Python adbutils library for direct device control.
+Android device implementation using **adbutils** library for direct Python-based device control.
 
 #### `AndroidDevice`
 
@@ -264,9 +264,45 @@ class AndroidDevice(Device):
         """Take screenshot and save to path"""
 ```
 
+### `ovmobilebench.devices.linux_ssh`
+
+Linux device implementation using **paramiko** library for secure SSH connections and operations.
+
+#### `LinuxSSHDevice`
+
+```python
+class LinuxSSHDevice(Device):
+    """Linux device via SSH using paramiko"""
+    
+    def __init__(
+        self,
+        host: str,
+        username: str,
+        password: Optional[str] = None,
+        key_filename: Optional[str] = None,
+        port: int = 22,
+        push_dir: str = "/tmp/ovmobilebench"
+    ):
+        """
+        Initialize SSH connection to Linux device.
+        
+        Args:
+            host: Hostname or IP address
+            username: SSH username
+            password: SSH password (optional if using key)
+            key_filename: Path to SSH private key
+            port: SSH port (default 22)
+            push_dir: Remote directory for deployment
+        """
+    
+    def get_env(self) -> Dict[str, str]:
+        """Get environment variables for benchmark execution"""
+```
+
 #### Example Usage
 
 ```python
+# Example 1: Android Device
 from ovmobilebench.devices.android import AndroidDevice
 
 # Create device connection
@@ -291,6 +327,29 @@ temp = device.get_temperature()
 print(f"Temperature: {temp}°C")
 
 device.disconnect()
+
+# Example 2: Linux SSH Device
+from ovmobilebench.devices.linux_ssh import LinuxSSHDevice
+
+# Connect via SSH with key authentication
+device = LinuxSSHDevice(
+    host="192.168.1.100",
+    username="ubuntu",
+    key_filename="~/.ssh/id_rsa",
+    push_dir="/home/ubuntu/ovmobilebench"
+)
+
+# Transfer files via SFTP
+device.push(Path("model.xml"), "/home/ubuntu/ovmobilebench/model.xml")
+
+# Execute remote commands
+ret, stdout, stderr = device.shell("uname -a")
+print(f"System: {stdout}")
+
+# Get device info
+info = device.info()
+print(f"Hostname: {info['hostname']}")
+print(f"CPU cores: {info['cpu_cores']}")
 ```
 
 ## Builder API

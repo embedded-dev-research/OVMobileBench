@@ -110,7 +110,9 @@ jobs:
   # Optional: Run on a self-hosted runner with a real device
   device-test-adb:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[device-test-adb]')
-    needs: build-package
+    needs:
+      - build-package
+      - dry-run
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -141,6 +143,58 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-results
+          name: benchmark-results-adb
+          path: experiments/results/
+          retention-days: 30
+
+  # Test SSH connection to localhost
+  device-test-ssh:
+    needs:
+      - build-package
+      - dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Set up SSH server
+        run: |
+          # Generate and run SSH setup script
+          python scripts/generate_ssh_config.py --type setup
+          bash scripts/setup_ssh_ci.sh
+
+      - name: List SSH devices
+        run: |
+          ovmobilebench list-ssh-devices || echo "Command not yet implemented"
+
+      - name: Test SSH deployment
+        run: |
+          # Generate and run SSH test script
+          python scripts/generate_ssh_config.py --type test
+          python scripts/test_ssh_device_ci.py
+
+      - name: Run benchmark dry-run via SSH
+        run: |
+          # Generate SSH config using Python script
+          python scripts/generate_ssh_config.py --type config
+          
+          # Run in dry-run mode
+          ovmobilebench all -c experiments/ssh_localhost_ci.yaml --dry-run || true
+
+      - name: Upload SSH test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-ssh
           path: experiments/results/
           retention-days: 30

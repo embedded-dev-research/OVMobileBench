@@ -205,7 +205,11 @@ class Device(ABC):
 - Optional: thermal and CPU governor inspection
 
 ### Linux (SSH)
-- Paramiko-based `push` via SFTP, `shell` via exec
+- **Paramiko-based** SSH implementation for secure remote operations
+- `push` via SFTP for file transfers
+- `shell` via exec_command for remote command execution
+- Support for both password and key-based authentication
+- Automatic retry with exponential backoff for reliability
 - Env and run directory configurable
 - Useful for SBCs/Jetson when Android is not applicable
 
