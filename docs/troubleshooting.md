@@ -558,8 +558,8 @@ pipeline = Pipeline("config.yaml")
 
 If you're still experiencing issues:
 
-1. **Check existing issues**: [GitHub Issues](https://github.com/embedded-dev-research/openvino_remote_benchmark/issues)
-2. **Search discussions**: [GitHub Discussions](https://github.com/embedded-dev-research/openvino_remote_benchmark/discussions)
+1. **Check existing issues**: [GitHub Issues](https://github.com/embedded-dev-research/OVMobileBench/issues)
+2. **Search discussions**: [GitHub Discussions](https://github.com/embedded-dev-research/OVMobileBench/discussions)
 3. **File a bug report** with:
    - OVMobileBench version: `ovmobilebench --version`
    - Python version: `python --version`

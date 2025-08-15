@@ -769,4 +769,4 @@ except BenchmarkError as e:
 
 - [Troubleshooting](troubleshooting.md) - Common issues
 - [Architecture](architecture.md) - System design
-- [Examples](https://github.com/embedded-dev-research/openvino_remote_benchmark/tree/main/examples) - Code examples
+- [Examples](https://github.com/embedded-dev-research/OVMobileBench/tree/main/examples) - Code examples
