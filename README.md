@@ -3,6 +3,9 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/embedded-dev-research/OVMobileBench/actions/workflows/bench.yml/badge.svg)](https://github.com/embedded-dev-research/OVMobileBench/actions)
+[![codecov](https://codecov.io/gh/embedded-dev-research/OVMobileBench/branch/main/graph/badge.svg)](https://codecov.io/gh/embedded-dev-research/OVMobileBench)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 
 **OVMobileBench** is an end-to-end automation pipeline for benchmarking OpenVINO inference performance on mobile devices. It handles the complete workflow from building OpenVINO runtime, packaging models, deploying to devices, executing benchmarks, and generating comprehensive reports.
 
