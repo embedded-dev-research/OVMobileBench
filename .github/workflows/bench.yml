@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       device_serial:
-        description: 'Android device serial'
+        description: 'Mobile device serial'
         required: false
 
 jobs:
