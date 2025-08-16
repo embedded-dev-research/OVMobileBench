@@ -66,10 +66,10 @@ class TestBenchmarkRunner:
 
         assert runner.remote_dir == custom_dir
 
-    @patch("time.time")
-    def test_run_single_success(self, mock_time, mock_device, run_config, benchmark_spec):
+    @patch("ovmobilebench.runners.benchmark.time")
+    def test_run_single_success(self, mock_time_module, mock_device, run_config, benchmark_spec):
         """Test successful single benchmark run."""
-        mock_time.side_effect = [1000.0, 1005.0, 1005.5]  # start, end, timestamp
+        mock_time_module.time.side_effect = [1000.0, 1005.0, 1005.5]  # start, end, timestamp
         mock_device.shell.return_value = (0, "benchmark output", "")
 
         runner = BenchmarkRunner(mock_device, run_config)
@@ -83,10 +83,10 @@ class TestBenchmarkRunner:
         assert result["timestamp"] == 1005.5
         assert "command" in result
 
-    @patch("time.time")
-    def test_run_single_failure(self, mock_time, mock_device, run_config, benchmark_spec):
+    @patch("ovmobilebench.runners.benchmark.time")
+    def test_run_single_failure(self, mock_time_module, mock_device, run_config, benchmark_spec):
         """Test failed single benchmark run."""
-        mock_time.side_effect = [1000.0, 1005.0, 1005.5]
+        mock_time_module.time.side_effect = [1000.0, 1005.0, 1005.5]
         mock_device.shell.return_value = (1, "", "error message")
 
         runner = BenchmarkRunner(mock_device, run_config)
