@@ -107,6 +107,7 @@ jobs:
           ovmobilebench run --help
 
   device-test-ssh:
+    if: inputs.os == 'ubuntu-latest'  # SSH tests only on Ubuntu for now
     needs:
       - build-package
       - dry-run
