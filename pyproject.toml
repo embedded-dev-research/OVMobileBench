@@ -52,12 +52,14 @@ warn_return_any = true
 warn_unused_configs = true
 
 [tool.coverage.run]
-source = ["ovmobilebench"]
+source = ["ovmobilebench", "scripts"]
 omit = [
     "*/tests/*",
     "*/test_*.py",
     "*/__pycache__/*",
     "*/site-packages/*",
+    "scripts/setup_ssh_ci.sh",
+    "scripts/test_ssh_device_ci.py",
 ]
 
 [tool.coverage.report]
