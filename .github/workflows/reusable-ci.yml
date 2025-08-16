@@ -54,6 +54,8 @@ jobs:
           flags: unittests
           name: codecov-${{ inputs.os }}
           fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
 
   build-package:
     needs: lint-and-test
