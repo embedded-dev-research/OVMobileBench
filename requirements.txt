@@ -6,6 +6,7 @@ paramiko>=3.4.0
 pandas>=2.2.2
 rich>=13.7.1
 adbutils>=2.0.0
+certifi>=2024.0.0
 
 # Development dependencies
 pytest>=8.2.0

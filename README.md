@@ -74,7 +74,10 @@ cat experiments/results/*.csv
 
 ## 📖 Learn More
 
+- [Getting Started Guide](docs/getting-started.md)
+- [Android SDK/NDK Setup](docs/android-setup.md)
 - [Architecture Overview](docs/architecture.md)
+- [API Reference](docs/api-reference.md)
 - [Contributing Guide](CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)
 - [Changelog](CHANGELOG.md)
