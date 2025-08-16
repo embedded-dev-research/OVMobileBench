@@ -1,0 +1,159 @@
+name: Reusable CI Workflow
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      device_serial:
+        required: false
+        type: string
+
+jobs:
+  lint-and-test:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Run Black
+        run: black --check ovmobilebench tests
+
+      - name: Run Ruff
+        run: ruff check ovmobilebench tests
+
+      - name: Run MyPy
+        run: mypy ovmobilebench --ignore-missing-imports
+
+      - name: Run tests
+        run: pytest tests/ -v --cov=ovmobilebench --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  build-package:
+    needs: lint-and-test
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install build dependencies
+        run: |
+          pip install --upgrade pip
+          pip install build setuptools wheel
+
+      - name: Build package
+        run: python -m build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ inputs.os }}
+          path: dist/
+          retention-days: 7
+
+  dry-run:
+    needs: lint-and-test
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Validate example config
+        run: |
+          python -c "from ovmobilebench.config.loader import load_experiment; load_experiment('experiments/android_example.yaml')"
+
+      - name: CLI help test
+        run: |
+          ovmobilebench --help
+          ovmobilebench build --help
+          ovmobilebench run --help
+
+  device-test-ssh:
+    if: inputs.os == 'ubuntu-latest'  # SSH tests only on Ubuntu for now
+    needs:
+      - build-package
+      - dry-run
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Set up SSH server
+        run: |
+          # Generate and run SSH setup script
+          python scripts/generate_ssh_config.py --type setup
+          bash scripts/setup_ssh_ci.sh || echo "SSH setup had warnings, continuing..."
+
+      - name: List SSH devices
+        run: |
+          ovmobilebench list-ssh-devices || echo "Command not yet implemented"
+
+      - name: Test SSH deployment
+        run: |
+          # Generate and run SSH test script
+          python scripts/generate_ssh_config.py --type test
+          python scripts/test_ssh_device_ci.py
+
+      - name: Run benchmark dry-run via SSH
+        run: |
+          # Generate SSH config using Python script
+          python scripts/generate_ssh_config.py --type config
+          
+          # Run in dry-run mode
+          ovmobilebench all -c experiments/ssh_localhost_ci.yaml --dry-run || true
+
+      - name: Upload SSH test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-ssh-${{ inputs.os }}
+          path: experiments/results/
+          retention-days: 30

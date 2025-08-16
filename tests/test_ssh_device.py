@@ -47,10 +47,11 @@ class TestLinuxSSHDevice:
 
         # Create device and push file
         device = LinuxSSHDevice(host="localhost", username="test")
-        device.push(Path("/tmp/test.txt"), "/remote/test.txt")
+        local_path = Path("/tmp/test.txt")
+        device.push(local_path, "/remote/test.txt")
 
         # Verify SFTP put was called
-        mock_sftp.put.assert_called_once_with("/tmp/test.txt", "/remote/test.txt")
+        mock_sftp.put.assert_called_once_with(str(local_path), "/remote/test.txt")
 
     @patch("ovmobilebench.devices.linux_ssh.paramiko.SSHClient")
     def test_shell_command(self, mock_ssh_client):
