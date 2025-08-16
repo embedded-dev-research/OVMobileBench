@@ -31,6 +31,22 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+## Platform Setup
+
+### Android SDK/NDK Setup
+
+For Android device testing, you need to install Android SDK and NDK. We provide an automated installation script:
+
+```bash
+# Install both SDK and NDK
+python scripts/setup_android_tools.py
+
+# Or install only NDK (for building OpenVINO)
+python scripts/setup_android_tools.py --ndk-only
+```
+
+For detailed instructions, see [Android Setup Guide](android-setup.md).
+
 ## Quick Setup
 
 ### 1. Set Up Environment Variables
