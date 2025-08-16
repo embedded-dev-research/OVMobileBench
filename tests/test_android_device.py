@@ -66,7 +66,7 @@ class TestAndroidDevice:
         device.push(local_path, "/data/local/tmp/test.txt")
 
         # Verify
-        mock_device.push.assert_called_once_with("/tmp/test.txt", "/data/local/tmp/test.txt")
+        mock_device.push.assert_called_once_with(str(local_path), "/data/local/tmp/test.txt")
 
     @patch("ovmobilebench.devices.android.adbutils.AdbClient")
     def test_pull_file(self, mock_adb_client):
@@ -83,7 +83,7 @@ class TestAndroidDevice:
         device.pull("/data/local/tmp/test.txt", local_path)
 
         # Verify
-        mock_device.pull.assert_called_once_with("/data/local/tmp/test.txt", "/tmp/test.txt")
+        mock_device.pull.assert_called_once_with("/data/local/tmp/test.txt", str(local_path))
 
     @patch("ovmobilebench.devices.android.adbutils.AdbClient")
     def test_shell_command(self, mock_adb_client):
@@ -277,7 +277,7 @@ class TestAndroidDevice:
         device.install_apk(apk_path)
 
         # Verify
-        mock_device.install.assert_called_once_with("/tmp/app.apk")
+        mock_device.install.assert_called_once_with(str(apk_path))
 
     @patch("ovmobilebench.devices.android.adbutils.AdbClient")
     def test_forward_port(self, mock_adb_client):
