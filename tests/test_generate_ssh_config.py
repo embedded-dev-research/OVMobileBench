@@ -3,15 +3,14 @@
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 import yaml
-import pytest
 
 from scripts.generate_ssh_config import (
     generate_ssh_config,
     generate_ssh_test_script,
     generate_ssh_setup_script,
-    main
+    main,
 )
 
 
@@ -22,17 +21,17 @@ class TestGenerateSSHConfig:
         """Test SSH config file generation."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_file = Path(tmpdir) / "test_config.yaml"
-            
+
             with patch.dict(os.environ, {"USER": "testuser"}):
                 result = generate_ssh_config(str(output_file))
-            
+
             assert result == str(output_file)
             assert output_file.exists()
-            
+
             # Load and verify config
             with open(output_file) as f:
                 config = yaml.safe_load(f)
-            
+
             assert config["project"]["name"] == "ssh-test"
             assert config["device"]["type"] == "linux_ssh"
             assert config["device"]["host"] == "localhost"
@@ -53,14 +52,14 @@ class TestGenerateSSHConfig:
             ssh_dir.mkdir()
             ssh_key = ssh_dir / "id_rsa"
             ssh_key.touch()
-            
+
             with patch.dict(os.environ, {"USER": "testuser", "HOME": tmpdir}):
                 with patch("scripts.generate_ssh_config.Path.home", return_value=Path(tmpdir)):
                     result = generate_ssh_config(str(output_file))
-            
+
             assert result == str(output_file)
             assert output_file.exists()
-            
+
             # Load and verify config has key_filename
             with open(output_file) as f:
                 config = yaml.safe_load(f)
@@ -71,14 +70,14 @@ class TestGenerateSSHConfig:
         """Test SSH test script generation."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_file = Path(tmpdir) / "test_script.py"
-            
+
             with patch.dict(os.environ, {"USER": "testuser"}):
                 result = generate_ssh_test_script(str(output_file))
-            
+
             assert result == str(output_file)
             assert output_file.exists()
             assert output_file.stat().st_mode & 0o111  # Check executable
-            
+
             # Verify script content
             content = output_file.read_text()
             assert "#!/usr/bin/env python3" in content
@@ -90,13 +89,13 @@ class TestGenerateSSHConfig:
         """Test SSH setup script generation."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_file = Path(tmpdir) / "setup.sh"
-            
+
             result = generate_ssh_setup_script(str(output_file))
-            
+
             assert result == str(output_file)
             assert output_file.exists()
             assert output_file.stat().st_mode & 0o111  # Check executable
-            
+
             # Verify script content
             content = output_file.read_text()
             assert "#!/bin/bash" in content
@@ -109,7 +108,7 @@ class TestGenerateSSHConfig:
         """Test main function with config generation."""
         mock_args.return_value.type = "config"
         mock_args.return_value.output = None
-        
+
         with patch("scripts.generate_ssh_config.generate_ssh_config") as mock_gen:
             main()
             mock_gen.assert_called_once_with("experiments/ssh_localhost_ci.yaml")
@@ -119,7 +118,7 @@ class TestGenerateSSHConfig:
         """Test main function with test script generation."""
         mock_args.return_value.type = "test"
         mock_args.return_value.output = None
-        
+
         with patch("scripts.generate_ssh_config.generate_ssh_test_script") as mock_gen:
             main()
             mock_gen.assert_called_once_with("scripts/test_ssh_device_ci.py")
@@ -129,7 +128,7 @@ class TestGenerateSSHConfig:
         """Test main function with setup script generation."""
         mock_args.return_value.type = "setup"
         mock_args.return_value.output = None
-        
+
         with patch("scripts.generate_ssh_config.generate_ssh_setup_script") as mock_gen:
             main()
             mock_gen.assert_called_once_with("scripts/setup_ssh_ci.sh")
@@ -139,7 +138,7 @@ class TestGenerateSSHConfig:
         """Test main function with all generation."""
         mock_args.return_value.type = "all"
         mock_args.return_value.output = None
-        
+
         with patch("scripts.generate_ssh_config.generate_ssh_config") as mock_config:
             with patch("scripts.generate_ssh_config.generate_ssh_test_script") as mock_test:
                 with patch("scripts.generate_ssh_config.generate_ssh_setup_script") as mock_setup:
@@ -153,7 +152,7 @@ class TestGenerateSSHConfig:
         """Test main function with custom output path."""
         mock_args.return_value.type = "config"
         mock_args.return_value.output = "/custom/path.yaml"
-        
+
         with patch("scripts.generate_ssh_config.generate_ssh_config") as mock_gen:
             main()
             mock_gen.assert_called_once_with("/custom/path.yaml")

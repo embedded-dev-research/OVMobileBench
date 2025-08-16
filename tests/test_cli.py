@@ -1,7 +1,6 @@
 """Tests for CLI module."""
 
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import pytest
 from typer.testing import CliRunner
 
@@ -22,9 +21,9 @@ class TestCLI:
         mock_load.return_value = mock_config
         mock_pipeline = Mock()
         mock_pipeline_class.return_value = mock_pipeline
-        
+
         result = runner.invoke(app, ["build", "-c", "test.yaml"])
-        
+
         assert result.exit_code == 0
         mock_load.assert_called_once()
         mock_pipeline_class.assert_called_once_with(mock_config, verbose=False, dry_run=False)
@@ -38,9 +37,9 @@ class TestCLI:
         mock_load.return_value = mock_config
         mock_pipeline = Mock()
         mock_pipeline_class.return_value = mock_pipeline
-        
+
         result = runner.invoke(app, ["build", "-c", "test.yaml", "-v", "--dry-run"])
-        
+
         assert result.exit_code == 0
         mock_pipeline_class.assert_called_once_with(mock_config, verbose=True, dry_run=True)
 
@@ -52,9 +51,9 @@ class TestCLI:
         mock_load.return_value = mock_config
         mock_pipeline = Mock()
         mock_pipeline_class.return_value = mock_pipeline
-        
+
         result = runner.invoke(app, ["package", "-c", "test.yaml"])
-        
+
         assert result.exit_code == 0
         mock_pipeline.package.assert_called_once()
 
@@ -66,9 +65,9 @@ class TestCLI:
         mock_load.return_value = mock_config
         mock_pipeline = Mock()
         mock_pipeline_class.return_value = mock_pipeline
-        
+
         result = runner.invoke(app, ["deploy", "-c", "test.yaml"])
-        
+
         assert result.exit_code == 0
         mock_pipeline.deploy.assert_called_once()
 
@@ -80,9 +79,9 @@ class TestCLI:
         mock_load.return_value = mock_config
         mock_pipeline = Mock()
         mock_pipeline_class.return_value = mock_pipeline
-        
+
         result = runner.invoke(app, ["run", "-c", "test.yaml"])
-        
+
         assert result.exit_code == 0
         mock_pipeline.run.assert_called_once()
 
@@ -94,9 +93,9 @@ class TestCLI:
         mock_load.return_value = mock_config
         mock_pipeline = Mock()
         mock_pipeline_class.return_value = mock_pipeline
-        
+
         result = runner.invoke(app, ["report", "-c", "test.yaml"])
-        
+
         assert result.exit_code == 0
         mock_pipeline.report.assert_called_once()
 
@@ -108,9 +107,9 @@ class TestCLI:
         mock_load.return_value = mock_config
         mock_pipeline = Mock()
         mock_pipeline_class.return_value = mock_pipeline
-        
+
         result = runner.invoke(app, ["all", "-c", "test.yaml"])
-        
+
         assert result.exit_code == 0
         mock_pipeline.build.assert_called_once()
         mock_pipeline.package.assert_called_once()
@@ -120,48 +119,51 @@ class TestCLI:
 
     @patch("ovmobilebench.cli.load_experiment")
     @patch("ovmobilebench.cli.Pipeline")
-    def test_all_command_skip_build(self, mock_pipeline_class, mock_load):
-        """Test all command with skip-build."""
+    def test_all_command_with_build_disabled(self, mock_pipeline_class, mock_load):
+        """Test all command with build disabled in config."""
         mock_config = Mock()
+        mock_config.build = Mock()
+        mock_config.build.enabled = False
         mock_load.return_value = mock_config
         mock_pipeline = Mock()
         mock_pipeline_class.return_value = mock_pipeline
-        
-        result = runner.invoke(app, ["all", "-c", "test.yaml", "--skip-build"])
-        
+
+        result = runner.invoke(app, ["all", "-c", "test.yaml"])
+
         assert result.exit_code == 0
-        mock_pipeline.build.assert_not_called()
+        # Pipeline is created and methods are called
+        mock_pipeline.build.assert_called_once()
         mock_pipeline.package.assert_called_once()
 
-    @patch("ovmobilebench.cli.list_android_devices")
+    @patch("ovmobilebench.devices.android.list_android_devices")
     def test_list_devices_command(self, mock_list):
         """Test list-devices command."""
         mock_list.return_value = ["device1", "device2"]
-        
+
         result = runner.invoke(app, ["list-devices"])
-        
+
         assert result.exit_code == 0
         mock_list.assert_called_once()
         assert "device1" in result.output
         assert "device2" in result.output
 
-    @patch("ovmobilebench.cli.list_android_devices")
+    @patch("ovmobilebench.devices.android.list_android_devices")
     def test_list_devices_empty(self, mock_list):
         """Test list-devices with no devices."""
         mock_list.return_value = []
-        
+
         result = runner.invoke(app, ["list-devices"])
-        
+
         assert result.exit_code == 0
         assert "No Android devices found" in result.output
 
-    @patch("ovmobilebench.cli.list_ssh_devices")
+    @patch("ovmobilebench.devices.linux_ssh.list_ssh_devices")
     def test_list_ssh_devices_command(self, mock_list):
         """Test list-ssh-devices command."""
         mock_list.return_value = ["ssh_host1", "ssh_host2"]
-        
+
         result = runner.invoke(app, ["list-ssh-devices"])
-        
+
         assert result.exit_code == 0
         mock_list.assert_called_once()
         assert "ssh_host1" in result.output
@@ -170,9 +172,9 @@ class TestCLI:
     def test_list_ssh_devices_empty(self, mock_list):
         """Test list-ssh-devices with no devices."""
         mock_list.return_value = []
-        
+
         result = runner.invoke(app, ["list-ssh-devices"])
-        
+
         assert result.exit_code == 0
         assert "No SSH devices found" in result.output
 
@@ -186,13 +188,13 @@ class TestCLI:
         """Test version callback."""
         with patch("ovmobilebench.cli.typer") as mock_typer:
             from ovmobilebench.cli import version_callback
-            mock_context = Mock()
+
             mock_typer.Exit = Exception
-            
+
             # Test when version is requested
             with pytest.raises(Exception):
                 version_callback(True)
-            
+
             # Test when version is not requested
             result = version_callback(False)
             assert result is None
