@@ -157,3 +157,44 @@ jobs:
           name: benchmark-results-ssh-${{ inputs.os }}
           path: experiments/results/
           retention-days: 30
+
+  # Optional: Run on a self-hosted runner with a real device
+  device-test-adb:
+    # Only run if explicitly triggered and only once (not for each OS in matrix)
+    if: (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[device-test-adb]')) && inputs.os == 'ubuntu-latest'
+    needs:
+      - build-package
+      - dry-run
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Check ADB devices
+        run: adb devices
+
+      - name: Run minimal benchmark
+        env:
+          DEVICE_SERIAL: ${{ inputs.device_serial }}
+        run: |
+          ovmobilebench list-devices
+          # Uncomment when ready:
+          # ovmobilebench all -c experiments/android_example.yaml --dry-run
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-adb-${{ inputs.os }}
+          path: experiments/results/
+          retention-days: 30
