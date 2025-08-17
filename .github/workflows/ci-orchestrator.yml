@@ -12,14 +12,22 @@ on:
         default: 'emulator-5554'
 
 jobs:
-  # Stage 1: Test
+  # Stage 1: Pre-commit checks
+  pre-commit:
+    uses: ./.github/workflows/stage-pre-commit.yml
+    with:
+      os: ubuntu-latest
+    secrets: inherit
+
+  # Stage 2: Test
   test:
+    needs: pre-commit
     uses: ./.github/workflows/stage-test.yml
     with:
       os: ${{ inputs.os }}
     secrets: inherit
 
-  # Stage 2: Build Package (runs in parallel with validation)
+  # Stage 3: Build Package (runs in parallel with validation)
   build:
     needs: test
     uses: ./.github/workflows/stage-build.yml
@@ -27,7 +35,7 @@ jobs:
       os: ${{ inputs.os }}
     secrets: inherit
 
-  # Stage 3: Validation (runs in parallel with build)
+  # Stage 4: Validation (runs in parallel with build)
   validation:
     needs: test
     uses: ./.github/workflows/stage-validation.yml
@@ -35,7 +43,7 @@ jobs:
       os: ${{ inputs.os }}
     secrets: inherit
 
-  # Stage 4: Device Tests (runs after build and validation)
+  # Stage 5: Device Tests (runs after build and validation)
   device-tests:
     needs: [build, validation]
     uses: ./.github/workflows/stage-device-tests.yml
