@@ -90,18 +90,22 @@ pytest tests/android/installer/ --cov=ovmobilebench.android.installer
 ## Supported Configurations
 
 ### NDK Versions
+
 - r21e, r22b, r23c, r24, r25c, r26d
 
 ### Android API Levels
+
 - API 21-34 (Android 5.0 - 14)
 
 ### Architectures
+
 - arm64-v8a (64-bit ARM)
 - armeabi-v7a (32-bit ARM)
 - x86_64 (64-bit x86)
 - x86 (32-bit x86)
 
 ### System Image Targets
+
 - default (Basic Android)
 - google_apis (With Google Play Services)
 - google_atd (Automated Test Device)

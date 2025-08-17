@@ -12,7 +12,7 @@ def pytest_collection_modifyitems(config, items):
     # Read skip list
     skip_list = set()
     if skip_list_file.exists():
-        with open(skip_list_file, "r") as f:
+        with open(skip_list_file) as f:
             for line in f:
                 line = line.strip()
                 # Skip comments and empty lines

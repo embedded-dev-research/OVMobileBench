@@ -103,4 +103,4 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 - 📝 [GitHub Issues](https://github.com/embedded-dev-research/OVMobileBench/issues) - Bug reports and feature requests
 - 💡 [Discussions](https://github.com/embedded-dev-research/OVMobileBench/discussions) - Questions and ideas
-- 📧 Contact: nesterov.alexander@outlook.com
+- 📧 Contact: <nesterov.alexander@outlook.com>

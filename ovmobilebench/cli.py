@@ -4,7 +4,6 @@
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -84,8 +83,8 @@ def run(
     config: Path = typer.Option(..., "-c", "--config", help="Experiment config YAML file"),
     verbose: bool = typer.Option(False, "-v", "--verbose", help="Enable verbose output"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Dry run without actual execution"),
-    timeout: Optional[int] = typer.Option(None, "--timeout", help="Timeout in seconds"),
-    cooldown: Optional[int] = typer.Option(None, "--cooldown", help="Cooldown between runs"),
+    timeout: int | None = typer.Option(None, "--timeout", help="Timeout in seconds"),
+    cooldown: int | None = typer.Option(None, "--cooldown", help="Cooldown between runs"),
 ):
     """Execute benchmark matrix on device(s)."""
     console.print("[bold blue]Running benchmarks...[/bold blue]")
@@ -113,8 +112,8 @@ def all(
     config: Path = typer.Option(..., "-c", "--config", help="Experiment config YAML file"),
     verbose: bool = typer.Option(False, "-v", "--verbose", help="Enable verbose output"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Dry run without actual execution"),
-    timeout: Optional[int] = typer.Option(None, "--timeout", help="Timeout in seconds"),
-    cooldown: Optional[int] = typer.Option(None, "--cooldown", help="Cooldown between runs"),
+    timeout: int | None = typer.Option(None, "--timeout", help="Timeout in seconds"),
+    cooldown: int | None = typer.Option(None, "--cooldown", help="Cooldown between runs"),
 ):
     """Execute complete pipeline: build, package, deploy, run, and report."""
     # Check if we're in CI environment

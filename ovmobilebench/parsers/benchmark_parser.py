@@ -1,12 +1,12 @@
 """Parser for benchmark_app output."""
 
 import re
-from typing import Any, Dict
+from typing import Any
 
 
-def parse_metrics(output: str) -> Dict[str, Any]:
+def parse_metrics(output: str) -> dict[str, Any]:
     """Parse benchmark_app output to extract metrics."""
-    metrics: Dict[str, Any] = {}
+    metrics: dict[str, Any] = {}
 
     # Parse throughput
     throughput_match = re.search(r"Throughput:\s*([\d.]+)\s*FPS", output)
@@ -42,7 +42,7 @@ def parse_metrics(output: str) -> Dict[str, Any]:
 class BenchmarkParser:
     """Parse and aggregate benchmark results."""
 
-    def parse_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
+    def parse_result(self, result: dict[str, Any]) -> dict[str, Any]:
         """Parse single benchmark result."""
         parsed = {
             **result["spec"],
@@ -66,7 +66,7 @@ class BenchmarkParser:
             return []
 
         # Group by configuration
-        grouped: Dict[str, list] = {}
+        grouped: dict[str, list] = {}
         for result in results:
             key = self._get_config_key(result)
             if key not in grouped:
@@ -98,7 +98,7 @@ class BenchmarkParser:
 
         return aggregated
 
-    def _get_config_key(self, result: Dict[str, Any]) -> str:
+    def _get_config_key(self, result: dict[str, Any]) -> str:
         """Generate unique key for configuration."""
         key_fields = [
             "model_name",

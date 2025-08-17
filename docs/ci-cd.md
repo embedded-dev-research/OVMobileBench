@@ -40,6 +40,7 @@ graph LR
 ### Basic Workflow
 
 `.github/workflows/benchmark.yml`:
+
 ```yaml
 name: Benchmark Pipeline
 
@@ -218,6 +219,7 @@ jobs:
 ### Basic Pipeline
 
 `.gitlab-ci.yml`:
+
 ```yaml
 stages:
   - build
@@ -418,6 +420,7 @@ pipeline {
 ### GitHub Actions Runner Setup
 
 #### Installation
+
 ```bash
 # Download runner
 mkdir actions-runner && cd actions-runner
@@ -437,6 +440,7 @@ sudo ./svc.sh start
 ```
 
 #### Runner Configuration
+
 ```yaml
 # .github/workflows/device-test.yml
 jobs:
@@ -452,6 +456,7 @@ jobs:
 ### Device Farm Management
 
 #### Device Registry
+
 ```yaml
 # devices/inventory.yaml
 devices:
@@ -469,6 +474,7 @@ devices:
 ```
 
 #### Health Monitoring
+
 ```python
 # ci/device_health.py
 import subprocess
@@ -703,6 +709,7 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
 ### CI Configuration
 
 1. **Resource Management**
+
    ```yaml
    jobs:
      benchmark:
@@ -712,6 +719,7 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
    ```
 
 2. **Caching**
+
    ```yaml
    - name: Cache build
      uses: actions/cache@v3
@@ -723,6 +731,7 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
    ```
 
 3. **Artifact Management**
+
    ```yaml
    - uses: actions/upload-artifact@v4
      with:
@@ -735,6 +744,7 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
 ### Security
 
 1. **Secrets Management**
+
    ```yaml
    env:
      ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
@@ -742,6 +752,7 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
    ```
 
 2. **Access Control**
+
    ```yaml
    jobs:
      deploy:
@@ -752,6 +763,7 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
 ### Monitoring
 
 1. **Job Status Notification**
+
    ```yaml
    - name: Notify Team
      if: failure()
@@ -762,6 +774,7 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
    ```
 
 2. **Performance Alerts**
+
    ```python
    if regression_detected:
        send_alert(
@@ -773,6 +786,7 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
 ### Documentation
 
 1. **CI Documentation**
+
    ```markdown
    ## CI/CD Pipeline
 
@@ -787,6 +801,7 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
    ```
 
 2. **Runbook**
+
    ```markdown
    ## Troubleshooting CI Failures
 

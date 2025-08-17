@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import paramiko
 
@@ -20,8 +20,8 @@ class LinuxSSHDevice(Device):
         self,
         host: str,
         username: str,
-        password: Optional[str] = None,
-        key_filename: Optional[str] = None,
+        password: str | None = None,
+        key_filename: str | None = None,
         port: int = 22,
         push_dir: str = "/tmp/ovmobilebench",
         mock_mode: bool = False,
@@ -46,8 +46,8 @@ class LinuxSSHDevice(Device):
         self.port = port
         self.push_dir = push_dir
         self.mock_mode = mock_mode
-        self.client: Optional[paramiko.SSHClient] = None
-        self.sftp: Optional[paramiko.SFTPClient] = None
+        self.client: paramiko.SSHClient | None = None
+        self.sftp: paramiko.SFTPClient | None = None
 
         if not mock_mode:
             self._connect()
@@ -135,7 +135,7 @@ class LinuxSSHDevice(Device):
         except Exception as e:
             raise DeviceError(f"Failed to pull {remote}: {e}")
 
-    def shell(self, cmd: str, timeout: Optional[int] = 120) -> tuple[int, str, str]:
+    def shell(self, cmd: str, timeout: int | None = 120) -> tuple[int, str, str]:
         """Execute command on device via SSH."""
         if self.mock_mode:
             logger.info(f"[MOCK] Would execute: {cmd}")
@@ -222,7 +222,7 @@ class LinuxSSHDevice(Device):
         if returncode != 0 and stderr:
             logger.warning(f"Failed to remove {path}: {stderr}")
 
-    def info(self) -> Dict[str, Any]:
+    def info(self) -> dict[str, Any]:
         """Get device information."""
         info = {
             "type": "linux_ssh",
@@ -285,7 +285,7 @@ class LinuxSSHDevice(Device):
             pass
         return False
 
-    def get_env(self) -> Dict[str, str]:
+    def get_env(self) -> dict[str, str]:
         """Get environment variables for benchmark execution."""
         env = super().get_env()
 
@@ -306,7 +306,7 @@ class LinuxSSHDevice(Device):
             pass
 
 
-def list_ssh_devices(config_file: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_ssh_devices(config_file: str | None = None) -> list[dict[str, Any]]:
     """List configured SSH devices.
 
     Args:

@@ -31,6 +31,7 @@ project:
 ```
 
 **Example:**
+
 ```yaml
 project:
   name: "mobile-benchmark"
@@ -77,6 +78,7 @@ build:
 **Examples:**
 
 Android build:
+
 ```yaml
 build:
   enabled: true
@@ -93,6 +95,7 @@ build:
 ```
 
 Linux ARM build:
+
 ```yaml
 build:
   enabled: true
@@ -107,6 +110,7 @@ build:
 ```
 
 Using prebuilt:
+
 ```yaml
 build:
   enabled: false
@@ -129,6 +133,7 @@ package:
 ```
 
 **Example:**
+
 ```yaml
 package:
   include_symbols: false
@@ -171,6 +176,7 @@ device:
 **Examples:**
 
 Android devices:
+
 ```yaml
 device:
   kind: "android"
@@ -182,6 +188,7 @@ device:
 ```
 
 Linux SSH device:
+
 ```yaml
 device:
   kind: "linux_ssh"
@@ -210,6 +217,7 @@ models:
 ```
 
 **Example:**
+
 ```yaml
 models:
   - name: "resnet50"
@@ -266,6 +274,7 @@ run:
 **Examples:**
 
 Simple matrix:
+
 ```yaml
 run:
   repeats: 3
@@ -276,6 +285,7 @@ run:
 ```
 
 Complex matrix:
+
 ```yaml
 run:
   repeats: 5
@@ -335,6 +345,7 @@ report:
 **Examples:**
 
 Multiple output formats:
+
 ```yaml
 report:
   sinks:
@@ -356,6 +367,7 @@ report:
 ```
 
 With aggregation and filtering:
+
 ```yaml
 report:
   aggregation:

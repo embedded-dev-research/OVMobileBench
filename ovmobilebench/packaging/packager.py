@@ -4,7 +4,6 @@ import logging
 import shutil
 import tarfile
 from pathlib import Path
-from typing import Dict, List
 
 from ovmobilebench.config.schema import ModelItem, PackageConfig
 from ovmobilebench.core.errors import OVMobileBenchError
@@ -19,7 +18,7 @@ class Packager:
     def __init__(
         self,
         config: PackageConfig,
-        models: List[ModelItem],
+        models: list[ModelItem],
         output_dir: Path,
     ):
         self.config = config
@@ -28,7 +27,7 @@ class Packager:
 
     def create_bundle(
         self,
-        artifacts: Dict[str, Path],
+        artifacts: dict[str, Path],
         bundle_name: str = "ovbundle",
     ) -> Path:
         """Create deployable bundle."""

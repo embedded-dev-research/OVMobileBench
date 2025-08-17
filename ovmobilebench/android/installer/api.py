@@ -1,7 +1,6 @@
 """Public API for Android installer module."""
 
 from pathlib import Path
-from typing import Dict, Optional
 
 from .core import AndroidInstaller
 from .env import export_android_env as _export_android_env
@@ -18,12 +17,12 @@ def ensure_android_tools(
     ndk: NdkSpec,
     install_platform_tools: bool = True,
     install_emulator: bool = True,
-    install_build_tools: Optional[str] = None,
-    create_avd_name: Optional[str] = None,
+    install_build_tools: str | None = None,
+    create_avd_name: str | None = None,
     accept_licenses: bool = True,
     dry_run: bool = False,
     verbose: bool = False,
-    jsonl_log: Optional[Path] = None,
+    jsonl_log: Path | None = None,
 ) -> InstallerResult:
     """Ensure Android tools are installed.
 
@@ -98,11 +97,11 @@ def ensure_android_tools(
 
 def export_android_env(
     *,
-    github_env: Optional[Path] = None,
+    github_env: Path | None = None,
     print_stdout: bool = False,
     sdk_root: Path,
     ndk_path: Path,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Export Android environment variables.
 
     Args:

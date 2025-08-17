@@ -36,20 +36,23 @@ deployment, execution, parsing, and reporting — end-to-end.
 ovmobilebench all -c experiments/android_mcpu_fp16.yaml
 ```
 
-__OVBENCH_EOF_1__
-cat > 'ARCHITECTURE.md' << '__OVBENCH_EOF_2__'
+**OVBENCH_EOF_1**
+cat > 'ARCHITECTURE.md' << '**OVBENCH_EOF_2**'
+
 # Architecture
 
-*(Placeholder: file was not found at generation time.)*
+_(Placeholder: file was not found at generation time.)_
 
-__OVBENCH_EOF_2__
-cat > 'docs/CHECKLIST_RU.md' << '__OVBENCH_EOF_3__'
+**OVBENCH_EOF_2**
+cat > 'docs/CHECKLIST_RU.md' << '**OVBENCH_EOF_3**'
+
 # Checklist (RU)
 
-*(Placeholder: file was not found at generation time.)*
+_(Placeholder: file was not found at generation time.)_
 
-__OVBENCH_EOF_3__
-cat > 'docs/CHECKLIST_EN.md' << '__OVBENCH_EOF_4__'
+**OVBENCH_EOF_3**
+cat > 'docs/CHECKLIST_EN.md' << '**OVBENCH_EOF_4**'
+
 # OVMobileBench — Repository Preflight Checklist for Publication and CI Launch
 
 > **Purpose**: This document is a detailed preflight checklist to prepare the **OVMobileBench**
@@ -430,6 +433,7 @@ cat > 'docs/CHECKLIST_EN.md' << '__OVBENCH_EOF_4__'
 ## Appendices: File Templates & Examples
 
 ### .gitignore (minimal)
+
 ```
 .artifacts/
 artifacts/
@@ -445,6 +449,7 @@ build/
 ```
 
 ### CODEOWNERS (example)
+
 ```
 *                 @team/owners
 /ovmobilebench/core/    @team/core
@@ -453,6 +458,7 @@ build/
 ```
 
 ### Pull Request Template (example)
+
 ```
 ## What & Why
 -
@@ -467,6 +473,7 @@ build/
 ```
 
 ### Issue Template — Performance Regression
+
 ```
 ### Description
 Performance regression (model/device/params).
@@ -482,7 +489,6 @@ Performance regression (model/device/params).
 ### Attachments
 - Logs, JSON/CSV, tooling versions
 ```
-
 
 ## Expanded Task Index
 
@@ -886,8 +892,8 @@ Performance regression (model/device/params).
 - [ ] Check #398: See CI/CD, Security, Testing, and Device Farm sections.
 - [ ] Check #399: See CI/CD, Security, Testing, and Device Farm sections.
 - [ ] Check #400: See CI/CD, Security, Testing, and Device Farm sections.
-__OVBENCH_EOF_4__
-cat > 'LICENSE' << '__OVBENCH_EOF_5__'
+**OVBENCH_EOF_4**
+cat > 'LICENSE' << '**OVBENCH_EOF_5**'
 MIT License
 
 Copyright (c) 2025
@@ -895,81 +901,91 @@ Copyright (c) 2025
 Permission is hereby granted, free of charge, to any person obtaining a copy
 ... (standard MIT text shortened for brevity in this snippet; include full text in real repo) ...
 
-__OVBENCH_EOF_5__
-cat > 'SECURITY.md' << '__OVBENCH_EOF_6__'
+**OVBENCH_EOF_5**
+cat > 'SECURITY.md' << '**OVBENCH_EOF_6**'
+
 # Security Policy
 
 ## Reporting
-Please report vulnerabilities privately via security@example.com. We will acknowledge within 72 hours.
+
+Please report vulnerabilities privately via <security@example.com>. We will acknowledge within 72 hours.
 
 ## Scope
+
 Source under /ovmobilebench/**, CI workflows, and published artifacts.
 
-__OVBENCH_EOF_6__
-cat > 'CODE_OF_CONDUCT.md' << '__OVBENCH_EOF_7__'
+**OVBENCH_EOF_6**
+cat > 'CODE_OF_CONDUCT.md' << '**OVBENCH_EOF_7**'
+
 # Code of Conduct
+
 We follow the Contributor Covenant. Be respectful, inclusive, and constructive.
 
-__OVBENCH_EOF_7__
-cat > 'CONTRIBUTING.md' << '__OVBENCH_EOF_8__'
+**OVBENCH_EOF_7**
+cat > 'CONTRIBUTING.md' << '**OVBENCH_EOF_8**'
+
 # Contributing
 
 ## Dev Setup
+
 - Python 3.11+, pip
 - `pip install -r requirements.txt && pip install -e .[dev]`
 
 ## Tests & Lint
+
 - `pytest -q`
 - `ruff ovmobilebench && black --check ovmobilebench && mypy ovmobilebench`
 
-__OVBENCH_EOF_8__
-cat > '.gitignore' << '__OVBENCH_EOF_9__'
+**OVBENCH_EOF_8**
+cat > '.gitignore' << '**OVBENCH_EOF_9**'
 .artifacts/
 artifacts/
 models/*
 !models/.gitkeep
 .venv/
-__pycache__/
+**pycache**/
 dist/
 build/
 *.egg-info/
 .env
 *.tar.gz
 
-__OVBENCH_EOF_9__
-cat > '.gitattributes' << '__OVBENCH_EOF_10__'
-* text=auto eol=lf
+**OVBENCH_EOF_9**
+cat > '.gitattributes' << '**OVBENCH_EOF_10**'
 
-__OVBENCH_EOF_10__
-cat > '.pre-commit-config.yaml' << '__OVBENCH_EOF_11__'
+- text=auto eol=lf
+
+**OVBENCH_EOF_10**
+cat > '.pre-commit-config.yaml' << '**OVBENCH_EOF_11**'
 repos:
-- repo: https://github.com/psf/black
+
+- repo: <https://github.com/psf/black>
   rev: 24.4.2
   hooks:
-    - id: black
+  - id: black
       args: [--line-length=100]
 
-- repo: https://github.com/astral-sh/ruff-pre-commit
+- repo: <https://github.com/astral-sh/ruff-pre-commit>
   rev: v0.5.0
   hooks:
-    - id: ruff
+  - id: ruff
       args: [--fix]
 
-- repo: https://github.com/pre-commit/mirrors-mypy
+- repo: <https://github.com/pre-commit/mirrors-mypy>
   rev: v1.10.0
   hooks:
-    - id: mypy
+  - id: mypy
       additional_dependencies: ["types-PyYAML"]
       args: ["--strict", "--ignore-missing-imports"]
 
-- repo: https://github.com/pre-commit/pre-commit-hooks
+- repo: <https://github.com/pre-commit/pre-commit-hooks>
   rev: v4.6.0
   hooks:
-    - id: end-of-file-fixer
-    - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
 
-__OVBENCH_EOF_11__
-cat > 'pyproject.toml' << '__OVBENCH_EOF_12__'
+**OVBENCH_EOF_11**
+cat > 'pyproject.toml' << '**OVBENCH_EOF_12**'
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -1011,49 +1027,51 @@ ovmobilebench = "ovmobilebench.cli:app"
 [tool.setuptools.packages.find]
 include = ["ovmobilebench*"]
 
-__OVBENCH_EOF_12__
-cat > 'Makefile' << '__OVBENCH_EOF_13__'
-#.PHONY targets
+**OVBENCH_EOF_12**
+cat > 'Makefile' << '**OVBENCH_EOF_13**'
+
+# .PHONY targets
+
 .PHONY: help build package deploy run report all lint fmt type test clean
 
 help:
-	@echo "Targets: build package deploy run report all lint fmt type test clean"
+ @echo "Targets: build package deploy run report all lint fmt type test clean"
 
 build:
-	ovmobilebench build -c $(CFG)
+ ovmobilebench build -c $(CFG)
 
 package:
-	ovmobilebench package -c $(CFG)
+ ovmobilebench package -c $(CFG)
 
 deploy:
-	ovmobilebench deploy -c $(CFG)
+ ovmobilebench deploy -c $(CFG)
 
 run:
-	ovmobilebench run -c $(CFG)
+ ovmobilebench run -c $(CFG)
 
 report:
-	ovmobilebench report -c $(CFG)
+ ovmobilebench report -c $(CFG)
 
 all:
-	ovmobilebench all -c $(CFG)
+ ovmobilebench all -c $(CFG)
 
 lint:
-	ruff ovmobilebench
+ ruff ovmobilebench
 
 fmt:
-	black ovmobilebench
+ black ovmobilebench
 
 type:
-	mypy ovmobilebench
+ mypy ovmobilebench
 
 test:
-	pytest -q
+ pytest -q
 
 clean:
-	rm -rf artifacts/ .pytest_cache .mypy_cache .ruff_cache dist build
+ rm -rf artifacts/ .pytest_cache .mypy_cache .ruff_cache dist build
 
-__OVBENCH_EOF_13__
-cat > 'tox.ini' << '__OVBENCH_EOF_14__'
+**OVBENCH_EOF_13**
+cat > 'tox.ini' << '**OVBENCH_EOF_14**'
 [tox]
 envlist = py311,lint,type
 skipsdist = true
@@ -1072,25 +1090,25 @@ commands =
 deps = mypy
 commands = mypy ovmobilebench
 
-__OVBENCH_EOF_14__
-cat > 'Dockerfile.dev' << '__OVBENCH_EOF_15__'
+**OVBENCH_EOF_14**
+cat > 'Dockerfile.dev' << '**OVBENCH_EOF_15**'
 FROM mcr.microsoft.com/devcontainers/python:3.11
 RUN apt-get update && apt-get install -y --no-install-recommends \    git cmake ninja-build unzip curl wget zip && rm -rf /var/lib/apt/lists/*
-RUN curl -sSL https://dl.google.com/android/repository/platform-tools-latest-linux.zip -o /tmp/pt.zip && \    unzip /tmp/pt.zip -d /opt && rm /tmp/pt.zip && \    ln -s /opt/platform-tools/adb /usr/local/bin/adb
+RUN curl -sSL <https://dl.google.com/android/repository/platform-tools-latest-linux.zip> -o /tmp/pt.zip && \    unzip /tmp/pt.zip -d /opt && rm /tmp/pt.zip && \    ln -s /opt/platform-tools/adb /usr/local/bin/adb
 WORKDIR /workspace
 COPY pyproject.toml README.md ./
 COPY ovmobilebench ./ovmobilebench
 RUN pip install -U pip && pip install .[dev]
 
-__OVBENCH_EOF_15__
-cat > '.github/workflows/bench.yml' << '__OVBENCH_EOF_16__'
+**OVBENCH_EOF_15**
+cat > '.github/workflows/bench.yml' << '**OVBENCH_EOF_16**'
 name: ovmobilebench-mobile
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 2 ** _"
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -1146,10 +1164,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: results
-          path: experiments/out/*
+          path: experiments/out/_
 
-__OVBENCH_EOF_16__
-cat > 'experiments/android_mcpu_fp16.yaml' << '__OVBENCH_EOF_17__'
+**OVBENCH_EOF_16**
+cat > 'experiments/android_mcpu_fp16.yaml' << '**OVBENCH_EOF_17**'
 project:
   name: "ovmobilebench-mobile"
   run_id: "2025-08-14_ov_arm_fp16"
@@ -1177,7 +1195,8 @@ device:
   push_dir: "/data/local/tmp/ovmobilebench"
   use_root: false
 models:
-  - name: "resnet50"
+
+- name: "resnet50"
     path: "models/resnet50_fp16.xml"
     precision: "FP16"
 run:
@@ -1192,22 +1211,22 @@ run:
     threads: [1, 4]
 report:
   sinks:
-    - type: "json"
+  - type: "json"
       path: "experiments/out/android_fp16.json"
-    - type: "csv"
+  - type: "csv"
       path: "experiments/out/android_fp16.csv"
   tags:
     branch: "feature/arm-optim"
 
-__OVBENCH_EOF_17__
-cat > 'models/.gitkeep' << '__OVBENCH_EOF_18__'
+**OVBENCH_EOF_17**
+cat > 'models/.gitkeep' << '**OVBENCH_EOF_18**'
 
-__OVBENCH_EOF_18__
-cat > 'ovmobilebench/__init__.py' << '__OVBENCH_EOF_19__'
-__all__ = []
+**OVBENCH_EOF_18**
+cat > 'ovmobilebench/**init**.py' << '**OVBENCH_EOF_19**'
+**all** = []
 
-__OVBENCH_EOF_19__
-cat > 'ovmobilebench/cli.py' << '__OVBENCH_EOF_20__'
+**OVBENCH_EOF_19**
+cat > 'ovmobilebench/cli.py' << '**OVBENCH_EOF_20**'
 import typer
 from ovmobilebench.pipeline import run_all
 from ovmobilebench.config.schema import Experiment
@@ -1247,19 +1266,19 @@ def run(c: str):
 def report(c: str):
     typer.echo("Report stage placeholder")
 
-if __name__ == "__main__":
+if **name** == "**main**":
     app()
 
-__OVBENCH_EOF_20__
-cat > 'ovmobilebench/pipeline.py' << '__OVBENCH_EOF_21__'
+**OVBENCH_EOF_20**
+cat > 'ovmobilebench/pipeline.py' << '**OVBENCH_EOF_21**'
 from ovmobilebench.config.schema import Experiment
 
 def run_all(cfg: Experiment):
     # Placeholder orchestrator to be replaced with real steps
     print("Running full pipeline for", cfg.project.name, "run_id:", cfg.project.run_id)
 
-__OVBENCH_EOF_21__
-cat > 'ovmobilebench/config/schema.py' << '__OVBENCH_EOF_22__'
+**OVBENCH_EOF_21**
+cat > 'ovmobilebench/config/schema.py' << '**OVBENCH_EOF_22**'
 
 from pydantic import BaseModel, Field
 from typing import List, Literal, Optional, Dict, Any
@@ -1339,14 +1358,14 @@ class Experiment(BaseModel):
     run: RunConfig
     report: ReportConfig
 
-__OVBENCH_EOF_22__
-cat > 'ovmobilebench/devices/base.py' << '__OVBENCH_EOF_23__'
+**OVBENCH_EOF_22**
+cat > 'ovmobilebench/devices/base.py' << '**OVBENCH_EOF_23**'
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Tuple
 
 class Device(ABC):
-    def __init__(self, name: str):
+    def **init**(self, name: str):
         self.name = name
 
     @abstractmethod
@@ -1360,15 +1379,15 @@ class Device(ABC):
     @abstractmethod
     def info(self) -> dict: ...
 
-__OVBENCH_EOF_23__
-cat > 'ovmobilebench/devices/android.py' << '__OVBENCH_EOF_24__'
+**OVBENCH_EOF_23**
+cat > 'ovmobilebench/devices/android.py' << '**OVBENCH_EOF_24**'
 import subprocess
 from pathlib import Path
 from .base import Device
 
 class AndroidDevice(Device):
-    def __init__(self, serial: str, push_dir: str):
-        super().__init__(name=serial)
+    def **init**(self, serial: str, push_dir: str):
+        super().**init**(name=serial)
         self.serial = serial
         self.push_dir = push_dir
 
@@ -1393,8 +1412,8 @@ class AndroidDevice(Device):
         rc, props, _ = self.shell("getprop")
         return {"os": "Android", "props": props, "serial": self.serial}
 
-__OVBENCH_EOF_24__
-cat > 'ovmobilebench/parsers/benchmark_parser.py' << '__OVBENCH_EOF_25__'
+**OVBENCH_EOF_24**
+cat > 'ovmobilebench/parsers/benchmark_parser.py' << '**OVBENCH_EOF_25**'
 import re
 
 RE = {
@@ -1414,18 +1433,18 @@ def _get(pat, text, cast=float):
 def parse_metrics(text: str) -> dict:
     return {
         "throughput_fps": _get("throughput", text),
-        "latency_avg_ms": _get("lat_avg", text),
-        "latency_min_ms": _get("lat_min", text),
-        "latency_max_ms": _get("lat_max", text),
-        "latency_med_ms": _get("lat_med", text),
-        "iterations": _get("count", text, int),
+        "latency_avg_ms":_get("lat_avg", text),
+        "latency_min_ms":_get("lat_min", text),
+        "latency_max_ms":_get("lat_max", text),
+        "latency_med_ms":_get("lat_med", text),
+        "iterations":_get("count", text, int),
         "raw_device_line": (RE["device_full"].search(text).group(1)
                             if RE["device_full"].search(text) else None),
         "raw": text[-2000:],
     }
 
-__OVBENCH_EOF_25__
-cat > 'ovmobilebench/runners/benchmark.py' << '__OVBENCH_EOF_26__'
+**OVBENCH_EOF_25**
+cat > 'ovmobilebench/runners/benchmark.py' << '**OVBENCH_EOF_26**'
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -1450,8 +1469,8 @@ def build_cmd(push_dir: str, spec: RunSpec) -> str:
     if spec.threads:  parts += [f"-nthreads {spec.threads}"]
     return " ".join(parts)
 
-__OVBENCH_EOF_26__
-cat > 'ovmobilebench/report/sink.py' << '__OVBENCH_EOF_27__'
+**OVBENCH_EOF_26**
+cat > 'ovmobilebench/report/sink.py' << '**OVBENCH_EOF_27**'
 import json, csv
 from pathlib import Path
 
@@ -1466,8 +1485,8 @@ def write_csv(rows: list[dict], path: Path):
         w = csv.DictWriter(f, fieldnames=sorted(rows[0].keys()))
         w.writeheader(); w.writerows(rows)
 
-__OVBENCH_EOF_27__
-cat > 'ovmobilebench/core/shell.py' << '__OVBENCH_EOF_28__'
+**OVBENCH_EOF_27**
+cat > 'ovmobilebench/core/shell.py' << '**OVBENCH_EOF_28**'
 import subprocess, shlex, time
 from dataclasses import dataclass
 
@@ -1490,14 +1509,14 @@ def run(cmd, timeout=None, env=None, cwd=None) -> CommandResult:
         return CommandResult(124, out, "TIMEOUT: " + err, time.time() - start)
     return CommandResult(proc.returncode, out, err, time.time() - start)
 
-__OVBENCH_EOF_28__
-cat > 'ovmobilebench/core/fs.py' << '__OVBENCH_EOF_29__'
+**OVBENCH_EOF_28**
+cat > 'ovmobilebench/core/fs.py' << '**OVBENCH_EOF_29**'
 from pathlib import Path
 def ensure_dir(p: Path) -> None:
     p.mkdir(parents=True, exist_ok=True)
 
-__OVBENCH_EOF_29__
-cat > 'ovmobilebench/core/artifacts.py' << '__OVBENCH_EOF_30__'
+**OVBENCH_EOF_29**
+cat > 'ovmobilebench/core/artifacts.py' << '**OVBENCH_EOF_30**'
 from dataclasses import dataclass
 
 @dataclass
@@ -1506,8 +1525,8 @@ class ArtifactRef:
     commit: str
     build_type: str
 
-__OVBENCH_EOF_30__
-cat > 'tests/test_parser.py' << '__OVBENCH_EOF_31__'
+**OVBENCH_EOF_30**
+cat > 'tests/test_parser.py' << '**OVBENCH_EOF_31**'
 from ovmobilebench.parsers.benchmark_parser import parse_metrics
 
 SAMPLE = """
@@ -1530,21 +1549,25 @@ def test_parse_basic():
     assert m["iterations"] == 200
     assert "ARM CPU" in m["raw_device_line"]
 
-__OVBENCH_EOF_31__
-cat > 'CODEOWNERS' << '__OVBENCH_EOF_32__'
-*                 @team/owners
+**OVBENCH_EOF_31**
+cat > 'CODEOWNERS' << '**OVBENCH_EOF_32**'
+
+-                 @team/owners
+
 /ovmobilebench/core/    @team/core
 /ovmobilebench/devices/ @team/devices
 /.github/         @team/ci
 
-__OVBENCH_EOF_32__
+**OVBENCH_EOF_32**
 echo 'Repo files created.'
 ls -la
+
 ```
 
 ## File Tree
 
 ```
+
 .gitattributes
 .github/workflows/bench.yml
 .gitignore
@@ -1562,7 +1585,7 @@ docs/CHECKLIST_EN.md
 docs/CHECKLIST_RU.md
 experiments/android_mcpu_fp16.yaml
 models/.gitkeep
-ovmobilebench/__init__.py
+ovmobilebench/**init**.py
 ovmobilebench/cli.py
 ovmobilebench/config/schema.py
 ovmobilebench/core/artifacts.py
@@ -1577,6 +1600,7 @@ ovmobilebench/runners/benchmark.py
 pyproject.toml
 tests/test_parser.py
 tox.ini
+
 ```
 
 ## Files — Embedded Content
@@ -1606,6 +1630,7 @@ ovmobilebench all -c experiments/android_mcpu_fp16.yaml
 *(Placeholder: file was not found at generation time.)*
 
 ```
+
 ### `docs/CHECKLIST_RU.md`
 
 ```markdown
@@ -1614,6 +1639,7 @@ ovmobilebench all -c experiments/android_mcpu_fp16.yaml
 *(Placeholder: file was not found at generation time.)*
 
 ```
+
 ### `docs/CHECKLIST_EN.md`
 
 ```markdown
@@ -1998,56 +2024,72 @@ ovmobilebench all -c experiments/android_mcpu_fp16.yaml
 
 ### .gitignore (minimal)
 ```
+
 .artifacts/
 artifacts/
 models/*
 !models/.gitkeep
 .venv/
-__pycache__/
+**pycache**/
 dist/
 build/
 *.egg-info/
 .env
 *.tar.gz
+
 ```
 
 ### CODEOWNERS (example)
 ```
-*                 @team/owners
+
+-                 @team/owners
+
 /ovmobilebench/core/    @team/core
 /ovmobilebench/devices/ @team/devices
 /.github/         @team/ci
+
 ```
 
 ### Pull Request Template (example)
 ```
+
 ## What & Why
+
 -
 
 ## How Tested
+
 -
 
 ## Author Checklist
+
 - [ ] Lint/types/tests green
 - [ ] Docs updated
 - [ ] No secrets/PII in logs
+
 ```
 
 ### Issue Template — Performance Regression
 ```
+
 ### Description
+
 Performance regression (model/device/params).
 
 ### Steps to Reproduce
+
 1)
 2)
 3)
 
 ### Expected / Actual
+
 -
 
 ### Attachments
+
 - Logs, JSON/CSV, tooling versions
+
 ```
 
 
@@ -2454,6 +2496,7 @@ Performance regression (model/device/params).
 - [ ] Check #399: See CI/CD, Security, Testing, and Device Farm sections.
 - [ ] Check #400: See CI/CD, Security, Testing, and Device Farm sections.
 ```
+
 ### `LICENSE`
 
 ```text
@@ -2465,6 +2508,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy
 ... (standard MIT text shortened for brevity in this snippet; include full text in real repo) ...
 
 ```
+
 ### `SECURITY.md`
 
 ```markdown
@@ -2477,6 +2521,7 @@ Please report vulnerabilities privately via security@example.com. We will acknow
 Source under /ovmobilebench/**, CI workflows, and published artifacts.
 
 ```
+
 ### `CODE_OF_CONDUCT.md`
 
 ```markdown
@@ -2484,6 +2529,7 @@ Source under /ovmobilebench/**, CI workflows, and published artifacts.
 We follow the Contributor Covenant. Be respectful, inclusive, and constructive.
 
 ```
+
 ### `CONTRIBUTING.md`
 
 ```markdown
@@ -2498,6 +2544,7 @@ We follow the Contributor Covenant. Be respectful, inclusive, and constructive.
 - `ruff ovmobilebench && black --check ovmobilebench && mypy ovmobilebench`
 
 ```
+
 ### `.gitignore`
 
 ```text
@@ -2514,12 +2561,14 @@ build/
 *.tar.gz
 
 ```
+
 ### `.gitattributes`
 
 ```text
 * text=auto eol=lf
 
 ```
+
 ### `.pre-commit-config.yaml`
 
 ```yaml
@@ -2550,6 +2599,7 @@ repos:
     - id: trailing-whitespace
 
 ```
+
 ### `pyproject.toml`
 
 ```toml
@@ -2595,6 +2645,7 @@ ovmobilebench = "ovmobilebench.cli:app"
 include = ["ovmobilebench*"]
 
 ```
+
 ### `Makefile`
 
 ```makefile
@@ -2602,42 +2653,43 @@ include = ["ovmobilebench*"]
 .PHONY: help build package deploy run report all lint fmt type test clean
 
 help:
-	@echo "Targets: build package deploy run report all lint fmt type test clean"
+ @echo "Targets: build package deploy run report all lint fmt type test clean"
 
 build:
-	ovmobilebench build -c $(CFG)
+ ovmobilebench build -c $(CFG)
 
 package:
-	ovmobilebench package -c $(CFG)
+ ovmobilebench package -c $(CFG)
 
 deploy:
-	ovmobilebench deploy -c $(CFG)
+ ovmobilebench deploy -c $(CFG)
 
 run:
-	ovmobilebench run -c $(CFG)
+ ovmobilebench run -c $(CFG)
 
 report:
-	ovmobilebench report -c $(CFG)
+ ovmobilebench report -c $(CFG)
 
 all:
-	ovmobilebench all -c $(CFG)
+ ovmobilebench all -c $(CFG)
 
 lint:
-	ruff ovmobilebench
+ ruff ovmobilebench
 
 fmt:
-	black ovmobilebench
+ black ovmobilebench
 
 type:
-	mypy ovmobilebench
+ mypy ovmobilebench
 
 test:
-	pytest -q
+ pytest -q
 
 clean:
-	rm -rf artifacts/ .pytest_cache .mypy_cache .ruff_cache dist build
+ rm -rf artifacts/ .pytest_cache .mypy_cache .ruff_cache dist build
 
 ```
+
 ### `tox.ini`
 
 ```ini
@@ -2660,6 +2712,7 @@ deps = mypy
 commands = mypy ovmobilebench
 
 ```
+
 ### `Dockerfile.dev`
 
 ```dockerfile
@@ -2672,6 +2725,7 @@ COPY ovmobilebench ./ovmobilebench
 RUN pip install -U pip && pip install .[dev]
 
 ```
+
 ### `.github/workflows/bench.yml`
 
 ```yaml
@@ -2740,6 +2794,7 @@ jobs:
           path: experiments/out/*
 
 ```
+
 ### `experiments/android_mcpu_fp16.yaml`
 
 ```yaml
@@ -2793,17 +2848,20 @@ report:
     branch: "feature/arm-optim"
 
 ```
+
 ### `models/.gitkeep`
 
 ```text
 
 ```
+
 ### `ovmobilebench/__init__.py`
 
 ```python
 __all__ = []
 
 ```
+
 ### `ovmobilebench/cli.py`
 
 ```python
@@ -2850,6 +2908,7 @@ if __name__ == "__main__":
     app()
 
 ```
+
 ### `ovmobilebench/pipeline.py`
 
 ```python
@@ -2860,6 +2919,7 @@ def run_all(cfg: Experiment):
     print("Running full pipeline for", cfg.project.name, "run_id:", cfg.project.run_id)
 
 ```
+
 ### `ovmobilebench/config/schema.py`
 
 ```python
@@ -2943,6 +3003,7 @@ class Experiment(BaseModel):
     report: ReportConfig
 
 ```
+
 ### `ovmobilebench/devices/base.py`
 
 ```python
@@ -2966,6 +3027,7 @@ class Device(ABC):
     def info(self) -> dict: ...
 
 ```
+
 ### `ovmobilebench/devices/android.py`
 
 ```python
@@ -3001,6 +3063,7 @@ class AndroidDevice(Device):
         return {"os": "Android", "props": props, "serial": self.serial}
 
 ```
+
 ### `ovmobilebench/parsers/benchmark_parser.py`
 
 ```python
@@ -3034,6 +3097,7 @@ def parse_metrics(text: str) -> dict:
     }
 
 ```
+
 ### `ovmobilebench/runners/benchmark.py`
 
 ```python
@@ -3062,6 +3126,7 @@ def build_cmd(push_dir: str, spec: RunSpec) -> str:
     return " ".join(parts)
 
 ```
+
 ### `ovmobilebench/report/sink.py`
 
 ```python
@@ -3080,6 +3145,7 @@ def write_csv(rows: list[dict], path: Path):
         w.writeheader(); w.writerows(rows)
 
 ```
+
 ### `ovmobilebench/core/shell.py`
 
 ```python
@@ -3106,6 +3172,7 @@ def run(cmd, timeout=None, env=None, cwd=None) -> CommandResult:
     return CommandResult(proc.returncode, out, err, time.time() - start)
 
 ```
+
 ### `ovmobilebench/core/fs.py`
 
 ```python
@@ -3114,6 +3181,7 @@ def ensure_dir(p: Path) -> None:
     p.mkdir(parents=True, exist_ok=True)
 
 ```
+
 ### `ovmobilebench/core/artifacts.py`
 
 ```python
@@ -3126,6 +3194,7 @@ class ArtifactRef:
     build_type: str
 
 ```
+
 ### `tests/test_parser.py`
 
 ```python
@@ -3152,6 +3221,7 @@ def test_parse_basic():
     assert "ARM CPU" in m["raw_device_line"]
 
 ```
+
 ### `CODEOWNERS`
 
 ```text

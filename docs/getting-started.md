@@ -193,6 +193,7 @@ A typical benchmark result includes:
 - **Build provenance**: OpenVINO version, build flags
 
 Example CSV output:
+
 ```
 model,device,threads,nstreams,throughput_fps,latency_avg_ms
 resnet50,CPU,4,1,25.3,39.5

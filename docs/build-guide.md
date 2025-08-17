@@ -24,11 +24,13 @@ This guide covers building OpenVINO and benchmark_app for mobile platforms.
 ### Platform-Specific Requirements
 
 #### Android
+
 - Android NDK r26d or later
 - Android SDK (for adb)
 - Java JDK 8+ (for Android SDK)
 
 #### Linux ARM
+
 - Cross-compilation toolchain (for cross-compiling)
 - OR native build environment (when building on target)
 

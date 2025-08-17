@@ -1,6 +1,6 @@
 """Configuration schema definitions using Pydantic."""
 
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -8,9 +8,9 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 class Toolchain(BaseModel):
     """Toolchain configuration for building."""
 
-    android_ndk: Optional[str] = Field(None, description="Path to Android NDK")
-    abi: Optional[str] = Field("arm64-v8a", description="Target ABI")
-    api_level: Optional[int] = Field(24, description="Android API level")
+    android_ndk: str | None = Field(None, description="Path to Android NDK")
+    abi: str | None = Field("arm64-v8a", description="Target ABI")
+    api_level: int | None = Field(24, description="Android API level")
     cmake: str = Field("cmake", description="CMake executable path")
     ninja: str = Field("ninja", description="Ninja executable path")
 
@@ -43,26 +43,26 @@ class PackageConfig(BaseModel):
     """Package configuration."""
 
     include_symbols: bool = Field(default=False, description="Include debug symbols")
-    extra_files: List[str] = Field(default_factory=list, description="Additional files to include")
+    extra_files: list[str] = Field(default_factory=list, description="Additional files to include")
 
 
 class DeviceConfig(BaseModel):
     """Device configuration."""
 
     kind: Literal["android", "linux_ssh", "ios"] = Field("android", description="Device type")
-    type: Optional[Literal["android", "linux_ssh", "ios"]] = Field(
+    type: Literal["android", "linux_ssh", "ios"] | None = Field(
         None, description="Alternative type field"
     )
-    serials: List[str] = Field(default_factory=list, description="Device serials (Android)")
-    host: Optional[str] = Field(None, description="SSH host (Linux)")
-    username: Optional[str] = Field(None, description="SSH username (Linux)")
-    user: Optional[str] = Field(None, description="SSH user (Linux) - deprecated, use username")
-    password: Optional[str] = Field(None, description="SSH password (Linux)")
-    key_filename: Optional[str] = Field(None, description="SSH key file path (Linux)")
-    key_path: Optional[str] = Field(
+    serials: list[str] = Field(default_factory=list, description="Device serials (Android)")
+    host: str | None = Field(None, description="SSH host (Linux)")
+    username: str | None = Field(None, description="SSH username (Linux)")
+    user: str | None = Field(None, description="SSH user (Linux) - deprecated, use username")
+    password: str | None = Field(None, description="SSH password (Linux)")
+    key_filename: str | None = Field(None, description="SSH key file path (Linux)")
+    key_path: str | None = Field(
         None, description="SSH key path (Linux) - deprecated, use key_filename"
     )
-    port: Optional[int] = Field(22, description="SSH port (Linux)")
+    port: int | None = Field(22, description="SSH port (Linux)")
     push_dir: str = Field(default="/data/local/tmp/ovmobilebench", description="Remote directory")
     use_root: bool = Field(default=False, description="Use root access")
 
@@ -99,8 +99,8 @@ class ModelItem(BaseModel):
 
     name: str = Field(..., description="Model name")
     path: str = Field(..., description="Path to model XML file")
-    precision: Optional[str] = Field(None, description="Model precision")
-    tags: Dict[str, Any] = Field(default_factory=dict, description="Additional tags")
+    precision: str | None = Field(None, description="Model precision")
+    tags: dict[str, Any] = Field(default_factory=dict, description="Additional tags")
 
     @field_validator("path")
     @classmethod
@@ -113,13 +113,13 @@ class ModelItem(BaseModel):
 class RunMatrix(BaseModel):
     """Run matrix configuration."""
 
-    niter: List[int] = Field([200], description="Number of iterations")
-    api: List[Literal["sync", "async"]] = Field(["sync"], description="API mode")
-    nireq: List[int] = Field([1], description="Number of infer requests")
-    nstreams: List[str] = Field(["1"], description="Number of streams")
-    device: List[str] = Field(["CPU"], description="Target device")
-    infer_precision: List[str] = Field(["FP16"], description="Inference precision")
-    threads: List[int] = Field([4], description="Number of threads")
+    niter: list[int] = Field([200], description="Number of iterations")
+    api: list[Literal["sync", "async"]] = Field(["sync"], description="API mode")
+    nireq: list[int] = Field([1], description="Number of infer requests")
+    nstreams: list[str] = Field(["1"], description="Number of streams")
+    device: list[str] = Field(["CPU"], description="Target device")
+    infer_precision: list[str] = Field(["FP16"], description="Inference precision")
+    threads: list[int] = Field([4], description="Number of threads")
 
 
 class RunConfig(BaseModel):
@@ -138,7 +138,7 @@ class RunConfig(BaseModel):
         )
     )
     cooldown_sec: int = Field(default=0, description="Cooldown between runs in seconds")
-    timeout_sec: Optional[int] = Field(None, description="Timeout per run in seconds")
+    timeout_sec: int | None = Field(None, description="Timeout per run in seconds")
     warmup: bool = Field(default=False, description="Perform warmup run")
 
 
@@ -152,8 +152,8 @@ class SinkItem(BaseModel):
 class ReportConfig(BaseModel):
     """Report configuration."""
 
-    sinks: List[SinkItem] = Field(..., description="Output sinks")
-    tags: Dict[str, Any] = Field(default_factory=dict, description="Additional tags")
+    sinks: list[SinkItem] = Field(..., description="Output sinks")
+    tags: dict[str, Any] = Field(default_factory=dict, description="Additional tags")
     aggregate: bool = Field(default=True, description="Aggregate results")
     include_raw: bool = Field(default=False, description="Include raw output")
 
@@ -163,7 +163,7 @@ class ProjectConfig(BaseModel):
 
     name: str = Field(..., description="Project name")
     run_id: str = Field(..., description="Run identifier")
-    description: Optional[str] = Field(None, description="Run description")
+    description: str | None = Field(None, description="Run description")
 
 
 class Experiment(BaseModel):
@@ -173,7 +173,7 @@ class Experiment(BaseModel):
     build: BuildConfig
     package: PackageConfig = Field(default_factory=lambda: PackageConfig())
     device: DeviceConfig
-    models: List[ModelItem]
+    models: list[ModelItem]
     run: RunConfig = Field(
         default_factory=lambda: RunConfig(
             repeats=3,
@@ -193,7 +193,7 @@ class Experiment(BaseModel):
     )
     report: ReportConfig
 
-    def expand_matrix_for_model(self, model: ModelItem) -> List[Dict[str, Any]]:
+    def expand_matrix_for_model(self, model: ModelItem) -> list[dict[str, Any]]:
         """Expand run matrix for a specific model."""
         combos = []
         matrix = self.run.matrix

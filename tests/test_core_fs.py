@@ -153,7 +153,7 @@ class TestGetDigest:
             digest = get_digest(temp_path)
 
             # Calculate expected digest
-            expected = hashlib.sha256("test content".encode()).hexdigest()
+            expected = hashlib.sha256(b"test content").hexdigest()
             assert digest == expected
             assert len(digest) == 64  # SHA256 hex length
         finally:
@@ -169,7 +169,7 @@ class TestGetDigest:
         try:
             digest = get_digest(temp_path, algorithm="md5")
 
-            expected = hashlib.md5("test content".encode()).hexdigest()
+            expected = hashlib.md5(b"test content").hexdigest()
             assert digest == expected
             assert len(digest) == 32  # MD5 hex length
         finally:
@@ -202,7 +202,7 @@ class TestGetDigest:
         try:
             digest = get_digest(Path(temp_path))
 
-            expected = hashlib.sha256("test content".encode()).hexdigest()
+            expected = hashlib.sha256(b"test content").hexdigest()
             assert digest == expected
         finally:
             os.unlink(temp_path)

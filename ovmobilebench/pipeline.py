@@ -3,7 +3,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from ovmobilebench.builders.openvino import OpenVINOBuilder
 from ovmobilebench.config.schema import Experiment
@@ -31,9 +31,9 @@ class Pipeline:
         self.verbose = verbose
         self.dry_run = dry_run
         self.artifacts_dir = ensure_dir(Path("artifacts") / config.project.run_id)
-        self.results: List[Dict[str, Any]] = []
+        self.results: list[dict[str, Any]] = []
 
-    def build(self) -> Optional[Path]:
+    def build(self) -> Path | None:
         """Build OpenVINO runtime."""
         if not self.config.build.enabled:
             logger.info("Build disabled, skipping")
@@ -48,7 +48,7 @@ class Pipeline:
 
         return builder.build()
 
-    def package(self) -> Optional[Path]:
+    def package(self) -> Path | None:
         """Create deployment package."""
         if self.dry_run:
             logger.info("[DRY RUN] Would create package")
@@ -101,9 +101,9 @@ class Pipeline:
 
     def run(
         self,
-        timeout: Optional[int] = None,
-        cooldown: Optional[int] = None,
-    ) -> List[Dict[str, Any]]:
+        timeout: int | None = None,
+        cooldown: int | None = None,
+    ) -> list[dict[str, Any]]:
         """Run benchmarks on devices."""
         if self.dry_run:
             logger.info("[DRY RUN] Would run benchmarks")
@@ -181,7 +181,7 @@ class Pipeline:
         for sink_config in self.config.report.sinks:
             path = Path(sink_config.path)
 
-            sink: Union[JSONSink, CSVSink]
+            sink: JSONSink | CSVSink
             if sink_config.type == "json":
                 sink = JSONSink()
             elif sink_config.type == "csv":

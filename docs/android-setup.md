@@ -115,6 +115,7 @@ ovmobilebench-android-installer setup \
 ### What Gets Installed
 
 **Full Installation (default):**
+
 - Android SDK Command Line Tools
 - Android SDK Platform Tools (includes `adb`)
 - Android SDK Build Tools
@@ -124,22 +125,26 @@ ovmobilebench-android-installer setup \
 - Android Emulator (optional)
 
 **NDK-Only Installation:**
+
 - Android SDK Command Line Tools (required)
 - Android NDK
 
 ### Platform-Specific Details
 
 #### Windows
+
 - Downloads Windows-specific packages
 - Installs to `%USERPROFILE%\android-sdk` by default
 - Uses `.bat` scripts for SDK manager
 
 #### macOS
+
 - Downloads macOS-specific packages (supports both Intel and Apple Silicon)
 - Installs to `~/android-sdk` by default
 - Handles DMG extraction for NDK
 
 #### Linux
+
 - Downloads Linux-specific packages
 - Installs to `~/android-sdk` by default
 - Works on x86_64 and ARM64 architectures
@@ -183,6 +188,7 @@ ovmobilebench-android-installer export-env `
 ```
 
 The module sets the following environment variables:
+
 - `ANDROID_HOME` - Android SDK root directory
 - `ANDROID_SDK_ROOT` - Same as ANDROID_HOME
 - `ANDROID_NDK_HOME` - NDK installation directory
@@ -235,6 +241,7 @@ chmod +x scripts/setup_android_tools.py
 #### Download Failures
 
 If downloads fail, you can:
+
 1. Try again (the script caches partial downloads)
 2. Use a VPN if you're in a region with restricted access
 3. Download files manually and place them in the installation directory
@@ -242,6 +249,7 @@ If downloads fail, you can:
 #### SDK Manager Issues
 
 If `sdkmanager` fails to install packages:
+
 1. Make sure you have Java 11 or higher installed
 2. Accept all licenses manually: `sdkmanager --licenses`
 3. Check proxy settings if behind a corporate firewall
@@ -249,9 +257,11 @@ If `sdkmanager` fails to install packages:
 #### ADB Connection Issues
 
 If `adb devices` doesn't show your device:
+
 1. Enable USB debugging on your Android device
 2. Install device drivers (Windows)
 3. Add udev rules (Linux):
+
    ```bash
    echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0666", GROUP="plugdev"' | sudo tee /etc/udev/rules.d/51-android.rules
    sudo udevadm control --reload-rules
@@ -262,12 +272,14 @@ If `adb devices` doesn't show your device:
 Once Android tools are installed, you can use them with OVMobileBench:
 
 1. **List connected devices:**
+
    ```bash
    ovmobilebench list-devices
    ```
 
 2. **Build OpenVINO for Android:**
    Configure your experiment YAML with the NDK path:
+
    ```yaml
    build:
      toolchain:
@@ -277,6 +289,7 @@ Once Android tools are installed, you can use them with OVMobileBench:
    ```
 
 3. **Deploy and run benchmarks:**
+
    ```bash
    ovmobilebench all -c experiments/android_config.yaml
    ```

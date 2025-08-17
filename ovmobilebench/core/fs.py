@@ -4,17 +4,16 @@ import hashlib
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Union
 
 
-def ensure_dir(path: Union[str, Path]) -> Path:
+def ensure_dir(path: str | Path) -> Path:
     """Ensure directory exists, create if needed."""
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
-def atomic_write(path: Union[str, Path], content: str, mode: str = "w"):
+def atomic_write(path: str | Path, content: str, mode: str = "w"):
     """Write file atomically using temporary file and rename."""
     path = Path(path)
     ensure_dir(path.parent)
@@ -33,7 +32,7 @@ def atomic_write(path: Union[str, Path], content: str, mode: str = "w"):
     temp_path.replace(path)
 
 
-def get_digest(path: Union[str, Path], algorithm: str = "sha256") -> str:
+def get_digest(path: str | Path, algorithm: str = "sha256") -> str:
     """Calculate file digest."""
     path = Path(path)
     hasher = hashlib.new(algorithm)
@@ -45,7 +44,7 @@ def get_digest(path: Union[str, Path], algorithm: str = "sha256") -> str:
     return hasher.hexdigest()
 
 
-def copy_tree(src: Union[str, Path], dst: Union[str, Path], symlinks: bool = False):
+def copy_tree(src: str | Path, dst: str | Path, symlinks: bool = False):
     """Copy directory tree."""
     src = Path(src)
     dst = Path(dst)
@@ -60,7 +59,7 @@ def copy_tree(src: Union[str, Path], dst: Union[str, Path], symlinks: bool = Fal
         shutil.copytree(src, dst, symlinks=symlinks, dirs_exist_ok=True)
 
 
-def clean_dir(path: Union[str, Path], keep_root: bool = True):
+def clean_dir(path: str | Path, keep_root: bool = True):
     """Clean directory contents."""
     path = Path(path)
 
@@ -77,7 +76,7 @@ def clean_dir(path: Union[str, Path], keep_root: bool = True):
         shutil.rmtree(path)
 
 
-def get_size(path: Union[str, Path]) -> int:
+def get_size(path: str | Path) -> int:
     """Get file or directory size in bytes."""
     path = Path(path)
 

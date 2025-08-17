@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional, cast
+from typing import Any, cast
 
 import typer
 from rich.console import Console
@@ -63,12 +63,12 @@ def setup(
         "--with-emulator/--no-emulator",
         help="Install emulator and system image",
     ),
-    with_build_tools: Optional[str] = typer.Option(
+    with_build_tools: str | None = typer.Option(
         None,
         "--with-build-tools",
         help="Install specific build-tools version",
     ),
-    create_avd: Optional[str] = typer.Option(
+    create_avd: str | None = typer.Option(
         None,
         "--create-avd",
         help="Create AVD with specified name",
@@ -78,7 +78,7 @@ def setup(
         "--accept-licenses/--prompt-licenses",
         help="Automatically accept SDK licenses",
     ),
-    export_env: Optional[Path] = typer.Option(
+    export_env: Path | None = typer.Option(
         None,
         "--export-env",
         help="Export environment variables to file (e.g., $GITHUB_ENV)",
@@ -99,7 +99,7 @@ def setup(
         "-v",
         help="Enable verbose logging",
     ),
-    jsonl_log: Optional[Path] = typer.Option(
+    jsonl_log: Path | None = typer.Option(
         None,
         "--jsonl-log",
         help="Write structured logs to JSON lines file",
@@ -326,7 +326,7 @@ def list_targets() -> None:
     console.print("[bold]Supported System Image Combinations:[/bold]\n")
 
     # Group by API level
-    combinations: Dict[int, Dict[str, list]] = {}
+    combinations: dict[int, dict[str, list]] = {}
     for api, target, arch in Planner.VALID_COMBINATIONS:
         if api not in combinations:
             combinations[api] = {}

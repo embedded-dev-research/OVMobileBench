@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import Dict
 
 from ovmobilebench.config.schema import BuildConfig
 from ovmobilebench.core.errors import BuildError
@@ -116,7 +115,7 @@ class OpenVINOBuilder:
 
         logger.info("Build completed successfully")
 
-    def get_artifacts(self) -> Dict[str, Path]:
+    def get_artifacts(self) -> dict[str, Path]:
         """Get paths to build artifacts."""
         artifacts = {
             "benchmark_app": self.build_dir / "bin" / "arm64-v8a" / "benchmark_app",

@@ -1,4 +1,5 @@
 # OVMobileBench Mobile — End-to-End Benchmarking Pipeline for OpenVINO on Mobile Devices
+>
 > **Summary**: This document describes a Python project that automates the full pipeline
 > from building OpenVINO Runtime and `benchmark_app`, packaging runtime and models,
 > deploying the bundle to mobile devices (Android via ADB, with optional Linux/SSH, iOS stub),
@@ -8,13 +9,16 @@
 > **Scope**: Architecture, directory layout, configuration schema, CLI design, build & packaging,
 > device abstractions, runners, parsers, reporting, CI, reliability & reproducibility strategies,
 > examples, troubleshooting, FAQs, and extensibility roadmap.
+
 - **Document Version**: 1.0
 - **Generated**: 2025-08-15 14:04:42
 - **Project Codename**: `ovmobilebench`
 - **Primary Target**: Android (ADB, arm64-v8a)
 - **Secondary Targets**: Linux ARM (SSH), iOS (stub/interface)
 - **Authoring Tool**: ChatGPT (programmatic generation)
+
 ## Table of Contents
+
 1. [Goals and Principles](#goals-and-principles)
 2. [High-Level Flow](#high-level-flow)
 3. [Directory Structure](#directory-structure)
@@ -45,6 +49,7 @@
 28. [Appendix E — Glossary](#appendix-e--glossary)
 29. [Appendix F — Device Notes (Android/Linux/iOS)](#appendix-f--device-notes-androidlinuxios)
 30. [License and Attribution](#license-and-attribution)
+
 ## Goals and Principles
 
 - **End-to-end automation**: One command to build, package, deploy, run, parse, and report.
@@ -55,6 +60,7 @@
 - **Reproducibility**: Versioned artifacts, pinned toolchains, hermetic packaging of runtime + models.
 - **Safety-by-default**: No hidden state; all inputs/outputs serialized to experiment artifact folders.
 - **Simplicity in use**: YAML experiments + ergonomic CLI with sane defaults.
+
 ## High-Level Flow
 
 1. **Build** OpenVINO Runtime and `benchmark_app` for the target ABI (Android NDK or native/SSH).
@@ -64,6 +70,7 @@
 5. **Parse** stdout / stderr to extract throughput and latency metrics with a robust parser.
 6. **Report** results into CSV/JSON (and optionally SQLite), including all metadata and tags.
 7. **Trace** everything: commits, flags, device props, temperature (optional), and timestamps.
+
 ## Directory Structure
 
 ```text
@@ -113,12 +120,14 @@ ovmobilebench/
   .github/workflows/
     bench.yml
 ```
+
 ## Configuration Model
 
 Configurations are authored as YAML and validated with Pydantic models.
 They describe the build options, devices, models, and run matrix, as well as reporting sinks and tags.
 
 **Key sections**:
+
 - `project`: name and run identifier.
 - `build`: whether to build, what repo/commit to use, toolchain, and options.
 - `package`: packaging flags and additional files.
@@ -126,6 +135,7 @@ They describe the build options, devices, models, and run matrix, as well as rep
 - `models`: a list of models (IR XML + BIN assumed) and metadata (precision, name).
 - `run`: execution matrix, repeats, and other parameters.
 - `report`: sinks (CSV/JSON/SQLite) and custom tags.
+
 ## CLI Commands
 
 - `ovmobilebench build -c <yaml>` — Build runtime and benchmark_app for the target.
@@ -135,49 +145,62 @@ They describe the build options, devices, models, and run matrix, as well as rep
 - `ovmobilebench report -c <yaml>` — Parse, aggregate, and save formatted results.
 - `ovmobilebench all -c <yaml>` — Perform the entire pipeline in one go.
 - Common flags: `--dry-run`, `--verbose`, `--timeout <sec>`, `--cooldown-sec <sec>`.
+
 ## Core Utilities
 
 ### `core.shell`
+
 - Safe subprocess execution with timeouts, live logging, and retry policies.
 - Captures `returncode`, `stdout`, `stderr` and duration.
 - Optional `env` and `cwd` control.
 
 ### `core.fs`
+
 - Helpers for atomic writes, temporary dirs, cross-platform path handling.
 - Digest-based caching and artifact versioning helpers.
 
 ### `core.artifacts`
+
 - Identifiers for artifacts: `<platform>/<commit>/<build_type>`.
 - Layout helpers mapping build outputs into a bundle structure.
 
 ### `core.device_info`
+
 - Collects system information (Android: `getprop`, `/proc/cpuinfo`, etc.).
 - Normalizes CPU, cores, frequencies where possible.
 
 ### `core.logging`
+
 - Structured logging (JSON lines) and human-readable logs simultaneously.
 
 ### `core.retry`
+
 - Exponential backoff with jitter for flaky ADB/SSH calls.
 
 ### `core.errors`
+
 - Exception hierarchy for predictable error handling across layers.
+
 ## Build System
 
 ### OpenVINO + benchmark_app for Android
+
 - Toolchain: Android NDK (r26d or newer recommended).
 - CMake + Ninja, `android.toolchain.cmake`, ABI `arm64-v8a`, API level ≥ 24.
 - Build flags intentionally minimal for runtime + samples.
 
 ### Example Steps
+
 1. Configure with CMake: set toolchain, ABI, platform, build type.
 2. Disable tests that aren't needed on device.
 3. Build `benchmark_app` target and copy required shared libraries.
 4. Version the build using `git rev-parse HEAD` for traceability.
 
 ### Non-Android (Linux ARM)
+
 - Native or cross-compilation depending on host/target.
 - SSH-based deployment; otherwise identical pipeline.
+
 ## Packaging
 
 - Bundle layout:
@@ -187,9 +210,11 @@ They describe the build options, devices, models, and run matrix, as well as rep
   - `README_device.txt` (optional hints)
 - Compressed as `ovbundle_<platform>_<commit>.tar.gz`.
 - Integrity check by verifying expected files on unpacking.
+
 ## Device Abstractions
 
 ### Base Interface
+
 ```python
 class Device(ABC):
     def push(self, local: Path, remote: str) -> None: ...
@@ -198,13 +223,16 @@ class Device(ABC):
     def pull(self, remote: str, local: Path) -> None: ...
     def info(self) -> dict: ...
 ```
+
 ### Android (ADB)
+
 - `adb -s <serial> push/pull/shell`
 - Run directory: `/data/local/tmp/ovmobilebench`
 - Env: `LD_LIBRARY_PATH` includes `lib/` within run directory
 - Optional: thermal and CPU governor inspection
 
 ### Linux (SSH)
+
 - **Paramiko-based** SSH implementation for secure remote operations
 - `push` via SFTP for file transfers
 - `shell` via exec_command for remote command execution
@@ -214,7 +242,9 @@ class Device(ABC):
 - Useful for SBCs/Jetson when Android is not applicable
 
 ### iOS (Stub)
+
 - Interface and constraints documented; app-based runner typically required
+
 ## Runners
 
 - The benchmark runner forms the command line based on a `RunSpec`:
@@ -225,6 +255,7 @@ class Device(ABC):
   - `-nstreams`, `-nthreads` (optional, CPU-specific)
 - Matrix expansion: `models × nireq × nstreams × threads × api × niter`.
 - Repeats: for each spec, run multiple times and collect per-run metrics for aggregation.
+
 ## Parsers
 
 - Regex-based extraction of:
@@ -235,6 +266,7 @@ class Device(ABC):
   - Device line (if present)
 - Normalization of units and robust handling of missing values.
 - Optionally preserve the last N KB of raw logs for diagnostics.
+
 ## Reporting
 
 - Sinks:
@@ -246,6 +278,7 @@ class Device(ABC):
   - Group by model/device/params
 - Provenance:
   - Commit hash, build flags, toolchain versions, device info, tags
+
 ## Orchestration Pipeline
 
 The `pipeline.py` module coordinates the stages:
@@ -259,6 +292,7 @@ The `pipeline.py` module coordinates the stages:
 
 Errors are captured with specific exception types and retried when safe.
 All intermediate artifacts and logs are stored beneath `artifacts/`.
+
 ## Reliability and Reproducibility
 
 - Timeouts and retries for ADB/SSH commands
@@ -266,22 +300,26 @@ All intermediate artifacts and logs are stored beneath `artifacts/`.
 - Optional preconditioning/warmup run
 - Pinned toolchain versions and flags, stored in JSON metadata
 - Model checksums recorded to guarantee inputs match
+
 ## Performance Methodology
 
 - Prefer **median** throughput and latency across repeats
 - Record ambient conditions (if available) and test durations
 - Control background load: airplane mode, disable animations (Android dev options), close apps
 - Standardize power source (battery level or charging policy)
+
 ## Thermals and Power
 
 - Optional capture: `dumpsys thermalservice`, `/sys/class/thermal/*`
 - If throttling detected, annotate results and optionally retry after cooldown
 - For power-sensitive tests, maintain consistent charging state and screen-off policy
+
 ## Security Considerations
 
 - Bundles may contain proprietary models; support encrypted model distribution (future work)
 - Avoid storing secrets in configs; use environment variables for sensitive paths
 - Sanitize logs by default (no accidental PII or internal paths where not required)
+
 ## CI/CD Integration
 
 - GitHub Actions workflow (`.github/workflows/bench.yml`):
@@ -289,20 +327,25 @@ All intermediate artifacts and logs are stored beneath `artifacts/`.
   - Device job (self-hosted runner with attached device): downloads artifact, deploys, runs matrix
   - Publishes results as artifacts and/or pushes to storage (S3/GCS)
 - Nightly and per-commit modes possible with differing matrices and models
+
 ## Examples and Walkthroughs
 
 ### 1) Minimal Android Run (single device, FP16)
+
 - Prepare `experiments/android_minimal.yaml`
 - Run: `ovmobilebench all -c experiments/android_minimal.yaml`
 - Inspect outputs: `experiments/out/*.json` and `*.csv`
 
 ### 2) Multi-Device Matrix
+
 - Provide multiple serials to `device.serials`
 - Matrix expands per device; reports include serial identifiers
 
 ### 3) SSH to Linux ARM
+
 - Switch `device.kind` to `linux_ssh` and provide host/user/key
 - Otherwise identical pipeline
+
 ## Troubleshooting
 
 - **ADB timeouts**: Check USB cable, enable developer options/USB debugging, increase command timeout.
@@ -310,6 +353,7 @@ All intermediate artifacts and logs are stored beneath `artifacts/`.
 - **Missing `.bin` next to `.xml`**: Packaging step expects both; verify model paths.
 - **Low/unstable FPS**: Add cooldowns, fix charging state, reduce background load, check thermal throttling.
 - **CMake configure errors**: Confirm NDK path, ABI, API level; delete build cache and reconfigure.
+
 ## FAQs
 
 **Q: Can I use prebuilt OpenVINO?**
@@ -323,11 +367,13 @@ A: Android via ADB out of the box; Linux ARM via SSH optional; iOS is stubbed fo
 
 **Q: How do I add a new runner (e.g., custom app)?**
 A: Implement a device-agnostic `Runner` that produces comparable metrics, and plug it into the pipeline.
+
 ## Change Management
 
 - Versioning via tags in `report.tags` and artifact directory structure
 - Schema evolution handled by Pydantic models with `version` keys
 - Changelog driven by PRs; CI validates sample experiments and parsing logic
+
 ## Extensibility Roadmap
 
 - iOS app-based runner integration
@@ -335,6 +381,7 @@ A: Implement a device-agnostic `Runner` that produces comparable metrics, and pl
 - Built-in ONNX→IR conversion stage
 - Web UI for browsing historical runs
 - SQLite sink and lightweight query CLI
+
 ## Appendix A — Config Schemas
 
 ```python
@@ -438,9 +485,11 @@ class Experiment(BaseModel):
                                 })
         return combos
 ```
+
 ## Appendix B — Code Skeletons
 
 ### `ovmobilebench/core/shell.py`
+
 ```python
 import subprocess, shlex, time
 from dataclasses import dataclass
@@ -469,6 +518,7 @@ def run(cmd, timeout=None, env=None, cwd=None) -> CommandResult:
 ```
 
 ### `ovmobilebench/devices/android.py`
+
 ```python
 import subprocess
 from pathlib import Path
@@ -502,9 +552,11 @@ class AndroidDevice(Device):
         rc, props, _ = self.shell("getprop")
         return {"os": "Android", "props": props, "serial": self.serial}
 ```
+
 ## Appendix C — Example Experiment Files
 
 ### `experiments/android_mcpu_fp16.yaml`
+
 ```yaml
 project:
   name: "ovmobilebench-mobile"
@@ -565,6 +617,7 @@ report:
 ```
 
 ### `experiments/linux_arm_fp32.yaml`
+
 ```yaml
 project:
   name: "ovmobilebench-linux-arm"
@@ -617,6 +670,7 @@ report:
   tags:
     scenario: "jetson-eval"
 ```
+
 ## Appendix D — Data Model for Results
 
 Each run produces a flattened record with the following fields:
@@ -631,6 +685,7 @@ build_type, build_commit, toolchain_versions, device_info, tags (JSON)
 ```
 
 Example (JSON):
+
 ```json
 {
   "timestamp": "2025-08-14T11:20:05Z",
@@ -662,6 +717,7 @@ Example (JSON):
   "tags": {"branch":"feature/arm-optim","owner":"alex"}
 }
 ```
+
 ## Appendix E — Glossary
 
 - **ABI** — Application Binary Interface (e.g., `arm64-v8a` for Android 64-bit ARM).
@@ -680,26 +736,33 @@ Example (JSON):
 - **RelWithDebInfo** — Build type (Release with Debug Info).
 - **Throughput (FPS)** — Inferences per second (frames per second).
 - **Threads (nthreads)** — CPU thread count configured for plugin.
+
 ## Appendix F — Device Notes (Android/Linux/iOS)
 
 ### Android
+
 - Enable Developer Options and USB Debugging.
 - Confirm `adb devices` lists the serial.
 - Ensure run directory permissions: `/data/local/tmp/ovmobilebench` is typically writable.
 
 ### Linux (SSH)
+
 - Ensure SSH key-based auth; confirm SFTP is enabled.
 - Confirm filesystem has enough space for bundles and outputs.
 
 ### iOS (Stub)
+
 - Requires custom app wrapper around inference runnable.
 - Future work: specify `xcrun simctl` or device-runner integration.
+
 ## License and Attribution
 
 - This document and the scaffolding are provided for internal benchmarking workflows.
 - Respect licenses of third-party tools and dependencies (OpenVINO, Android NDK, etc.).
 - Models may have their own licenses; ensure compliance before distribution.
+
 ### Recipe 01 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #1.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -712,8 +775,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_01.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 02 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #2.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -726,8 +789,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_02.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 03 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #3.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -740,8 +803,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_03.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 04 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #4.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -754,8 +817,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_04.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 05 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #5.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -768,8 +831,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_05.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 06 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #6.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -782,8 +845,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_06.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 07 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #7.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -796,8 +859,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_07.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 08 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #8.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -810,8 +873,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_08.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 09 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #9.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -824,8 +887,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_09.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 10 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #10.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -838,8 +901,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_10.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 11 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #11.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -852,8 +915,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_11.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 12 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #12.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -866,8 +929,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_12.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 13 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #13.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -880,8 +943,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_13.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 14 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #14.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -894,8 +957,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_14.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 15 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #15.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -908,8 +971,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_15.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 16 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #16.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -922,8 +985,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_16.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 17 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #17.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -936,8 +999,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_17.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 18 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #18.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -950,8 +1013,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_18.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 19 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #19.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -964,8 +1027,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_19.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 20 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #20.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -978,8 +1041,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_20.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 21 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #21.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -992,8 +1055,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_21.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 22 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #22.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1006,8 +1069,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_22.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 23 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #23.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1020,8 +1083,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_23.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 24 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #24.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1034,8 +1097,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_24.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 25 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #25.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1048,8 +1111,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_25.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 26 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #26.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1062,8 +1125,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_26.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 27 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #27.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1076,8 +1139,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_27.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 28 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #28.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1090,8 +1153,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_28.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 29 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #29.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1104,8 +1167,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_29.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 30 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #30.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1118,8 +1181,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_30.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 31 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #31.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1132,8 +1195,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_31.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 32 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #32.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1146,8 +1209,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_32.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 33 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #33.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1160,8 +1223,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_33.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 34 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #34.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1174,8 +1237,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_34.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 35 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #35.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1188,8 +1251,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_35.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 36 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #36.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1202,8 +1265,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_36.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 37 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #37.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1216,8 +1279,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_37.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 38 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #38.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1230,8 +1293,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_38.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 39 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #39.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1244,8 +1307,8 @@ Example (JSON):
 - **Outputs**: `experiments/out/recipe_39.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
 
-
 ### Recipe 40 — Scenario Pattern
+
 - **Goal**: Describe a repeatable benchmarking scenario pattern #40.
 - **Context**: Applies to a class of models/devices.
 - **Inputs**: YAML config with variations in `nireq`, `nstreams`, `threads`.
@@ -1257,280 +1320,282 @@ Example (JSON):
   5. Parse and report as CSV + JSON.
 - **Outputs**: `experiments/out/recipe_40.csv` and `.json`.
 - **Notes**: Adjust cooldowns to avoid thermal bias for longer models.
+
 ### Tip 01 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 02 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 03 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 04 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 05 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 06 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 07 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 08 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 09 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 10 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 11 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 12 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 13 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 14 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 15 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 16 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 17 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 18 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 19 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 20 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 21 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 22 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 23 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 24 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 25 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 26 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 27 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 28 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 29 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 30 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 31 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 32 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 33 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 34 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 35 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 36 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 37 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 38 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
-
 
 ### Tip 39 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
 - **Extra**: Increase `run.cooldown_sec` or add a warmup run.
 
-
 ### Tip 40 — Practical Insight
+
 - **Symptom**: Variation in throughput across repeats.
 - **Likely Cause**: CPU governor scaling or background tasks.
 - **Mitigation**: Fix governor (if possible), airplane mode, screen off, stabilize temperature.
@@ -1547,6 +1612,7 @@ Example (JSON):
 ## Quickstart (Expanded)
 
 ### Prerequisites
+
 - Python 3.11+
 - Android SDK Platform Tools (`adb`), Android NDK r26d+
 - CMake 3.24+, Ninja 1.11+
@@ -1555,6 +1621,7 @@ Example (JSON):
 - On macOS host (optional): `brew install cmake ninja android-platform-tools`
 
 ### Installation
+
 ```bash
 # Install dependencies and package
 python -m venv .venv && source .venv/bin/activate
@@ -1565,6 +1632,7 @@ ovmobilebench --help
 ```
 
 ### First Run
+
 ```bash
 cp experiments/android_mcpu_fp16.yaml experiments/local.yaml
 # Edit paths: openvino_repo, models/*.xml, ndk path, etc.
@@ -1625,38 +1693,38 @@ include = ["ovmobilebench*"]
 .PHONY: help build package deploy run report all lint fmt test clean
 
 help:
-	@echo "Targets: build package deploy run report all lint fmt test clean"
+ @echo "Targets: build package deploy run report all lint fmt test clean"
 
 build:
-	ovmobilebench build -c $(CFG)
+ ovmobilebench build -c $(CFG)
 
 package:
-	ovmobilebench package -c $(CFG)
+ ovmobilebench package -c $(CFG)
 
 deploy:
-	ovmobilebench deploy -c $(CFG)
+ ovmobilebench deploy -c $(CFG)
 
 run:
-	ovmobilebench run -c $(CFG)
+ ovmobilebench run -c $(CFG)
 
 report:
-	ovmobilebench report -c $(CFG)
+ ovmobilebench report -c $(CFG)
 
 all:
-	ovmobilebench all -c $(CFG)
+ ovmobilebench all -c $(CFG)
 
 lint:
-	ruff check ovmobilebench
-	mypy ovmobilebench
+ ruff check ovmobilebench
+ mypy ovmobilebench
 
 fmt:
-	black ovmobilebench
+ black ovmobilebench
 
 test:
-	pytest -q
+ pytest -q
 
 clean:
-	rm -rf artifacts/ .pytest_cache .mypy_cache .ruff_cache dist build
+ rm -rf artifacts/ .pytest_cache .mypy_cache .ruff_cache dist build
 ```
 
 ---
@@ -1711,6 +1779,7 @@ RUN pip install -U pip && pip install .[dev]
 ## GitHub Actions — Build & Device Runs
 
 ### `.github/workflows/bench.yml`
+
 ```yaml
 name: ovmobilebench-mobile
 
@@ -1830,6 +1899,7 @@ CREATE INDEX IF NOT EXISTS idx_runs_runid ON runs(run_id);
 ```
 
 **Example Queries**
+
 ```sql
 SELECT model, device, threads, nstreams, nireq,
        percentile_cont(0.5) WITHIN GROUP (ORDER BY throughput_fps) AS fps_median
@@ -1872,6 +1942,7 @@ def check_gates(latest: float, baseline: float | None, min_fps: float, allowed_p
 ## Unit Tests (pytest)
 
 ### `tests/test_parser.py`
+
 ```python
 from ovmobilebench.parsers.benchmark_parser import parse_metrics
 
@@ -1897,6 +1968,7 @@ def test_parse_basic():
 ```
 
 ### `tests/test_android_device.py`
+
 ```python
 from ovmobilebench.devices.android import AndroidDevice
 

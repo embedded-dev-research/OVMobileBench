@@ -12,7 +12,7 @@
 We take security seriously. If you discover a security vulnerability, please follow these steps:
 
 1. **DO NOT** create a public GitHub issue
-2. Email security report to: nesterov.alexander@outlook.com
+2. Email security report to: <nesterov.alexander@outlook.com>
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
@@ -65,16 +65,19 @@ We take security seriously. If you discover a security vulnerability, please fol
 ## Known Security Considerations
 
 ### ADB Security
+
 - ADB runs with elevated privileges
 - Ensure devices are trusted
 - Use ADB authorization
 
 ### SSH Security
+
 - Use key-based authentication
 - Verify host keys
 - Limit SSH access scope
 
 ### Model Execution
+
 - Models run with benchmark_app privileges
 - Potential for malicious models
 - Validate model sources
@@ -82,11 +85,13 @@ We take security seriously. If you discover a security vulnerability, please fol
 ## Security Features
 
 ### Current
+
 - Input validation in configuration
 - Parameterized shell commands
 - Secrets excluded from logs
 
 ### Planned
+
 - Model signature verification
 - Encrypted credential storage
 - Audit logging
@@ -94,18 +99,20 @@ We take security seriously. If you discover a security vulnerability, please fol
 ## Vulnerability Disclosure
 
 After a security issue is resolved:
+
 1. Security advisory will be published
 2. CVE will be requested if applicable
 3. Users will be notified via GitHub
 
 ## Contact
 
-Security Team: nesterov.alexander@outlook.com
+Security Team: <nesterov.alexander@outlook.com>
 PGP Key: [Link to public key]
 
 ## Acknowledgments
 
 We appreciate responsible disclosure and will acknowledge security researchers who:
+
 - Follow responsible disclosure practices
 - Allow reasonable time for fixes
 - Don't exploit vulnerabilities

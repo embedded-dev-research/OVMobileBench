@@ -17,6 +17,7 @@ This guide covers running benchmarks, interpreting results, and optimizing perfo
 ### What is benchmark_app?
 
 `benchmark_app` is OpenVINO's official tool for measuring inference performance. It:
+
 - Loads a model and runs inference
 - Measures throughput and latency
 - Supports various execution modes
@@ -41,6 +42,7 @@ ovmobilebench run -c experiments/basic.yaml
 ```
 
 Basic configuration:
+
 ```yaml
 run:
   repeats: 3
@@ -119,14 +121,17 @@ run:
 ### Primary Metrics
 
 #### Throughput
+
 ```
 Throughput: 156.23 FPS
 ```
+
 - Total inferences per second
 - Higher is better
 - Best for batch processing
 
 #### Latency
+
 ```
 Latency:
   Median: 6.4 ms
@@ -134,6 +139,7 @@ Latency:
   Min: 5.8 ms
   Max: 8.2 ms
 ```
+
 - Time per inference
 - Lower is better
 - Critical for real-time applications
@@ -141,18 +147,21 @@ Latency:
 ### Secondary Metrics
 
 #### CPU Utilization
+
 ```bash
 # Monitor during benchmark
 adb shell top -d 1 | grep benchmark_app
 ```
 
 #### Memory Usage
+
 ```bash
 # Check memory consumption
 adb shell dumpsys meminfo | grep benchmark_app
 ```
 
 #### Power Consumption
+
 ```bash
 # Battery stats (Android)
 adb shell dumpsys batterystats
@@ -163,6 +172,7 @@ adb shell dumpsys batterystats
 ### Thread Optimization
 
 Find optimal thread count:
+
 ```yaml
 run:
   matrix:
@@ -170,6 +180,7 @@ run:
 ```
 
 Analysis:
+
 ```python
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -192,6 +203,7 @@ run:
 ```
 
 Best practices:
+
 - nstreams ≤ number of CPU cores
 - nireq ≥ nstreams for async mode
 - Use AUTO for automatic optimization
@@ -210,6 +222,7 @@ run:
 ```
 
 Trade-offs:
+
 - Larger batch = better throughput
 - Larger batch = higher latency
 - Memory constraints limit max batch
@@ -347,6 +360,7 @@ graph TD
 ### Configuration Examples
 
 #### Latency-Optimized
+
 ```yaml
 run:
   matrix:
@@ -357,6 +371,7 @@ run:
 ```
 
 #### Throughput-Optimized
+
 ```yaml
 run:
   matrix:
@@ -367,6 +382,7 @@ run:
 ```
 
 #### Power-Efficient
+
 ```yaml
 run:
   matrix:

@@ -2,7 +2,7 @@
 
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import adbutils
 from adbutils import AdbDevice, AdbError
@@ -11,7 +11,7 @@ from ovmobilebench.core.errors import DeviceError
 from ovmobilebench.devices.base import Device
 
 
-def list_android_devices() -> List[Tuple[str, str]]:
+def list_android_devices() -> list[tuple[str, str]]:
     """List available Android devices.
 
     Returns:
@@ -36,7 +36,7 @@ class AndroidDevice(Device):
         super().__init__(name=serial)
         self.serial = serial
         self.push_dir = push_dir
-        self._device: Optional[AdbDevice] = None
+        self._device: AdbDevice | None = None
         self._connect()
 
     def _connect(self) -> None:
@@ -81,7 +81,7 @@ class AndroidDevice(Device):
         except Exception as e:
             raise DeviceError(f"Failed to pull {remote} to {local}: {e}")
 
-    def shell(self, cmd: str, timeout: Optional[int] = None) -> Tuple[int, str, str]:
+    def shell(self, cmd: str, timeout: int | None = None) -> tuple[int, str, str]:
         """Execute shell command on device."""
         try:
             # adbutils returns output as string directly
@@ -141,9 +141,9 @@ class AndroidDevice(Device):
         except Exception as e:
             raise DeviceError(f"Failed to remove {remote_path}: {e}")
 
-    def info(self) -> Dict[str, Any]:
+    def info(self) -> dict[str, Any]:
         """Get device information."""
-        info: Dict[str, Any] = {
+        info: dict[str, Any] = {
             "serial": self.serial,
             "os": "Android",
         }
@@ -197,7 +197,7 @@ class AndroidDevice(Device):
         except Exception:
             return False
 
-    def get_temperature(self) -> Optional[float]:
+    def get_temperature(self) -> float | None:
         """Get device temperature if available."""
         try:
             # Try thermal zones
@@ -333,7 +333,7 @@ class AndroidDevice(Device):
         except Exception as e:
             raise DeviceError(f"Failed to uninstall package {package_name}: {e}")
 
-    def list_packages(self) -> List[str]:
+    def list_packages(self) -> list[str]:
         """List installed packages."""
         try:
             output = self.device.shell("pm list packages")

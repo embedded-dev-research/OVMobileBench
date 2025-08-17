@@ -1,24 +1,24 @@
 """Configuration loader utilities."""
 
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any
 
 import yaml
 
 from ovmobilebench.config.schema import Experiment
 
 
-def load_yaml(path: Path) -> Dict[str, Any]:
+def load_yaml(path: Path) -> dict[str, Any]:
     """Load YAML configuration file."""
     if not path.exists():
         raise FileNotFoundError(f"Configuration file not found: {path.as_posix()}")
 
-    with open(path, "r") as f:
-        data: Dict[str, Any] = yaml.safe_load(f)
+    with open(path) as f:
+        data: dict[str, Any] = yaml.safe_load(f)
         return data
 
 
-def load_experiment(config_path: Union[Path, str]) -> Experiment:
+def load_experiment(config_path: Path | str) -> Experiment:
     """Load and validate experiment configuration."""
     if isinstance(config_path, str):
         config_path = Path(config_path)

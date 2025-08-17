@@ -4,7 +4,6 @@ import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Union
 
 
 @dataclass
@@ -23,10 +22,10 @@ class CommandResult:
 
 
 def run(
-    cmd: Union[str, List[str]],
-    timeout: Optional[int] = None,
-    env: Optional[Dict[str, str]] = None,
-    cwd: Optional[Path] = None,
+    cmd: str | list[str],
+    timeout: int | None = None,
+    env: dict[str, str] | None = None,
+    cwd: Path | None = None,
     check: bool = False,
     capture: bool = True,
     verbose: bool = False,

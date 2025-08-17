@@ -20,6 +20,7 @@ This guide helps you diagnose and resolve common issues with OVMobileBench.
 **Problem**: `ERROR: ovmobilebench requires Python 3.11+`
 
 **Solution**:
+
 ```bash
 # Check Python version
 python --version
@@ -42,6 +43,7 @@ source .venv/bin/activate
 **Problem**: `ModuleNotFoundError: No module named 'typer'`
 
 **Solution**:
+
 ```bash
 # Install all dependencies
 pip install -e .[dev]
@@ -55,6 +57,7 @@ pip install typer pydantic pyyaml
 **Problem**: `ovmobilebench: command not found`
 
 **Solution**:
+
 ```bash
 # Install package in development mode
 pip install -e .
@@ -73,12 +76,14 @@ ovmobilebench --help
 **Problem**: `CMake Error: Android NDK not found`
 
 **Solution**:
+
 ```bash
 # Set NDK environment variable
 export ANDROID_NDK_HOME=/path/to/android-ndk-r26d
 
 # Or specify in config
 ```
+
 ```yaml
 build:
   toolchain:
@@ -90,6 +95,7 @@ build:
 **Problem**: `ERROR: NDK version r25 is not supported`
 
 **Solution**:
+
 ```bash
 # Download correct NDK version
 wget https://dl.google.com/android/repository/android-ndk-r26d-linux.zip
@@ -104,6 +110,7 @@ export ANDROID_NDK_HOME=/opt/android-ndk-r26d
 **Problem**: `CMake Error at CMakeLists.txt`
 
 **Solution**:
+
 ```bash
 # Clear CMake cache
 rm -rf build/CMakeCache.txt build/CMakeFiles
@@ -123,6 +130,7 @@ cmake -B build -S . \
 **Problem**: `undefined reference to '__atomic_load_8'`
 
 **Solution**:
+
 ```yaml
 # Add atomic library in config
 build:
@@ -136,6 +144,7 @@ build:
 **Problem**: `c++: fatal error: Killed signal terminated program`
 
 **Solution**:
+
 ```bash
 # Reduce parallel jobs
 ninja -j2  # Instead of -j$(nproc)
@@ -156,6 +165,7 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 **Problem**: `error: no devices/emulators found`
 
 **Solution**:
+
 ```bash
 # Check USB connection
 lsusb | grep -i google  # For Pixel devices
@@ -177,6 +187,7 @@ adb devices
 **Problem**: `device unauthorized`
 
 **Solution**:
+
 1. On device: Settings → Developer Options → Revoke USB debugging authorizations
 2. Reconnect USB cable
 3. Accept RSA fingerprint on device
@@ -187,6 +198,7 @@ adb devices
 **Problem**: `ssh: connect to host 192.168.1.100 port 22: Connection refused`
 
 **Solution**:
+
 ```bash
 # Check SSH service on target
 sudo systemctl status ssh
@@ -208,6 +220,7 @@ ssh -v user@host  # Verbose mode for debugging
 **Problem**: `Permission denied` when accessing /data/local/tmp
 
 **Solution**:
+
 ```bash
 # Check SELinux status
 adb shell getenforce
@@ -216,6 +229,7 @@ adb shell getenforce
 adb shell mkdir -p /sdcard/ovmobilebench
 # Update config
 ```
+
 ```yaml
 device:
   push_dir: "/sdcard/ovmobilebench"
@@ -228,6 +242,7 @@ device:
 **Problem**: `sh: benchmark_app: not found`
 
 **Solution**:
+
 ```bash
 # Verify file exists
 adb shell ls -la /data/local/tmp/ovmobilebench/bin/benchmark_app
@@ -245,12 +260,14 @@ adb shell getprop ro.product.cpu.abi
 **Problem**: `error while loading shared libraries: libopenvino.so`
 
 **Solution**:
+
 ```bash
 # Set library path
 adb shell "export LD_LIBRARY_PATH=/data/local/tmp/ovmobilebench/lib:\$LD_LIBRARY_PATH && benchmark_app"
 
 # Or in config
 ```
+
 ```yaml
 device:
   env_vars:
@@ -262,6 +279,7 @@ device:
 **Problem**: `Failed to read model`
 
 **Solution**:
+
 ```bash
 # Verify model files exist
 adb shell ls -la /data/local/tmp/ovmobilebench/models/
@@ -273,6 +291,7 @@ model.bin  # Must have same base name
 
 # Update config with correct path
 ```
+
 ```yaml
 models:
   - name: "model"
@@ -284,6 +303,7 @@ models:
 **Problem**: `Benchmark timeout after 600 seconds`
 
 **Solution**:
+
 ```yaml
 # Increase timeout in config
 run:
@@ -302,6 +322,7 @@ run:
 **Problem**: Throughput significantly lower than expected
 
 **Diagnosis**:
+
 ```bash
 # Check CPU frequency
 adb shell "cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq"
@@ -316,21 +337,25 @@ adb shell top -n 1
 **Solutions**:
 
 1. **Thermal throttling**:
+
    ```bash
    # Add cooldown
    ```
+
    ```yaml
    run:
      cooldown_sec: 60
    ```
 
 2. **CPU governor**:
+
    ```bash
    # Set performance governor (requires root)
    adb shell "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
    ```
 
 3. **Background apps**:
+
    ```bash
    # Stop unnecessary apps
    adb shell am force-stop com.android.chrome
@@ -342,6 +367,7 @@ adb shell top -n 1
 **Problem**: Large variance in benchmark results
 
 **Solution**:
+
 ```yaml
 # Increase statistical validity
 run:
@@ -361,12 +387,14 @@ device:
 **Problem**: `std::bad_alloc` or out of memory
 
 **Solution**:
+
 ```bash
 # Check available memory
 adb shell free -h
 
 # Reduce batch size
 ```
+
 ```yaml
 run:
   matrix:
@@ -385,6 +413,7 @@ device:
 **Problem**: `yaml.scanner.ScannerError`
 
 **Solution**:
+
 ```bash
 # Validate YAML syntax
 python -c "import yaml; yaml.safe_load(open('config.yaml'))"
@@ -400,6 +429,7 @@ python -c "import yaml; yaml.safe_load(open('config.yaml'))"
 **Problem**: `pydantic.ValidationError`
 
 **Solution**:
+
 ```python
 # Debug configuration
 from ovmobilebench.config.schema import Experiment
@@ -411,6 +441,7 @@ except ValidationError as e:
 ```
 
 Common fixes:
+
 - Ensure required fields are present
 - Check value types match schema
 - Verify enum values are valid
@@ -420,6 +451,7 @@ Common fixes:
 **Problem**: `FileNotFoundError: /path/to/openvino`
 
 **Solution**:
+
 ```bash
 # Use absolute paths
 realpath relative/path
@@ -427,6 +459,7 @@ realpath relative/path
 # Or use environment variables
 export OPENVINO_ROOT=/path/to/openvino
 ```
+
 ```yaml
 build:
   openvino_repo: "${OPENVINO_ROOT}"
@@ -439,6 +472,7 @@ build:
 **Problem**: GitHub Actions waiting for runner
 
 **Solution**:
+
 ```bash
 # Check runner status
 cd actions-runner
@@ -457,6 +491,7 @@ journalctl -u actions.runner.* -f
 **Problem**: `Error: Artifact upload failed`
 
 **Solution**:
+
 ```yaml
 # Reduce artifact size
 - uses: actions/upload-artifact@v4
@@ -475,6 +510,7 @@ journalctl -u actions.runner.* -f
 **Problem**: Docker image build fails in CI
 
 **Solution**:
+
 ```dockerfile
 # Add error handling
 RUN apt-get update || exit 1
@@ -566,7 +602,7 @@ If you're still experiencing issues:
    - Full error message and stack trace
    - Configuration file (sanitized)
    - Steps to reproduce
-4. **Community support**: Email nesterov.alexander@outlook.com
+4. **Community support**: Email <nesterov.alexander@outlook.com>
 
 ## Next Steps
 

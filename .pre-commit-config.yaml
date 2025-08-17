@@ -18,6 +18,12 @@ repos:
       - id: name-tests-test
         args: ['--pytest-test-first']
 
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.19.1
+    hooks:
+      - id: pyupgrade
+        args: ['--py311-plus']
+
   - repo: https://github.com/psf/black
     rev: 24.4.2
     hooks:
@@ -50,6 +56,24 @@ repos:
     hooks:
       - id: commitizen
         stages: [commit-msg]
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: ['--strict']
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.43.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        args: ['--skip=*.json,*.yaml,*.yml,*.txt,*.csv,*.lock', '--ignore-words-list=nd,teh,hist']
 
 ci:
   autofix_prs: false

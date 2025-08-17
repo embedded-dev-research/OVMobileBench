@@ -1,7 +1,6 @@
 """Core orchestration for Android tools installation."""
 
 from pathlib import Path
-from typing import Optional
 
 from .avd import AvdManager
 from .detect import check_disk_space, detect_host
@@ -18,7 +17,7 @@ class AndroidInstaller:
     """Main orchestrator for Android tools installation."""
 
     def __init__(
-        self, sdk_root: Path, *, logger: Optional[StructuredLogger] = None, verbose: bool = False
+        self, sdk_root: Path, *, logger: StructuredLogger | None = None, verbose: bool = False
     ):
         """Initialize Android installer.
 
@@ -47,8 +46,8 @@ class AndroidInstaller:
         ndk: NdkSpec,
         install_platform_tools: bool = True,
         install_emulator: bool = True,
-        install_build_tools: Optional[str] = None,
-        create_avd_name: Optional[str] = None,
+        install_build_tools: str | None = None,
+        create_avd_name: str | None = None,
         accept_licenses: bool = True,
         dry_run: bool = False,
     ) -> InstallerResult:
@@ -214,7 +213,7 @@ class AndroidInstaller:
             test_file = self.sdk_root / ".permission_test"
             test_file.touch()
             test_file.unlink()
-        except (OSError, IOError) as e:
+        except OSError as e:
             raise PermissionError(f"No write permission for {self.sdk_root}: {e}")
 
     def cleanup(self, remove_downloads: bool = True, remove_temp: bool = True) -> None:
@@ -289,7 +288,7 @@ class AndroidInstaller:
 
         # Check AVDs
         try:
-            results["avds"] = self.avd.list()
+            results["avds"] = self.avd.list_avds()
         except Exception:
             results["avds"] = []
 

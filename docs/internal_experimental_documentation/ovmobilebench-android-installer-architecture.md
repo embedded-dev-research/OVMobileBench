@@ -1,4 +1,5 @@
 # Architecture Specification: `ovmobilebench.android.installer` — Android SDK/NDK Module
+
 _Generated: 2025-08-17 19:30:51_
 
 > This document proposes a concrete, code-level architecture for the **Android SDK/NDK installer** module inside the OVMobileBench project.
@@ -8,6 +9,7 @@ _Generated: 2025-08-17 19:30:51_
 ---
 
 ## 0. Source context (what we know from the repo)
+
 - The repository **OVMobileBench** exists on GitHub and exposes a CLI: `ovmobilebench all -c experiments/...yaml` in README Quick Start. citeturn1view0
 - The README links include **Android SDK/NDK Setup** documentation (file `docs/android-setup.md`). citeturn1view0turn6view0
 - The repo is licensed under **Apache-2.0**. citeturn1view0
@@ -18,6 +20,7 @@ _Generated: 2025-08-17 19:30:51_
 ---
 
 ## 1. High-level responsibilities
+
 1. Ensure Android **cmdline-tools** and **platform-tools** exist at a configured SDK root.
 2. Ensure **platforms;android-<API>** and **system-images;android-<API>;<target>;<arch>** are installed when requested.
 3. Ensure **NDK** is available (resolve as version alias like `r26d` or as an absolute path).
@@ -29,6 +32,7 @@ _Generated: 2025-08-17 19:30:51_
 ---
 
 ## 2. Package layout
+
 ```text
 ovmobilebench/
   android/
@@ -53,6 +57,7 @@ ovmobilebench/
 ---
 
 ## 3. Public Python API (stable surface)
+
 ```python
 from pathlib import Path
 from typing import Optional
@@ -85,19 +90,26 @@ export_android_env(
     ndk_path=result.ndk_path,
 )
 ```
+
 **Design notes**:
+
 - Thin, explicit function with dataclass return type avoids leaky details and decouples callers from CLI nuances.
 - The same API powers the CLI subcommand to avoid divergence with scripts.
 
 ---
 
 ## 4. CLI surface (replacing `scripts/setup_android_tools.py`)
+
 ### 4.1 Subcommand wiring
+
 Expose a new subcommand under the main CLI (declared in `pyproject.toml` entry points):
+
 ```text
 ovmobilebench android setup [OPTIONS]
 ```
+
 ### 4.2 Example usage
+
 ```bash
 ovmobilebench android setup \
   --sdk-root /opt/android-sdk \
@@ -113,11 +125,13 @@ ovmobilebench android setup \
   --print-env \
   --verbose
 ```
+
 **Rationale**: align with README’s CLI-first workflow where users run a single `ovmobilebench` command to kick off E2E. citeturn1view0
 
 ---
 
 ## 5. Data model and enums
+
 ```python
 from dataclasses import dataclass
 from pathlib import Path
@@ -158,6 +172,7 @@ class InstallerResult:
 ---
 
 ## 6. Core orchestration (`core.py`)
+
 ```python
 class AndroidInstaller:
     def __init__(self, sdk_root: Path, *, logger, verbose: bool = False):
@@ -198,18 +213,23 @@ class AndroidInstaller:
         return InstallerResult(sdk_root=self.sdk_root, ndk_path=ndk_path, avd_created=avd_created,
                                performed={"plan": plan})
 ```
+
 **Notes**:
+
 - `Planner` computes idempotent actions; every `ensure_*` checks disk before executing downloads.
 - All sub-steps log JSON lines for audit and reproducibility.
 
 ---
 
 ## 7. SDK Manager wrapper (`sdkmanager.py`)
+
 Responsibilities:
+
 - Locate `sdkmanager` binary under `cmdline-tools/latest/bin/`.
 - Provide `install(packages: list[str])` and `accept_licenses()` helpers.
 - Build package IDs: `platforms;android-{api}` and `system-images;android-{api};{target};{arch}`.
 - Validate results (check directories after install).
+
 ```python
 class SdkManager:
     def __init__(self, sdk_root: Path, *, logger):
@@ -222,14 +242,17 @@ class SdkManager:
     def ensure_system_image(self, api: int, target: Target, arch: Arch) -> Path: ...
     def accept_licenses(self) -> None: ...
 ```
+
 **Key invariant**: every ensure checks for existing dirs first (idempotency) and logs version information from `sdkmanager --version` and `adb version`.
 
 ---
 
 ## 8. NDK resolver (`ndk.py`)
+
 - If `NdkSpec.path` is given, validate and return it.
 - If alias is given (e.g., `r26d`), map to concrete version (`26.1.10909125`) and ensure it is present under `<sdk_root>/ndk/<ver>` (download/unpack if missing).
 - Expose `resolve_path(NdkSpec) -> Path` and `ensure(NdkSpec) -> Path`.
+
 ```python
 class NdkResolver:
     def __init__(self, sdk_root: Path, *, logger):
@@ -239,43 +262,54 @@ class NdkResolver:
     def resolve_path(self, spec: NdkSpec) -> Path: ...
     def ensure(self, spec: NdkSpec) -> Path: ...
 ```
+
 ---
 
 ## 9. AVD utilities (`avd.py`)
+
 - Construct package id from `(api, target, arch)` and call `avdmanager create avd -n <NAME> -k <PACKAGE>` if AVD doesn’t exist.
 - Provide `list_avd() -> list[str]` for diagnostics.
 - (Optional) `boot_headless(name)` helper for local smoke checks in tests.
+
 ```python
 class AvdManager:
     def __init__(self, sdk_root: Path, *, logger): ...
     def list(self) -> list[str]: ...
     def create(self, name: str, api: int, target: Target, arch: Arch, profile: str | None = None) -> bool: ...
 ```
+
 ---
 
 ## 10. Environment export (`env.py`)
+
 - Write `ANDROID_SDK_ROOT` and `ANDROID_NDK` into a given `$GITHUB_ENV` file if provided.
 - Also support `print_stdout=True` to echo lines like `ANDROID_SDK_ROOT=/path` (used by shell eval).
+
 ```python
 class EnvExporter:
     def __init__(self, *, logger): ...
     def export(self, github_env: Path | None, *, print_stdout: bool, sdk_root: Path, ndk_path: Path) -> None: ...
 ```
+
 ---
 
 ## 11. Planner & validators (`plan.py`)
+
 - Decide which components are missing and produce `InstallerPlan`.
 - Validate `(api, target, arch)` combination and NDK spec before execution.
 - Support `--dry-run` mode: print plan and exit zero without changes.
+
 ```python
 class Planner:
     def __init__(self, sdk_root: Path, *, logger): ...
     def build_plan(self, *, api: int, target: Target, arch: Arch, install_platform_tools: bool,
                    install_emulator: bool, ndk: NdkSpec) -> InstallerPlan: ...
 ```
+
 ---
 
 ## 12. Error model (`errors.py`)
+
 - `InstallerError` (base)
 - `InvalidArgumentError` (bad api/target/arch/ndk)
 - `DownloadError`, `UnpackError`, `SdkManagerError`, `AvdManagerError`
@@ -284,6 +318,7 @@ class Planner:
 ---
 
 ## 13. Structured logging (`logging.py`)
+
 - Human-readable INFO lines plus a JSONL sink (e.g., `.ovmb/logs/installer.jsonl`).
 - Each step logs: component, action, args, start/finish, duration, outcome, error (if any).
 - Make it trivial to attach logs as **CI artifacts**.
@@ -291,12 +326,14 @@ class Planner:
 ---
 
 ## 14. Host detection (`detect.py`)
+
 - Detect host OS and architecture, presence of `/dev/kvm` (Linux) to hint best AVD (ARM64 on ARM runners).
 - Not strictly required for install, but useful for warnings and defaults.
 
 ---
 
 ## 15. Integration points with the rest of OVMobileBench
+
 - **Build stage**: the `toolchain.android_ndk` path in experiments YAML should be set from the exported `ANDROID_NDK`.
 - **Device stage**: Android ADB tools (`platform-tools`) must be on PATH for deploy/run.
 - **CI**: call `ovmobilebench android setup ...` before `ovmobilebench all -c ...`. citeturn1view0
@@ -304,6 +341,7 @@ class Planner:
 ---
 
 ## 16. CLI help (spec)
+
 ```text
 Usage: ovmobilebench android setup [OPTIONS]
 
@@ -324,9 +362,11 @@ Options:
   --verbose                   Verbose logging
   --help                      Show this message and exit
 ```
+
 ---
 
 ## 17. YAML glue (how experiments consume the env)
+
 ```yaml
 build:
   toolchain:
@@ -336,28 +376,35 @@ build:
     cmake: "cmake"
     ninja: "ninja"
 ```
+
 **This lets the pipeline stay configuration-driven while the installer determines actual paths.**
 
 ---
 
 ## 18. Test strategy
+
 ### 18.1 Unit tests
+
 - Mock subprocess calls to `sdkmanager`, `avdmanager`, `emulator`, `adb`.
 - Validate parser, planner, and idempotent `ensure_*` logic on fake filesystem (tmp dirs).
 - Verify `EnvExporter.export` writes correct lines and supports `print_stdout`.
 
 ### 18.2 Integration tests
+
 - On self-hosted or containerized ARM/Linux with KVM:
   - `android setup --api 30 --target google_atd --arch arm64-v8a --with-platform-tools --with-emulator --ndk r26d`
   - Assert presence of folders and versions; optionally boot AVD headless and check `sys.boot_completed`.
 
 ### 18.3 Negative tests
+
 - Network unavailable, disk full, invalid alias, conflicting flags (e.g., `--create-avd` without `--with-emulator`).
 
 ---
 
 ## 19. Code skeletons (selected files)
+
 ### 19.1 `api.py`
+
 ```python
 from pathlib import Path
 from typing import Optional
@@ -388,6 +435,7 @@ def export_android_env(*, github_env: Path | None, print_stdout: bool, sdk_root:
 ```
 
 ### 19.2 `cli.py` (Click/typer skeleton)
+
 ```python
 import typer
 from pathlib import Path
@@ -419,9 +467,11 @@ def setup(
     export_android_env(github_env=export_env, print_stdout=print_env,
                        sdk_root=res["sdk_root"], ndk_path=res["ndk_path"])
 ```
+
 ---
 
 ## 20. Observability (what to log)
+
 - **Inputs:** api, target, arch, ndk alias/path, sdk_root, flags.
 - **Host:** OS, arch, `/dev/kvm` existence, Java version.
 - **Actions:** package IDs, install durations, exit codes, directory sizes.
@@ -430,6 +480,7 @@ def setup(
 ---
 
 ## 21. Security & supply-chain
+
 - Download from official Android sources; allow mirror override via env/opts.
 - (Optional) SHA256 verification for archives.
 - Avoid logging secrets; sanitize environment in logs.
@@ -437,13 +488,15 @@ def setup(
 ---
 
 ## 22. Failure semantics
+
 - Installer raises typed errors; CLI converts them to non-zero exit codes and user-readable hints.
 - Always print last actions and remediation tips (e.g., disk free, proxy settings).
-- Keep a *state file* with timestamps and versions to ease retries.
+- Keep a _state file_ with timestamps and versions to ease retries.
 
 ---
 
 ## 23. Example CI usage (ARM runner)
+
 ```yaml
 - name: Android setup
   run: |
@@ -455,11 +508,13 @@ def setup(
 - name: Run pipeline
   run: ovmobilebench all -c experiments/android_emulator_arm64.yaml
 ```
+
 **Why ARM64 AVD on ARM runners:** natively accelerated via KVM → fast CPU benchmarks for OpenVINO. citeturn1view0
 
 ---
 
 ## 24. Extended diagnostics & tips
+
 - `sdkmanager --list` to confirm available packages.
 - `adb version` and `emulator -version` to record versions in artifacts.
 - Use `--dry-run` first in new environments to preview actions.
@@ -468,6 +523,7 @@ def setup(
 ---
 
 ## 25. Roadmap for deprecating `scripts/setup_android_tools.py`
+
 1. Introduce `ovmobilebench android setup` using this module.
 2. Make `scripts/setup_android_tools.py` a thin shim that imports and calls the module functions.
 3. Update docs/CI to prefer the subcommand.
@@ -476,6 +532,7 @@ def setup(
 ---
 
 ## 26. Appendix — Formal CLI grammar (EBNF-ish)
+
 ```text
 setup := 'ovmobilebench' 'android' 'setup' (option)*
 option :=
@@ -486,9 +543,11 @@ option :=
 TARGET := 'google_atd' | 'google_apis'
 ARCH   := 'arm64-v8a' | 'x86_64'
 ```
+
 ---
 
 ## 27. Checklist (succinct)
+
 - [ ] Idempotent ensures for cmdline-tools, platform-tools, platform, system-images, emulator, NDK
 - [ ] Validated `(api, target, arch)` and NDK spec
 - [ ] Exported env to `$GITHUB_ENV` and/or stdout

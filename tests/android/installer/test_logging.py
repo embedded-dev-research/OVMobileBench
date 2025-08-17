@@ -112,7 +112,7 @@ class TestStructuredLogger:
             # Read and verify JSONL file
             assert jsonl_path.exists()
 
-            with open(jsonl_path, "r") as f:
+            with open(jsonl_path) as f:
                 lines = f.readlines()
 
             assert len(lines) >= 3
@@ -270,7 +270,7 @@ class TestLoggerFunctions:
             logger.close()
 
             # Read and check timestamp
-            with open(jsonl_path, "r") as f:
+            with open(jsonl_path) as f:
                 log_entry = json.loads(f.readline())
 
             assert "timestamp" in log_entry
@@ -305,7 +305,7 @@ class TestLoggerFunctions:
             logger.close()
 
             # Read all log entries
-            with open(jsonl_path, "r") as f:
+            with open(jsonl_path) as f:
                 entries = [json.loads(line) for line in f]
 
             # Check levels

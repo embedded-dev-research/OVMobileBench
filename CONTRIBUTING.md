@@ -18,12 +18,14 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 ### Submitting Pull Requests
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/embedded-dev-research/OVMobileBench
    cd OVMobileBench
    ```
 
 2. **Create Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -31,6 +33,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    ```
 
 3. **Set Up Development Environment**
+
    ```bash
    pip install -r requirements.txt
    pip install -e .
@@ -43,6 +46,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    - Update documentation if needed
 
 5. **Run Quality Checks**
+
    ```bash
    # Format code
    black ovmobilebench tests
@@ -58,6 +62,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    ```
 
 6. **Commit Changes**
+
    ```bash
    git add .
    git commit -m "feat: add new feature"
@@ -73,6 +78,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    - `ci:` CI/CD changes
 
 7. **Push and Create PR**
+
    ```bash
    git push origin feature/your-feature-name
    ```

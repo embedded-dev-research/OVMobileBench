@@ -40,6 +40,7 @@ OVMobileBench is a comprehensive benchmarking pipeline for OpenVINO inference on
 ### Configuration
 
 All experiments are defined in YAML files with these sections:
+
 - `project`: Experiment metadata
 - `build`: OpenVINO build configuration
 - `device`: Target device settings
@@ -50,6 +51,7 @@ All experiments are defined in YAML files with these sections:
 ### Run Matrix
 
 The run matrix defines parameter combinations to test:
+
 - `niter`: Number of iterations
 - `api`: Sync or async execution
 - `nireq`: Number of inference requests
@@ -71,6 +73,7 @@ The run matrix defines parameter combinations to test:
 ### Install Options
 
 #### From Source
+
 ```bash
 git clone https://github.com/embedded-dev-research/OVMobileBench.git
 cd OVMobileBench
@@ -78,6 +81,7 @@ pip install -e .[dev]
 ```
 
 #### Using pip with requirements
+
 ```bash
 pip install -r requirements.txt
 pip install -e .
@@ -198,6 +202,7 @@ report:
 ### Model Sources
 
 #### Open Model Zoo
+
 ```bash
 # Download model
 omz_downloader --name resnet-50-tf -o models/
@@ -207,6 +212,7 @@ omz_converter --name resnet-50-tf --precision FP16 -d models/
 ```
 
 #### Custom Models
+
 ```bash
 # Convert ONNX model
 mo --input_model model.onnx --output_dir models/ --data_type FP16
@@ -249,6 +255,7 @@ sha256sum models/*.xml models/*.bin > models/checksums.txt
 ### Android Devices
 
 #### Setup
+
 ```bash
 # Enable Developer Options and USB Debugging
 # Connect device via USB
@@ -262,6 +269,7 @@ adb shell getprop ro.board.platform
 ```
 
 #### Configuration
+
 ```yaml
 device:
   kind: "android"
@@ -273,6 +281,7 @@ device:
 ### Linux ARM Devices
 
 #### Setup
+
 ```bash
 # Set up SSH key authentication
 ssh-copy-id user@device.local
@@ -282,6 +291,7 @@ ssh user@device.local uname -a
 ```
 
 #### Configuration
+
 ```yaml
 device:
   kind: "linux_ssh"
@@ -440,6 +450,7 @@ Yes, set `build.enabled: false` and point to your prebuilt OpenVINO directory.
 ### Q: How do I benchmark on multiple devices simultaneously?
 
 List multiple device serials in the configuration:
+
 ```yaml
 device:
   serials: ["device1", "device2", "device3"]
@@ -469,6 +480,7 @@ Yes, ensure your custom layers are built into OpenVINO and the model uses them c
 ### Q: What's the recommended matrix for initial testing?
 
 Start with:
+
 ```yaml
 run:
   matrix:
@@ -490,6 +502,7 @@ run:
 ### Q: Can I export results to Excel?
 
 Yes, CSV output can be opened directly in Excel or converted:
+
 ```python
 import pandas as pd
 df = pd.read_csv('results.csv')
@@ -507,4 +520,4 @@ df.to_excel('results.xlsx', index=False)
 - [GitHub Issues](https://github.com/embedded-dev-research/OVMobileBench/issues) - Bug reports and feature requests
 - [Documentation](https://github.com/embedded-dev-research/OVMobileBench/tree/main/docs) - This guide and API reference
 - [Discussions](https://github.com/embedded-dev-research/OVMobileBench/discussions) - Project discussions
-- Email: nesterov.alexander@outlook.com
+- Email: <nesterov.alexander@outlook.com>
