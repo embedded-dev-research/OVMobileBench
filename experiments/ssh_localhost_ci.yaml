@@ -1,0 +1,47 @@
+project:
+  name: ssh-test
+  run_id: ci-test-20250817-110326
+  description: SSH localhost test for CI
+device:
+  type: linux_ssh
+  host: localhost
+  username: anesterov
+  push_dir: /tmp/ovmobilebench
+  key_filename: /Users/anesterov/.ssh/id_rsa
+build:
+  enabled: false
+  openvino_repo: /tmp/openvino
+models:
+- name: dummy
+  path: /tmp/dummy_model.xml
+  precision: FP32
+run:
+  repeats: 1
+  warmup: false
+  cooldown_sec: 0
+  matrix:
+    niter:
+    - 10
+    device:
+    - CPU
+    nstreams:
+    - '1'
+    api:
+    - sync
+    nireq:
+    - 1
+    infer_precision:
+    - FP16
+    threads:
+    - 4
+report:
+  sinks:
+  - type: csv
+    path: experiments/results/ssh_test.csv
+  - type: json
+    path: experiments/results/ssh_test.json
+  aggregate: true
+  tags:
+    test_type: ssh_localhost
+    ci: true
+    user: anesterov

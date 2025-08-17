@@ -613,7 +613,7 @@ def collect_metrics(results_path, metadata):
 def send_to_influxdb(metrics):
     from influxdb import InfluxDBClient
     
-    client = InfluxDBClient('localhost', 8086, database='ovmobilebench')
+    client = InfluxDBClient('127.0.0.1', 8086, database='ovmobilebench')
     
     points = []
     for result in metrics['results']:

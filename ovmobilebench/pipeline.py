@@ -205,7 +205,7 @@ class Pipeline:
             # Parse SSH config from device section
             device_config = self.config.device.model_dump()
             return LinuxSSHDevice(
-                host=device_config.get("host", "localhost"),
+                host=device_config.get("host"),  # No default, must be specified
                 username=device_config.get("username", os.environ.get("USER", "user")),
                 password=device_config.get("password"),
                 key_filename=device_config.get("key_filename"),

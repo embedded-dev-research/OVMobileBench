@@ -269,36 +269,36 @@ def list_ssh_devices(config_file: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     devices = []
 
-    # Try to connect to localhost as a test
+    # Try to detect available SSH hosts
     try:
         import socket
 
         hostname = socket.gethostname()
         username = os.environ.get("USER", "user")
 
+        # Add current hostname as available SSH device
         devices.append(
             {
-                "serial": f"{username}@localhost:22",
-                "host": "localhost",
+                "serial": f"{username}@{hostname}:22",
+                "host": hostname,
                 "port": 22,
                 "username": username,
                 "status": "available",
                 "type": "linux_ssh",
             }
         )
-
-        # Also add actual hostname
-        if hostname != "localhost":
-            devices.append(
-                {
-                    "serial": f"{username}@{hostname}:22",
-                    "host": hostname,
-                    "port": 22,
-                    "username": username,
-                    "status": "available",
-                    "type": "linux_ssh",
-                }
-            )
+        
+        # Add 127.0.0.1 as a fallback for testing
+        devices.append(
+            {
+                "serial": f"{username}@127.0.0.1:22",
+                "host": "127.0.0.1",
+                "port": 22,
+                "username": username,
+                "status": "available",
+                "type": "linux_ssh",
+            }
+        )
     except Exception as e:
         logger.warning(f"Failed to detect SSH devices: {e}")
 

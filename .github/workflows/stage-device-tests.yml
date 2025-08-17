@@ -64,7 +64,7 @@ jobs:
           PYTHONUTF8: 1
         run: |
           set -e
-          ovmobilebench all -c experiments/ssh_localhost_ci.yaml --dry-run
+          ovmobilebench all -c experiments/ssh_test_ci.yaml --dry-run
 
       - name: Upload SSH test results
         if: always()

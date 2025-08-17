@@ -34,7 +34,7 @@ class TestGenerateSSHConfig:
 
             assert config["project"]["name"] == "ssh-test"
             assert config["device"]["type"] == "linux_ssh"
-            assert config["device"]["host"] == "localhost"
+            assert config["device"]["host"] == "127.0.0.1"
             assert config["device"]["username"] == "testuser"
             # Check push_dir contains ovmobilebench, path format varies by OS
             assert "ovmobilebench" in config["device"]["push_dir"]
@@ -127,7 +127,7 @@ class TestGenerateSSHConfig:
 
         with patch("scripts.generate_ssh_config.generate_ssh_config") as mock_gen:
             main()
-            mock_gen.assert_called_once_with("experiments/ssh_localhost_ci.yaml")
+            mock_gen.assert_called_once_with("experiments/ssh_test_ci.yaml")
 
     @patch("scripts.generate_ssh_config.argparse.ArgumentParser.parse_args")
     def test_main_test(self, mock_args):

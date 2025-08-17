@@ -1,12 +1,12 @@
-# SSH localhost test configuration
+# SSH test configuration
 project:
-  name: "ssh-localhost-test"
+  name: "ssh-test"
   run_id: "local-test"
 
 # SSH device configuration
 device:
   type: "linux_ssh"
-  host: "localhost"
+  host: "127.0.0.1"
   username: "${USER}"  # Will use current user
   # key_filename: "~/.ssh/id_rsa"  # Optional, will use SSH agent
   push_dir: "/tmp/ovmobilebench"
@@ -40,5 +40,5 @@ report:
     - type: "json"
       path: "experiments/results/ssh_test.json"
   tags:
-    test_type: "ssh_localhost"
+    test_type: "ssh_test"
     ci: false
