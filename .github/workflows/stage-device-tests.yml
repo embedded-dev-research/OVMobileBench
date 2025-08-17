@@ -13,7 +13,6 @@ on:
 
 jobs:
   device-test-ssh:
-    if: inputs.os == 'ubuntu-latest'
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v5
