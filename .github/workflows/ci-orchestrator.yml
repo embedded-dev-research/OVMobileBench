@@ -1,0 +1,45 @@
+name: CI Orchestrator
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      device_serial:
+        required: false
+        type: string
+        default: 'emulator-5554'
+
+jobs:
+  # Stage 1: Lint and Test
+  lint-test:
+    uses: ./.github/workflows/stage-lint-test.yml
+    with:
+      os: ${{ inputs.os }}
+    secrets: inherit
+
+  # Stage 2: Build Package (runs in parallel with validation)
+  build:
+    needs: lint-test
+    uses: ./.github/workflows/stage-build.yml
+    with:
+      os: ${{ inputs.os }}
+    secrets: inherit
+
+  # Stage 3: Validation (runs in parallel with build)
+  validation:
+    needs: lint-test
+    uses: ./.github/workflows/stage-validation.yml
+    with:
+      os: ${{ inputs.os }}
+    secrets: inherit
+
+  # Stage 4: Device Tests (runs after build and validation)
+  device-tests:
+    needs: [build, validation]
+    uses: ./.github/workflows/stage-device-tests.yml
+    with:
+      os: ${{ inputs.os }}
+      device_serial: ${{ inputs.device_serial }}
+    secrets: inherit
