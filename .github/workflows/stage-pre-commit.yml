@@ -2,14 +2,10 @@ name: Pre-commit
 
 on:
   workflow_call:
-    inputs:
-      os:
-        required: true
-        type: string
 
 jobs:
   pre-commit:
-    runs-on: ${{ inputs.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:

@@ -12,11 +12,9 @@ on:
         default: 'emulator-5554'
 
 jobs:
-  # Stage 1: Pre-commit checks
+  # Stage 1: Pre-commit checks (always runs on ubuntu-latest)
   pre-commit:
     uses: ./.github/workflows/stage-pre-commit.yml
-    with:
-      os: ubuntu-latest
     secrets: inherit
 
   # Stage 2: Test
