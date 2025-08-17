@@ -28,14 +28,32 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v --cov=ovmobilebench --cov=scripts --cov-report=xml --cov-report=term-missing
 
+      - name: Check coverage file
+        run: |
+          if [ -f coverage.xml ]; then
+            echo "Coverage file exists"
+            ls -la coverage.xml
+            echo "First 20 lines of coverage.xml:"
+            head -20 coverage.xml
+          else
+            echo "Coverage file not found!"
+          fi
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
           flags: unittests
           name: codecov-${{ inputs.os }}
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
+          codecov_yml_path: ./codecov.yml
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage via CLI (fallback)
+        if: failure()
+        run: |
+          pip install codecov
+          codecov --file ./coverage.xml --flags unittests --name codecov-${{ inputs.os }} --token ${{ secrets.CODECOV_TOKEN }} || echo "CLI upload failed"
