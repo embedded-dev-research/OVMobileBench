@@ -140,21 +140,33 @@ class TestGenerateSSHConfig:
             mock_gen.assert_called_once_with("scripts/test_ssh_device_ci.py")
 
     @patch("scripts.generate_ssh_config.argparse.ArgumentParser.parse_args")
-    def test_main_setup(self, mock_args):
+    @patch("platform.system")
+    def test_main_setup(self, mock_platform, mock_args):
         """Test main function with setup script generation."""
         mock_args.return_value.type = "setup"
         mock_args.return_value.output = None
-
+        
+        # Test Unix platform
+        mock_platform.return_value = "Linux"
         with patch("scripts.generate_ssh_config.generate_ssh_setup_script") as mock_gen:
             main()
             mock_gen.assert_called_once_with("scripts/setup_ssh_ci.sh")
+        
+        # Test Windows platform
+        mock_platform.return_value = "Windows"
+        with patch("scripts.generate_ssh_config.generate_ssh_setup_script_ps1") as mock_gen_ps1:
+            main()
+            mock_gen_ps1.assert_called_once_with("scripts/setup_ssh_ci.ps1")
 
     @patch("scripts.generate_ssh_config.argparse.ArgumentParser.parse_args")
-    def test_main_all(self, mock_args):
+    @patch("platform.system")
+    def test_main_all(self, mock_platform, mock_args):
         """Test main function with all generation."""
         mock_args.return_value.type = "all"
         mock_args.return_value.output = None
 
+        # Test Unix platform
+        mock_platform.return_value = "Linux"
         with patch("scripts.generate_ssh_config.generate_ssh_config") as mock_config:
             with patch("scripts.generate_ssh_config.generate_ssh_test_script") as mock_test:
                 with patch("scripts.generate_ssh_config.generate_ssh_setup_script") as mock_setup:
@@ -162,6 +174,16 @@ class TestGenerateSSHConfig:
                     mock_config.assert_called_once()
                     mock_test.assert_called_once()
                     mock_setup.assert_called_once()
+        
+        # Test Windows platform
+        mock_platform.return_value = "Windows"
+        with patch("scripts.generate_ssh_config.generate_ssh_config") as mock_config:
+            with patch("scripts.generate_ssh_config.generate_ssh_test_script") as mock_test:
+                with patch("scripts.generate_ssh_config.generate_ssh_setup_script_ps1") as mock_setup_ps1:
+                    main()
+                    mock_config.assert_called_once()
+                    mock_test.assert_called_once()
+                    mock_setup_ps1.assert_called_once()
 
     @patch("scripts.generate_ssh_config.argparse.ArgumentParser.parse_args")
     def test_main_with_custom_output(self, mock_args):
