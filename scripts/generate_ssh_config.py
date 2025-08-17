@@ -276,70 +276,52 @@ elif [[ "$OS" == "Darwin" ]]; then
     if pgrep -x sshd > /dev/null; then
         echo "SSH daemon is already running on macOS"
     else
-        echo "SSH daemon not running on macOS, starting it..."
+        echo "SSH daemon not running on macOS, attempting to start..."
         
-        # GitHub Actions has passwordless sudo on macOS runners
-        if [[ "$IS_GITHUB_ACTIONS" == "true" ]]; then
-            echo "Running in GitHub Actions on macOS - forcefully enabling SSH"
+        # Method 1: Try systemsetup first (works on most macOS versions)
+        echo "Enabling Remote Login via systemsetup..."
+        sudo systemsetup -setremotelogin on 2>/dev/null && {
+            echo "Remote Login enabled via systemsetup"
+            sleep 3
+        } || {
+            echo "systemsetup failed, trying launchctl..."
+        }
+        
+        # Method 2: If not running yet, try launchctl
+        if ! pgrep -x sshd > /dev/null; then
+            echo "Loading SSH daemon via launchctl..."
             
-            # Method 1: systemsetup is the most reliable way on macOS
-            echo "Step 1: Enabling Remote Login via systemsetup..."
-            sudo systemsetup -setremotelogin on
+            # Unload first to ensure clean state
+            sudo launchctl unload -w /System/Library/LaunchDaemons/ssh.plist 2>/dev/null || true
+            sleep 1
             
-            # Give it time to start
-            echo "Waiting for SSH service to start..."
-            sleep 5
-            
-            # Check if SSH is now running
-            if pgrep -x sshd > /dev/null; then
-                echo "SSH daemon started successfully via systemsetup!"
-            else
-                echo "SSH not started yet, trying additional methods..."
-                
-                # Method 2: Force load the SSH daemon plist
-                echo "Step 2: Force loading SSH daemon plist..."
-                sudo launchctl unload -w /System/Library/LaunchDaemons/ssh.plist 2>/dev/null || true
-                sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
-                sleep 3
-                
-                # Method 3: Use launchctl kickstart to force start
-                if ! pgrep -x sshd > /dev/null; then
-                    echo "Step 3: Force starting SSH via kickstart..."
-                    sudo launchctl kickstart -kp system/com.openssh.sshd
-                    sleep 3
-                fi
-                
-                # Method 4: Bootstrap the service
-                if ! pgrep -x sshd > /dev/null; then
-                    echo "Step 4: Bootstrapping SSH service..."
-                    sudo launchctl bootstrap system /System/Library/LaunchDaemons/ssh.plist
-                    sleep 3
-                fi
-            fi
-            
-            # Final verification
-            if pgrep -x sshd > /dev/null; then
-                echo "SUCCESS: SSH daemon is now running!"
-                SSHD_PID=$(pgrep -x sshd | head -1)
-                echo "SSH daemon PID: $SSHD_PID"
-            else
-                echo "ERROR: Failed to start SSH daemon after all attempts"
-                echo "Debugging information:"
-                echo "- Checking if sshd binary exists:"
-                ls -la /usr/sbin/sshd || echo "sshd binary not found"
-                echo "- Checking SSH plist:"
-                ls -la /System/Library/LaunchDaemons/ssh.plist || echo "SSH plist not found"
-                echo "- Checking launchctl list:"
-                sudo launchctl list | grep -i ssh || echo "No SSH in launchctl"
-                echo "- System version:"
-                sw_vers
-                exit 1  # Fail CI if we can't start SSH
-            fi
+            # Load SSH daemon
+            sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist 2>/dev/null && {
+                echo "SSH daemon loaded via launchctl"
+                sleep 2
+            } || {
+                echo "Standard load failed, trying bootstrap..."
+                # Try bootstrap method (for newer macOS)
+                sudo launchctl bootstrap system /System/Library/LaunchDaemons/ssh.plist 2>/dev/null || true
+                sleep 2
+            }
+        fi
+        
+        # Method 3: Try to kickstart the service
+        if ! pgrep -x sshd > /dev/null; then
+            echo "Attempting to kickstart SSH service..."
+            sudo launchctl kickstart -k system/com.openssh.sshd 2>/dev/null || true
+            sleep 2
+        fi
+        
+        # Final check
+        if pgrep -x sshd > /dev/null; then
+            echo "SUCCESS: SSH daemon is now running!"
         else
-            # Local macOS
-            echo "Local macOS environment - attempting to enable SSH..."
-            sudo systemsetup -setremotelogin on 2>/dev/null || \\
-            echo "Note: You may need to enable Remote Login manually in System Settings > General > Sharing"
+            echo "ERROR: Could not start SSH daemon"
+            echo "Debug info:"
+            sudo launchctl list | grep -i ssh || echo "No SSH services in launchctl"
+            echo "Continuing anyway - SSH may work via on-demand activation"
         fi
     fi
 fi
@@ -354,13 +336,38 @@ MAX_RETRIES=5
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if ssh -o ConnectTimeout=5 -o PasswordAuthentication=no -o PubkeyAuthentication=yes localhost "echo 'SSH connection successful'" 2>/dev/null; then
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    echo "Connection attempt $RETRY_COUNT/$MAX_RETRIES..."
+    
+    # Capture output for diagnostics
+    SSH_OUTPUT=$(ssh -o ConnectTimeout=5 -o PasswordAuthentication=no \\
+                     -o PubkeyAuthentication=yes -o StrictHostKeyChecking=no \\
+                     -o UserKnownHostsFile=/dev/null \\
+                     localhost "echo 'SSH connection successful'" 2>&1)
+    SSH_EXIT_CODE=$?
+    
+    if [ $SSH_EXIT_CODE -eq 0 ] && echo "$SSH_OUTPUT" | grep -q "SSH connection successful"; then
         echo "✓ SSH setup completed successfully!"
         exit 0
     else
-        RETRY_COUNT=$((RETRY_COUNT + 1))
+        echo "  Failed with exit code: $SSH_EXIT_CODE"
+        
+        # Diagnostic information
+        if echo "$SSH_OUTPUT" | grep -q "Connection refused"; then
+            echo "  -> SSH server not accepting connections"
+            if [[ "$OS" == "Darwin" ]]; then
+                echo "  -> Checking macOS SSH status:"
+                sudo launchctl list | grep -i ssh || echo "    No SSH in launchctl"
+                pgrep -x sshd > /dev/null && echo "    sshd running" || echo "    sshd NOT running"
+            fi
+        elif echo "$SSH_OUTPUT" | grep -q "Permission denied"; then
+            echo "  -> Authentication failed - check keys"
+        else
+            echo "  -> Error: ${SSH_OUTPUT:0:100}"
+        fi
+        
         if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-            echo "SSH connection attempt $RETRY_COUNT failed, retrying in 3 seconds..."
+            echo "  -> Retrying in 3 seconds..."
             sleep 3
         fi
     fi

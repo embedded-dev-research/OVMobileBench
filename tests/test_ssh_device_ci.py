@@ -10,8 +10,11 @@ from pathlib import Path
 def test_ssh_in_ci():
     """Test SSH connectivity in CI environment."""
 
-    # Check if we're on Windows
-    is_windows = platform.system().lower() == "windows"
+    # Check platform
+    system = platform.system().lower()
+    is_windows = system == "windows"
+    is_macos = system == "darwin"
+    is_ci = os.environ.get("CI")
 
     # Check if SSH is available
     ssh_dir = Path.home() / ".ssh"
@@ -28,14 +31,7 @@ def test_ssh_in_ci():
     print(f"SSH directory exists: {ssh_dir}")
     print(f"SSH key exists: {id_rsa}")
 
-    # On Windows in CI, SSH server might not be fully configured
-    # Just check that keys exist
-    if is_windows and os.environ.get("CI"):
-        print("Windows CI environment detected - skipping connection test")
-        print("SSH keys are configured correctly")
-        return True
-
-    # Try to connect to localhost
+    # Always try to connect to localhost
     import subprocess
 
     username = os.environ.get("USER") or os.environ.get("USERNAME", "runner")
@@ -62,14 +58,18 @@ def test_ssh_in_ci():
         if "SSH_TEST_SUCCESS" in result.stdout:
             print("SSH connection test successful!")
             return True
-        elif "Connection refused" in result.stderr:
-            print("SSH server not running (expected in some CI environments)")
-            print("Keys are configured correctly")
-            # Return success if keys exist, even if server isn't running
-            return True
         else:
             print(f"SSH test failed. stdout: {result.stdout}")
             print(f"stderr: {result.stderr}")
+            
+            # Show more diagnostic info
+            if "Connection refused" in result.stderr:
+                print("SSH server is not running or not accepting connections")
+            elif "Permission denied" in result.stderr:
+                print("SSH authentication failed - check keys and permissions")
+            elif "Host key verification failed" in result.stderr:
+                print("SSH host key verification issue")
+                
             return False
 
     except subprocess.TimeoutExpired:
