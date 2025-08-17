@@ -133,3 +133,6 @@ CLAUDE.md
 
 # Test results
 experiments/results/
+ovmb_cache
+artifacts
+junit.xml

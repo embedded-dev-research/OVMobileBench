@@ -11,7 +11,8 @@ Complete API documentation for OVMobileBench Python modules.
 5. [Runner API](#runner-api)
 6. [Parser API](#parser-api)
 7. [Report API](#report-api)
-8. [Utilities](#utilities)
+8. [Android Installer API](#android-installer-api)
+9. [Utilities](#utilities)
 
 ## Pipeline API
 
@@ -627,6 +628,173 @@ print(f"Std deviation: {summary.throughput_std}")
 comparison = summarizer.compare(baseline_results, current_results)
 print(f"Performance change: {comparison.throughput_change:.1%}")
 ```
+
+## Android Installer API
+
+### `ovmobilebench.android.installer`
+
+Automated Android SDK/NDK installation and management.
+
+#### Main Functions
+
+##### `ensure_android_tools`
+
+```python
+def ensure_android_tools(
+    sdk_root: Union[str, Path],
+    api: int,
+    target: str = "google_atd",
+    arch: str = "arm64-v8a",
+    ndk: Optional[Union[str, Path, NdkSpec]] = None,
+    create_avd_name: Optional[str] = None,
+    install_platform_tools: bool = True,
+    install_emulator: bool = True,
+    install_build_tools: Optional[str] = None,
+    accept_licenses: bool = True,
+    dry_run: bool = False,
+    verbose: bool = False,
+    jsonl_path: Optional[Path] = None
+) -> InstallerResult:
+    """
+    Install and configure Android SDK/NDK.
+    
+    Args:
+        sdk_root: Android SDK installation directory
+        api: Android API level (e.g., 30, 31, 33)
+        target: System image target (google_atd, google_apis, default)
+        arch: Architecture (arm64-v8a, x86_64, x86, armeabi-v7a)
+        ndk: NDK specification (alias like "r26d" or path)
+        create_avd_name: Name for AVD creation (None to skip)
+        install_platform_tools: Install ADB and platform tools
+        install_emulator: Install Android Emulator
+        install_build_tools: Build tools version (e.g., "34.0.0")
+        accept_licenses: Automatically accept SDK licenses
+        dry_run: Preview without making changes
+        verbose: Enable detailed logging
+        jsonl_path: Path for JSON Lines log output
+    
+    Returns:
+        Dictionary with installation results
+    
+    Raises:
+        InstallerError: If installation fails
+    """
+```
+
+##### `export_android_env`
+
+```python
+def export_android_env(
+    sdk_root: Union[str, Path],
+    ndk_path: Optional[Union[str, Path]] = None,
+    format: str = "dict"
+) -> Union[Dict[str, str], str]:
+    """
+    Export Android environment variables.
+    
+    Args:
+        sdk_root: Android SDK root directory
+        ndk_path: NDK installation path
+        format: Output format (dict, bash, fish, windows, github)
+    
+    Returns:
+        Environment variables as dictionary or formatted string
+    """
+```
+
+##### `verify_installation`
+
+```python
+def verify_installation(
+    sdk_root: Union[str, Path],
+    verbose: bool = True
+) -> Dict[str, Any]:
+    """
+    Verify Android tools installation.
+    
+    Args:
+        sdk_root: Android SDK root directory
+        verbose: Print verification results
+    
+    Returns:
+        Dictionary with installation status
+    """
+```
+
+#### Classes
+
+##### `AndroidInstaller`
+
+```python
+class AndroidInstaller:
+    """Main installer orchestrator"""
+    
+    def __init__(self, sdk_root: Path, logger: Optional[StructuredLogger] = None):
+        """Initialize installer with SDK root"""
+    
+    def ensure(self, api: int, target: str, arch: str, 
+               ndk: Optional[NdkSpec] = None, **kwargs) -> InstallerResult:
+        """Install Android tools with specified configuration"""
+    
+    def verify(self) -> Dict[str, Any]:
+        """Verify installation status"""
+    
+    def cleanup(self, remove_downloads: bool = True, 
+                remove_temp: bool = True) -> None:
+        """Clean up temporary files"""
+```
+
+#### Data Types
+
+##### `NdkSpec`
+
+```python
+class NdkSpec:
+    """NDK specification"""
+    alias: Optional[str] = None  # e.g., "r26d"
+    path: Optional[Path] = None  # Absolute path to NDK
+```
+
+##### `InstallerResult`
+
+```python
+class InstallerResult(TypedDict):
+    """Installation result"""
+    sdk_root: Path
+    ndk_path: Optional[Path]
+    avd_created: bool
+    performed: Dict[str, Any]
+```
+
+#### Example Usage
+
+```python
+from ovmobilebench.android import ensure_android_tools, export_android_env
+
+# Install Android tools
+result = ensure_android_tools(
+    sdk_root="/opt/android-sdk",
+    api=30,
+    target="google_atd",
+    arch="arm64-v8a",
+    ndk="r26d",
+    create_avd_name="test_device"
+)
+
+# Export environment variables
+env = export_android_env(
+    sdk_root=result["sdk_root"],
+    ndk_path=result["ndk_path"],
+    format="bash"
+)
+print(env)
+
+# Verify installation
+from ovmobilebench.android import verify_installation
+status = verify_installation("/opt/android-sdk")
+```
+
+For complete documentation, see [Android Installer Module Documentation](android_installer.md).
 
 ## Utilities
 

@@ -30,6 +30,7 @@ cat experiments/results/*.csv
 - **[User Guide](docs/user-guide.md)** - Complete usage documentation
 - **[Configuration Reference](docs/configuration.md)** - YAML configuration schema
 - **[Device Setup](docs/device-setup.md)** - Android/Linux device preparation
+- **[Android Installer Module](docs/android_installer.md)** - Automated Android SDK/NDK setup
 - **[Build Guide](docs/build-guide.md)** - Building OpenVINO for mobile
 - **[Benchmarking Guide](docs/benchmarking.md)** - Running and interpreting benchmarks
 - **[CI/CD Integration](docs/ci-cd.md)** - GitHub Actions and automation
@@ -46,6 +47,7 @@ cat experiments/results/*.csv
 - 🌡️ **Device Control** - Temperature monitoring, performance tuning
 - 🔄 **CI/CD Ready** - GitHub Actions integration included
 - 📈 **Reproducible** - Full provenance tracking of builds and runs
+- 🤖 **Android SDK/NDK Installer** - Automated setup of Android development tools
 
 ## 🔧 Supported Platforms
 

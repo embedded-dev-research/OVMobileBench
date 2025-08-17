@@ -4,33 +4,74 @@ This guide explains how to install Android SDK and NDK for building and running 
 
 ## Automated Installation
 
-We provide a Python script that automatically downloads and installs Android SDK and NDK for Windows, macOS, and Linux.
+The `ovmobilebench.android.installer` module provides a robust, type-safe, and well-tested solution for Android SDK/NDK installation.
 
 ### Prerequisites
 
-- Python 3.7 or higher
-- ~5GB of free disk space
+- Python 3.8 or higher
+- ~15GB of free disk space
 - Internet connection for downloading tools
+- Java 11+ (for Android tools)
 
-### Installation Script
+### Python API
 
-Run the installation script from the project root:
+```python
+from ovmobilebench.android import ensure_android_tools
 
-```bash
-python scripts/setup_android_tools.py
+# Install Android SDK and NDK
+result = ensure_android_tools(
+    sdk_root="~/android-sdk",
+    api=30,
+    target="google_atd",
+    arch="arm64-v8a",
+    ndk="r26d",
+    verbose=True
+)
+
+print(f"SDK installed at: {result['sdk_root']}")
+print(f"NDK installed at: {result['ndk_path']}")
 ```
 
-This will:
-1. Fetch the latest available versions from Google's repository
-2. Install both Android SDK and NDK to `~/android-sdk` by default
-3. Use the most recent stable versions automatically
+### Command Line Interface
+
+```bash
+# Install Android SDK and NDK
+ovmobilebench-android-installer setup \
+    --sdk-root ~/android-sdk \
+    --api 30 \
+    --target google_atd \
+    --arch arm64-v8a \
+    --ndk r26d
+
+# Verify installation
+ovmobilebench-android-installer verify --sdk-root ~/android-sdk
+
+# List available targets
+ovmobilebench-android-installer list-targets
+```
+
+### Key Features
+
+- ✅ Type-safe with full type hints
+- ✅ Comprehensive error handling
+- ✅ Dry-run mode for testing
+- ✅ Structured logging with JSON Lines support
+- ✅ Cross-platform support (Windows, macOS, Linux)
+- ✅ Idempotent operations (safe to run multiple times)
+- ✅ AVD (Android Virtual Device) management
+- ✅ Environment variable export in multiple formats
+
+For complete documentation, see [Android Installer Module Documentation](android_installer.md).
 
 ### Installation Options
 
 #### Custom Installation Directory
 
 ```bash
-python scripts/setup_android_tools.py --install-dir /path/to/install
+ovmobilebench-android-installer setup \
+    --sdk-root /path/to/install \
+    --api 30 \
+    --ndk r26d
 ```
 
 #### Install Only NDK (without SDK)
@@ -38,61 +79,53 @@ python scripts/setup_android_tools.py --install-dir /path/to/install
 If you only need NDK for building OpenVINO:
 
 ```bash
-python scripts/setup_android_tools.py --ndk-only
-```
-
-#### List Available Versions
-
-To see all available versions fetched from Google:
-
-```bash
-python scripts/setup_android_tools.py --list-versions
+ovmobilebench-android-installer setup \
+    --sdk-root ~/android-sdk \
+    --api 30 \
+    --ndk r26d \
+    --no-platform-tools \
+    --no-emulator
 ```
 
 #### Specify Versions
 
-Install specific versions instead of latest:
+Install specific versions:
 
 ```bash
 # Specific NDK version
-python scripts/setup_android_tools.py --ndk-version r26d
-
-# Multiple specific versions
-python scripts/setup_android_tools.py \
-    --ndk-version r26d \
-    --build-tools-version 34.0.0 \
-    --platform-version 34
+ovmobilebench-android-installer setup \
+    --sdk-root ~/android-sdk \
+    --api 30 \
+    --ndk r26d \
+    --build-tools 34.0.0
 ```
 
-#### Offline Mode
+#### Dry Run Mode
 
-To skip fetching from Google and use fallback versions:
-
-```bash
-python scripts/setup_android_tools.py --no-fetch
-```
-
-#### Keep Downloaded Files
-
-By default, the script removes downloaded archives after installation. To keep them:
+Preview what would be installed without making changes:
 
 ```bash
-python scripts/setup_android_tools.py --skip-cleanup
+ovmobilebench-android-installer setup \
+    --sdk-root ~/android-sdk \
+    --api 30 \
+    --ndk r26d \
+    --dry-run
 ```
 
 ### What Gets Installed
 
 **Full Installation (default):**
-- Android SDK Command Line Tools (latest version)
+- Android SDK Command Line Tools
 - Android SDK Platform Tools (includes `adb`)
-- Android SDK Build Tools (latest version)
-- Android Platform API (latest version)
-- Android NDK (latest version)
+- Android SDK Build Tools
+- Android Platform API
+- Android NDK
+- System Images (for emulator)
+- Android Emulator (optional)
 
 **NDK-Only Installation:**
-- Android NDK (latest version)
-
-Note: The script automatically fetches and uses the most recent versions from Google's repository. You can see available versions with `--list-versions` or specify specific versions with the version flags.
+- Android SDK Command Line Tools (required)
+- Android NDK
 
 ### Platform-Specific Details
 
@@ -113,52 +146,48 @@ Note: The script automatically fetches and uses the most recent versions from Go
 
 ### Environment Setup
 
-After installation, the script will display environment variables to add to your shell configuration:
+After installation, export environment variables using the module:
 
-#### Linux/macOS (bash/zsh)
+```python
+from ovmobilebench.android import export_android_env
 
-Add to `~/.bashrc`, `~/.zshrc`, or equivalent:
+# Get environment variables
+env = export_android_env(
+    sdk_root="~/android-sdk",
+    ndk_path="~/android-sdk/ndk/26.3.11579264",
+    format="bash"  # or "fish", "windows", "github"
+)
+print(env)
+```
+
+Or use the CLI to generate export commands:
 
 ```bash
-export ANDROID_SDK_ROOT="$HOME/android-sdk/sdk"
-export ANDROID_HOME="$HOME/android-sdk/sdk"
-export ANDROID_NDK_ROOT="$HOME/android-sdk/ndk/r26d"
-export ANDROID_NDK_HOME="$HOME/android-sdk/ndk/r26d"
-export NDK_ROOT="$HOME/android-sdk/ndk/r26d"
-export PATH="$HOME/android-sdk/sdk/platform-tools:$HOME/android-sdk/sdk/cmdline-tools/latest/bin:$PATH"
+# For bash/zsh
+ovmobilebench-android-installer export-env \
+    --sdk-root ~/android-sdk \
+    --ndk-path ~/android-sdk/ndk/26.3.11579264 \
+    --format bash >> ~/.bashrc
+
+# For fish shell
+ovmobilebench-android-installer export-env \
+    --sdk-root ~/android-sdk \
+    --ndk-path ~/android-sdk/ndk/26.3.11579264 \
+    --format fish >> ~/.config/fish/config.fish
+
+# For Windows PowerShell
+ovmobilebench-android-installer export-env `
+    --sdk-root C:\android-sdk `
+    --ndk-path C:\android-sdk\ndk\26.3.11579264 `
+    --format windows
 ```
 
-Or source the generated script:
-
-```bash
-source ~/android-sdk/android_env.sh
-```
-
-#### Windows (PowerShell)
-
-Add to PowerShell profile:
-
-```powershell
-$env:ANDROID_SDK_ROOT = "$env:USERPROFILE\android-sdk\sdk"
-$env:ANDROID_HOME = "$env:USERPROFILE\android-sdk\sdk"
-$env:ANDROID_NDK_ROOT = "$env:USERPROFILE\android-sdk\ndk\r26d"
-$env:ANDROID_NDK_HOME = "$env:USERPROFILE\android-sdk\ndk\r26d"
-$env:NDK_ROOT = "$env:USERPROFILE\android-sdk\ndk\r26d"
-$env:Path += ";$env:USERPROFILE\android-sdk\sdk\platform-tools"
-$env:Path += ";$env:USERPROFILE\android-sdk\sdk\cmdline-tools\latest\bin"
-```
-
-#### Windows (Command Prompt)
-
-```batch
-set ANDROID_SDK_ROOT=%USERPROFILE%\android-sdk\sdk
-set ANDROID_HOME=%USERPROFILE%\android-sdk\sdk
-set ANDROID_NDK_ROOT=%USERPROFILE%\android-sdk\ndk\r26d
-set ANDROID_NDK_HOME=%USERPROFILE%\android-sdk\ndk\r26d
-set NDK_ROOT=%USERPROFILE%\android-sdk\ndk\r26d
-set PATH=%PATH%;%USERPROFILE%\android-sdk\sdk\platform-tools
-set PATH=%PATH%;%USERPROFILE%\android-sdk\sdk\cmdline-tools\latest\bin
-```
+The module sets the following environment variables:
+- `ANDROID_HOME` - Android SDK root directory
+- `ANDROID_SDK_ROOT` - Same as ANDROID_HOME
+- `ANDROID_NDK_HOME` - NDK installation directory
+- `ANDROID_NDK_ROOT` - Same as ANDROID_NDK_HOME
+- `PATH` - Updated with platform-tools and cmdline-tools
 
 ### Verification
 

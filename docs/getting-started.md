@@ -35,17 +35,35 @@ pip install -e .
 
 ### Android SDK/NDK Setup
 
-For Android device testing, you need to install Android SDK and NDK. We provide an automated installation script:
+For Android device testing, you need to install Android SDK and NDK. We provide an automated installer module:
 
-```bash
-# Install both SDK and NDK
-python scripts/setup_android_tools.py
+```python
+from ovmobilebench.android import ensure_android_tools
 
-# Or install only NDK (for building OpenVINO)
-python scripts/setup_android_tools.py --ndk-only
+# Automated installation
+result = ensure_android_tools(
+    sdk_root="~/Android/sdk",
+    api=30,
+    target="google_atd",
+    arch="arm64-v8a",
+    ndk="r26d"
+)
 ```
 
-For detailed instructions, see [Android Setup Guide](android-setup.md).
+Or via command line:
+
+```bash
+# Install Android SDK and NDK
+ovmobilebench-android-installer setup \
+    --sdk-root ~/Android/sdk \
+    --api 30 \
+    --ndk r26d
+
+# Verify installation
+ovmobilebench-android-installer verify --sdk-root ~/Android/sdk
+```
+
+For detailed instructions, see [Android Installer Module Documentation](android_installer.md) or [Android Setup Guide](android-setup.md).
 
 ## Quick Setup
 
