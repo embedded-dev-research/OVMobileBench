@@ -9,7 +9,7 @@ from pathlib import Path
 
 def test_ssh_in_ci():
     """Test SSH connectivity in CI environment."""
-    
+
     # Check if SSH is available
     ssh_dir = Path.home() / ".ssh"
     id_rsa = ssh_dir / "id_rsa"
@@ -31,18 +31,25 @@ def test_ssh_in_ci():
     # Build SSH command
     ssh_cmd = [
         "ssh",
-        "-o", "StrictHostKeyChecking=no",
-        "-o", "UserKnownHostsFile=/dev/null",
-        "-o", "ConnectTimeout=5",
-        "-o", "PasswordAuthentication=no",
-        "-o", "PubkeyAuthentication=yes",
-        "-i", str(id_rsa),
+        "-o",
+        "StrictHostKeyChecking=no",
+        "-o",
+        "UserKnownHostsFile=/dev/null",
+        "-o",
+        "ConnectTimeout=5",
+        "-o",
+        "PasswordAuthentication=no",
+        "-o",
+        "PubkeyAuthentication=yes",
+        "-i",
+        str(id_rsa),
         f"{username}@localhost",
-        "echo", "SSH_TEST_SUCCESS",
+        "echo",
+        "SSH_TEST_SUCCESS",
     ]
 
     print(f"Testing SSH connection as {username}@localhost...")
-    
+
     try:
         result = subprocess.run(ssh_cmd, capture_output=True, text=True, timeout=10)
 
