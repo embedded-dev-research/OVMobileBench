@@ -30,6 +30,7 @@ jobs:
 
       - name: Set up SSH server (Unix)
         if: runner.os != 'Windows'
+        shell: bash
         run: |
           set -e
           python scripts/generate_ssh_config.py --type setup
@@ -50,12 +51,14 @@ jobs:
           ovmobilebench list-ssh-devices
 
       - name: Test SSH deployment
+        shell: bash
         run: |
           set -e
           python scripts/generate_ssh_config.py --type test
           python tests/test_ssh_device_ci.py
 
       - name: Run benchmark dry-run via SSH
+        shell: bash
         env:
           PYTHONIOENCODING: utf-8
           PYTHONUTF8: 1
