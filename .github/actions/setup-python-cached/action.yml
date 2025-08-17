@@ -17,13 +17,14 @@ runs:
 
     - name: Get Python paths
       id: python-paths
-      shell: python
+      shell: bash
       run: |
+        # Get Python paths using Python
+        python << 'EOF'
         import os
         import sys
         import site
         import subprocess
-        import platform
         
         # Get site-packages path
         site_packages = site.getsitepackages()[0]
@@ -31,25 +32,14 @@ runs:
         # Get pip cache dir
         pip_cache = subprocess.check_output([sys.executable, "-m", "pip", "cache", "dir"]).decode().strip()
         
-        # Get hash of requirements files for cache key
-        import hashlib
-        hasher = hashlib.sha256()
-        
-        for file in ['requirements.txt', 'pyproject.toml']:
-            if os.path.exists(file):
-                with open(file, 'rb') as f:
-                    hasher.update(f.read())
-        
-        req_hash = hasher.hexdigest()[:16]
-        
         # Output for GitHub Actions
         output_file = os.environ.get('GITHUB_OUTPUT', '')
         if output_file:
             with open(output_file, 'a') as f:
                 f.write(f"site-packages={site_packages}\n")
                 f.write(f"pip-cache={pip_cache}\n")
-                f.write(f"cache-key={platform.system()}-py{sys.version_info.major}.{sys.version_info.minor}-{req_hash}\n")
                 f.write(f"python-version={sys.version}\n")
+        EOF
 
     - name: Cache Python environment
       uses: actions/cache@v3
@@ -61,7 +51,7 @@ runs:
           ~/.local/bin
           ~/.local/lib
           ~/Library/Python
-        key: ${{ steps.python-paths.outputs.cache-key }}
+        key: ${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-py${{ inputs.python-version }}-
 
@@ -87,9 +77,9 @@ runs:
       shell: bash
       run: |
         echo "=== Installed packages ==="
-        pip list | head -20
+        pip list 2>/dev/null | head -20 || true
         echo "..."
         echo "=== Package location ==="
-        python -c "import ovmobilebench; print(f'Package installed at: {ovmobilebench.__file__}')"
+        python -c "import ovmobilebench; print(f'Package installed at: {ovmobilebench.__file__}')" || echo "Package not found"
         echo "=== CLI availability ==="
         which ovmobilebench || echo "CLI not in PATH"
