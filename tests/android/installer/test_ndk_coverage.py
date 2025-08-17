@@ -2,18 +2,11 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
-import urllib.error
+from unittest.mock import Mock, patch
 
 import pytest
 
 from ovmobilebench.android.installer.ndk import NdkResolver
-from ovmobilebench.android.installer.errors import (
-    ComponentNotFoundError,
-    DownloadError,
-    InvalidArgumentError,
-    UnpackError,
-)
 
 
 class TestNdkResolverCoverage:
