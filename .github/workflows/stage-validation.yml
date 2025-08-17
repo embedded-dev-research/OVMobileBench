@@ -1,0 +1,35 @@
+name: Validation
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  dry-run:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python with cached dependencies
+        uses: ./.github/actions/setup-python-cached
+
+      - name: Validate example config
+        run: |
+          python -c "from ovmobilebench.config.loader import load_experiment; load_experiment('experiments/android_example.yaml')"
+
+      - name: CLI help test
+        run: |
+          ovmobilebench --help
+          ovmobilebench build --help
+          ovmobilebench run --help
+
+      - name: Check CLI commands
+        run: |
+          ovmobilebench list-devices --help
+          ovmobilebench all --help
+          ovmobilebench package --help
+          ovmobilebench deploy --help
+          ovmobilebench report --help

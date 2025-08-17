@@ -1,0 +1,27 @@
+name: Build Package
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  build-package:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python with cached dependencies
+        uses: ./.github/actions/setup-python-cached
+
+      - name: Build package
+        run: python -m build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ inputs.os }}
+          path: dist/
+          retention-days: 7
