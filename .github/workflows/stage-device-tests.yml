@@ -28,33 +28,13 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
 
-      - name: Set up SSH server (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          set -e
-          python scripts/generate_ssh_config.py --type setup
-          bash scripts/setup_ssh_ci.sh
-      
-      - name: Set up SSH server (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          python scripts/generate_ssh_config.py --type setup
-          .\scripts\setup_ssh_ci.ps1
-
       - name: Generate SSH config
         run: python scripts/generate_ssh_config.py --type config
 
-      - name: List SSH devices
-        run: |
-          ovmobilebench list-ssh-devices
-
-      - name: Test SSH deployment
+      - name: Test SSH with Paramiko test server
         shell: bash
         run: |
           set -e
-          python scripts/generate_ssh_config.py --type test
           python tests/test_ssh_device_ci.py
 
       - name: Run benchmark dry-run via SSH

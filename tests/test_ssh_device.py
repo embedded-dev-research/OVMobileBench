@@ -581,7 +581,7 @@ class TestLinuxSSHDevice:
         mock_ssh_client.return_value = mock_client
         mock_client.open_sftp.return_value = Mock()
 
-        device = LinuxSSHDevice(host="localhost", username="test", push_dir="/custom/path")
+        device = LinuxSSHDevice(host="127.0.0.1", username="test", push_dir="/custom/path")
         env = device.get_env()
 
         assert "LD_LIBRARY_PATH" in env

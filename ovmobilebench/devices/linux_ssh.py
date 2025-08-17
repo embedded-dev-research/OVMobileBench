@@ -22,6 +22,7 @@ class LinuxSSHDevice(Device):
         key_filename: Optional[str] = None,
         port: int = 22,
         push_dir: str = "/tmp/ovmobilebench",
+        mock_mode: bool = False,
     ):
         """Initialize SSH device.
 
@@ -32,6 +33,7 @@ class LinuxSSHDevice(Device):
             key_filename: Path to private key file (optional)
             port: SSH port (default 22)
             push_dir: Remote directory for deployment
+            mock_mode: If True, don't connect (for dry-run)
         """
         super().__init__(f"{username}@{host}:{port}")
         self.serial = f"{username}@{host}:{port}"
@@ -41,9 +43,14 @@ class LinuxSSHDevice(Device):
         self.key_filename = key_filename
         self.port = port
         self.push_dir = push_dir
+        self.mock_mode = mock_mode
         self.client: Optional[paramiko.SSHClient] = None
         self.sftp: Optional[paramiko.SFTPClient] = None
-        self._connect()
+
+        if not mock_mode:
+            self._connect()
+        else:
+            logger.info(f"Mock SSH device created for {self.serial}")
 
     def _connect(self):
         """Establish SSH connection."""
@@ -82,6 +89,10 @@ class LinuxSSHDevice(Device):
 
     def push(self, local: Path, remote: str) -> None:
         """Push file to device via SFTP."""
+        if self.mock_mode:
+            logger.info(f"[MOCK] Would push {local} to {remote}")
+            return
+
         if not self.sftp:
             raise DeviceError("SFTP connection not established")
 
@@ -102,6 +113,13 @@ class LinuxSSHDevice(Device):
 
     def pull(self, remote: str, local: Path) -> None:
         """Pull file from device via SFTP."""
+        if self.mock_mode:
+            logger.info(f"[MOCK] Would pull {remote} to {local}")
+            # Create dummy file for dry-run
+            local.parent.mkdir(parents=True, exist_ok=True)
+            local.write_text("mock output")
+            return
+
         if not self.sftp:
             raise DeviceError("SFTP connection not established")
 
@@ -117,6 +135,10 @@ class LinuxSSHDevice(Device):
 
     def shell(self, cmd: str, timeout: Optional[int] = 120) -> tuple[int, str, str]:
         """Execute command on device via SSH."""
+        if self.mock_mode:
+            logger.info(f"[MOCK] Would execute: {cmd}")
+            return (0, "mock output", "")
+
         if not self.client:
             raise DeviceError("SSH connection not established")
 
@@ -138,6 +160,10 @@ class LinuxSSHDevice(Device):
 
     def exists(self, remote_path: str) -> bool:
         """Check if file/directory exists on device."""
+        if self.mock_mode:
+            logger.info(f"[MOCK] Checking existence of {remote_path}")
+            return False  # Mock: nothing exists
+
         try:
             if self.sftp:
                 self.sftp.stat(remote_path)
@@ -154,6 +180,10 @@ class LinuxSSHDevice(Device):
 
     def _mkdir_p(self, path: str) -> None:
         """Create directory recursively (like mkdir -p)."""
+        if self.mock_mode:
+            logger.info(f"[MOCK] Would create directory: {path}")
+            return
+
         if not self.sftp:
             raise DeviceError("SFTP connection not established")
 
@@ -177,6 +207,10 @@ class LinuxSSHDevice(Device):
 
     def rm(self, path: str, recursive: bool = False) -> None:
         """Remove file or directory from device."""
+        if self.mock_mode:
+            logger.info(f"[MOCK] Would remove {'recursively' if recursive else ''}: {path}")
+            return
+
         if recursive:
             cmd = f"rm -rf {path}"
         else:
@@ -194,6 +228,15 @@ class LinuxSSHDevice(Device):
             "port": self.port,
             "username": self.username,
         }
+
+        if self.mock_mode:
+            info["mock"] = True
+            info["kernel"] = "Mock Linux 5.0.0"
+            info["cpu_cores"] = 4
+            info["memory"] = "16G"
+            info["arch"] = "x86_64"
+            info["hostname"] = "mock-host"
+            return info
 
         # Get system info
         try:
@@ -228,6 +271,9 @@ class LinuxSSHDevice(Device):
 
     def is_available(self) -> bool:
         """Check if device is available."""
+        if self.mock_mode:
+            return True  # Mock device is always available
+
         try:
             if self.client:
                 transport = self.client.get_transport()

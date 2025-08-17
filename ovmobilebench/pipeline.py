@@ -214,6 +214,7 @@ class Pipeline:
                 key_filename=device_config.get("key_filename"),
                 port=device_config.get("port", 22),
                 push_dir=device_config.get("push_dir", "/tmp/ovmobilebench"),
+                mock_mode=self.dry_run,  # Use mock mode in dry-run
             )
         else:
             raise OVMobileBenchError(

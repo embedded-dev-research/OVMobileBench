@@ -126,7 +126,7 @@ def test_ssh_device():
     username = os.environ.get("USER") or os.environ.get("USERNAME", "runner")
 
     try:
-        # Connect to localhost
+        # Connect to test server
         device = LinuxSSHDevice(
             host="127.0.0.1",
             username=username,
