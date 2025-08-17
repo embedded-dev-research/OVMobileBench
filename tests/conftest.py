@@ -20,8 +20,9 @@ def pytest_collection_modifyitems(config, items):
 
     # Mark tests for skipping
     for item in items:
-        # Get relative test path
-        test_file = Path(item.fspath).name
+        # Get relative test path from tests/ directory
+        test_path = Path(item.fspath).relative_to(Path(__file__).parent.parent)
+        test_file = str(test_path).replace("\\", "/")  # Normalize path separators
 
         # Build test identifier
         if item.cls:

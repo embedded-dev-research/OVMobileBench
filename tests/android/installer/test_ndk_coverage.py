@@ -123,7 +123,7 @@ class TestNdkResolverCoverage:
         
         with patch.dict("os.environ", {"NDK_HOME": str(ndk_path)}):
             from ovmobilebench.android.installer.types import NdkSpec
-            spec = NdkSpec()
+            spec = NdkSpec(alias="r26d")  # Provide required alias
             result = self.resolver.resolve_path(spec)
             assert result is not None
             assert result.path == ndk_path
@@ -136,7 +136,7 @@ class TestNdkResolverCoverage:
         
         with patch.dict("os.environ", {"ANDROID_NDK": str(ndk_path)}):
             from ovmobilebench.android.installer.types import NdkSpec
-            spec = NdkSpec()
+            spec = NdkSpec(alias="r26d")  # Provide required alias
             result = self.resolver.resolve_path(spec)
             assert result is not None
             assert result.path == ndk_path
@@ -145,7 +145,7 @@ class TestNdkResolverCoverage:
         """Test resolving path from environment with invalid path."""
         with patch.dict("os.environ", {"NDK_HOME": "/nonexistent/path"}):
             from ovmobilebench.android.installer.types import NdkSpec
-            spec = NdkSpec()
+            spec = NdkSpec(alias="r26d")  # Provide required alias
             result = self.resolver.resolve_path(spec)
             assert result is None
 
