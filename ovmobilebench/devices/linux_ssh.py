@@ -287,7 +287,7 @@ def list_ssh_devices(config_file: Optional[str] = None) -> List[Dict[str, Any]]:
                 "type": "linux_ssh",
             }
         )
-        
+
         # Add 127.0.0.1 as a fallback for testing
         devices.append(
             {
