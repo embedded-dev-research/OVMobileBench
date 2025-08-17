@@ -135,6 +135,11 @@ class TestSetupLogging:
             # File should be created
             assert log_file.exists()
 
+            # Clean up handlers to release file lock
+            for handler in root_logger.handlers[:]:
+                handler.close()
+                root_logger.removeHandler(handler)
+
     def test_setup_with_json_format(self):
         """Test setup with JSON format."""
         root_logger = logging.getLogger()
@@ -161,6 +166,11 @@ class TestSetupLogging:
             # File handler should also have JSON formatter
             file_handler = root_logger.handlers[1]
             assert isinstance(file_handler.formatter, JSONFormatter)
+
+            # Clean up handlers to release file lock
+            for handler in root_logger.handlers[:]:
+                handler.close()
+                root_logger.removeHandler(handler)
 
 
 class TestGetLogger:

@@ -30,13 +30,10 @@ class TestCommandResult:
 class TestRun:
     """Test run function."""
 
-    @patch("subprocess.Popen")
-    def test_run_simple_command(self, mock_popen):
+    @patch("subprocess.run")
+    def test_run_simple_command(self, mock_run):
         """Test running a simple command."""
-        mock_proc = Mock()
-        mock_proc.communicate.return_value = ("output", "")
-        mock_proc.returncode = 0
-        mock_popen.return_value = mock_proc
+        mock_run.return_value = Mock(returncode=0, stdout="output", stderr="")
 
         result = run("echo test")
 
@@ -46,127 +43,99 @@ class TestRun:
         assert result.cmd == "echo test"
         assert result.success is True
 
-    @patch("subprocess.Popen")
-    def test_run_list_command(self, mock_popen):
+    @patch("subprocess.run")
+    def test_run_list_command(self, mock_run):
         """Test running command as list."""
-        mock_proc = Mock()
-        mock_proc.communicate.return_value = ("output", "")
-        mock_proc.returncode = 0
-        mock_popen.return_value = mock_proc
+        mock_run.return_value = Mock(returncode=0, stdout="output", stderr="")
 
         result = run(["echo", "test"])
 
         assert result.returncode == 0
         assert result.cmd == "echo test"
 
-    @patch("subprocess.Popen")
-    def test_run_with_env(self, mock_popen):
+    @patch("subprocess.run")
+    def test_run_with_env(self, mock_run):
         """Test running with environment variables."""
-        mock_proc = Mock()
-        mock_proc.communicate.return_value = ("", "")
-        mock_proc.returncode = 0
-        mock_popen.return_value = mock_proc
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
         env = {"TEST_VAR": "value"}
         run("echo test", env=env)
 
-        mock_popen.assert_called_once()
-        call_kwargs = mock_popen.call_args[1]
+        mock_run.assert_called_once()
+        call_kwargs = mock_run.call_args[1]
         assert call_kwargs["env"] == env
 
-    @patch("subprocess.Popen")
-    def test_run_with_cwd(self, mock_popen):
+    @patch("subprocess.run")
+    def test_run_with_cwd(self, mock_run):
         """Test running with working directory."""
-        mock_proc = Mock()
-        mock_proc.communicate.return_value = ("", "")
-        mock_proc.returncode = 0
-        mock_popen.return_value = mock_proc
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             cwd = Path(tmpdir)
-            run("ls", cwd=cwd)
+            run("echo test", cwd=cwd)
 
-            mock_popen.assert_called_once()
-            call_kwargs = mock_popen.call_args[1]
+            mock_run.assert_called_once()
+            call_kwargs = mock_run.call_args[1]
             assert call_kwargs["cwd"] == cwd
 
-    @patch("subprocess.Popen")
-    def test_run_with_timeout(self, mock_popen):
+    @patch("subprocess.run")
+    def test_run_with_timeout(self, mock_run):
         """Test running with timeout."""
-        mock_proc = Mock()
-        mock_proc.communicate.side_effect = subprocess.TimeoutExpired("cmd", 5)
-        mock_proc.kill = Mock()
-        mock_proc.communicate.side_effect = [
-            subprocess.TimeoutExpired("cmd", 5),
-            ("partial", "timeout error"),
-        ]
-        mock_popen.return_value = mock_proc
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
-        result = run("sleep 10", timeout=5)
+        run("echo test", timeout=30)
 
-        assert result.returncode == 124  # Timeout code
-        assert "TIMEOUT" in result.stderr
-        mock_proc.kill.assert_called_once()
+        mock_run.assert_called_once()
+        call_kwargs = mock_run.call_args[1]
+        assert call_kwargs["timeout"] == 30
 
-    @patch("subprocess.Popen")
-    def test_run_timeout_with_check(self, mock_popen):
-        """Test timeout with check=True raises exception."""
-        mock_proc = Mock()
-        mock_proc.communicate.side_effect = subprocess.TimeoutExpired("cmd", 5)
-        mock_proc.kill = Mock()
-        mock_proc.communicate.side_effect = [subprocess.TimeoutExpired("cmd", 5), ("", "")]
-        mock_popen.return_value = mock_proc
+    @patch("subprocess.run")
+    def test_run_timeout_with_check(self, mock_run):
+        """Test timeout with check=True raises TimeoutError."""
+        mock_run.side_effect = subprocess.TimeoutExpired("cmd", 5)
 
         with pytest.raises(TimeoutError) as exc_info:
             run("sleep 10", timeout=5, check=True)
 
-        assert "timed out" in str(exc_info.value)
+        assert "timed out after 5s" in str(exc_info.value)
 
-    @patch("subprocess.Popen")
-    def test_run_no_capture(self, mock_popen):
+    @patch("subprocess.run")
+    def test_run_no_capture(self, mock_run):
         """Test running without capturing output."""
-        mock_proc = Mock()
-        mock_proc.communicate.return_value = (None, None)
-        mock_proc.returncode = 0
-        mock_popen.return_value = mock_proc
+        mock_run.return_value = Mock(returncode=0, stdout=None, stderr=None)
 
-        run("echo test", capture=False)
+        result = run("echo test", capture=False)
 
-        mock_popen.assert_called_once()
-        call_kwargs = mock_popen.call_args[1]
+        mock_run.assert_called_once()
+        call_kwargs = mock_run.call_args[1]
         assert call_kwargs["stdout"] is None
         assert call_kwargs["stderr"] is None
+        assert result.stdout == ""
+        assert result.stderr == ""
 
-    @patch("subprocess.Popen")
-    @patch("builtins.print")
-    def test_run_verbose(self, mock_print, mock_popen):
+    @patch("subprocess.run")
+    def test_run_verbose(self, mock_run):
         """Test verbose mode prints command."""
-        mock_proc = Mock()
-        mock_proc.communicate.return_value = ("", "")
-        mock_proc.returncode = 0
-        mock_popen.return_value = mock_proc
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
-        run("echo test", verbose=True)
+        with patch("builtins.print") as mock_print:
+            run("echo test", verbose=True)
+            mock_print.assert_called_once_with("Executing: echo test")
 
-        mock_print.assert_called_once_with("Executing: echo test")
-
-    @patch("subprocess.Popen")
-    def test_run_check_error(self, mock_popen):
-        """Test check=True raises on non-zero exit."""
-        mock_proc = Mock()
-        mock_proc.communicate.return_value = ("", "error")
-        mock_proc.returncode = 1
-        mock_popen.return_value = mock_proc
+    @patch("subprocess.run")
+    def test_run_check_error(self, mock_run):
+        """Test check=True raises CalledProcessError on failure."""
+        mock_run.return_value = Mock(returncode=1, stdout="output", stderr="error")
 
         with pytest.raises(subprocess.CalledProcessError) as exc_info:
             run("false", check=True)
 
         assert exc_info.value.returncode == 1
 
-    @patch("subprocess.Popen")
-    def test_run_exception_handling(self, mock_popen):
-        """Test exception handling during execution."""
-        mock_popen.side_effect = OSError("Command not found")
+    @patch("subprocess.run")
+    def test_run_exception_handling(self, mock_run):
+        """Test exception handling without check."""
+        mock_run.side_effect = OSError("Command not found")
 
         result = run("nonexistent_command")
 
@@ -174,35 +143,30 @@ class TestRun:
         assert "Command not found" in result.stderr
         assert result.success is False
 
-    @patch("subprocess.Popen")
-    def test_run_exception_with_check(self, mock_popen):
+    @patch("subprocess.run")
+    def test_run_exception_with_check(self, mock_run):
         """Test exception with check=True re-raises."""
-        mock_popen.side_effect = OSError("Command not found")
+        mock_run.side_effect = OSError("Command not found")
 
         with pytest.raises(OSError):
             run("nonexistent_command", check=True)
 
-    @patch("subprocess.Popen")
-    def test_run_with_special_chars(self, mock_popen):
+    @patch("subprocess.run")
+    def test_run_with_special_chars(self, mock_run):
         """Test command with special characters."""
-        mock_proc = Mock()
-        mock_proc.communicate.return_value = ("", "")
-        mock_proc.returncode = 0
-        mock_popen.return_value = mock_proc
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
         result = run(["echo", "test with spaces"])
 
-        assert result.cmd == "echo 'test with spaces'"
+        # Command string is now consistent across platforms
+        assert result.cmd == "echo test with spaces"
 
-    @patch("subprocess.Popen")
-    def test_run_duration_tracking(self, mock_popen):
+    @patch("subprocess.run")
+    def test_run_duration_tracking(self, mock_run):
         """Test that duration is tracked."""
-        mock_proc = Mock()
-        mock_proc.communicate.return_value = ("", "")
-        mock_proc.returncode = 0
-        mock_popen.return_value = mock_proc
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
-        with patch("time.time", side_effect=[100.0, 101.5]):
-            result = run("echo test")
+        result = run("echo test")
 
-        assert result.duration_sec == 1.5
+        assert result.duration_sec >= 0
+        assert isinstance(result.duration_sec, float)

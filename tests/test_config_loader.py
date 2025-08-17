@@ -18,7 +18,8 @@ class TestLoadYaml:
         path = Path("/nonexistent/config.yaml")
         with pytest.raises(FileNotFoundError) as exc_info:
             load_yaml(path)
-        assert "Configuration file not found: /nonexistent/config.yaml" in str(exc_info.value)
+        # Use path.as_posix() for consistent forward slashes in error message
+        assert f"Configuration file not found: {path.as_posix()}" in str(exc_info.value)
 
     @patch("pathlib.Path.exists")
     @patch("builtins.open", new_callable=mock_open)

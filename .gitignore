@@ -131,7 +131,5 @@ dmypy.json
 .claude
 CLAUDE.md
 
-# Generated CI configs
-experiments/ssh_localhost_ci.yaml
+# Test results
 experiments/results/
-scripts/setup_ssh_ci.sh

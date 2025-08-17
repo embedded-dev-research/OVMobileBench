@@ -28,24 +28,20 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
 
-      - name: Set up SSH server
+      - name: Test SSH with Paramiko test server
+        shell: bash
         run: |
-          python scripts/generate_ssh_config.py --type setup
-          bash scripts/setup_ssh_ci.sh || echo "SSH setup had warnings, continuing..."
-
-      - name: List SSH devices
-        run: |
-          ovmobilebench list-ssh-devices || echo "Command not yet implemented"
-
-      - name: Test SSH deployment
-        run: |
-          python scripts/generate_ssh_config.py --type test
-          python scripts/test_ssh_device_ci.py
+          set -e
+          python tests/test_ssh_device_ci.py
 
       - name: Run benchmark dry-run via SSH
+        shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: 1
         run: |
-          python scripts/generate_ssh_config.py --type config
-          ovmobilebench all -c experiments/ssh_localhost_ci.yaml --dry-run || true
+          set -e
+          ovmobilebench all -c experiments/ssh_test_ci.yaml --dry-run
 
       - name: Upload SSH test results
         if: always()

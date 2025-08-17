@@ -56,12 +56,16 @@ class TestAndroidToolsInstaller:
 
     def test_custom_install_directory(self):
         """Test custom installation directory."""
+        from pathlib import Path
+
         custom_dir = "/custom/path/android"
         installer = AndroidToolsInstaller(install_dir=custom_dir)
 
-        assert str(installer.install_dir) == custom_dir
-        assert str(installer.sdk_dir) == f"{custom_dir}/sdk"
-        assert str(installer.ndk_dir) == f"{custom_dir}/ndk/{installer.NDK_VERSION}"
+        # Convert to Path for cross-platform comparison
+        expected_path = Path(custom_dir).expanduser().absolute()
+        assert installer.install_dir == expected_path
+        assert installer.sdk_dir == expected_path / "sdk"
+        assert installer.ndk_dir == expected_path / "ndk" / installer.NDK_VERSION
 
     def test_ndk_only_mode(self):
         """Test NDK-only installation mode."""

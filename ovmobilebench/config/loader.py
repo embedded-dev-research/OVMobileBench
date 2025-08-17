@@ -9,7 +9,7 @@ from ovmobilebench.config.schema import Experiment
 def load_yaml(path: Path) -> Dict[str, Any]:
     """Load YAML configuration file."""
     if not path.exists():
-        raise FileNotFoundError(f"Configuration file not found: {path}")
+        raise FileNotFoundError(f"Configuration file not found: {path.as_posix()}")
 
     with open(path, "r") as f:
         data: Dict[str, Any] = yaml.safe_load(f)

@@ -3,6 +3,8 @@
 # Apply typer compatibility patch
 from ovmobilebench import typer_patch  # noqa: F401
 
+import os
+import sys
 import typer
 from pathlib import Path
 from typing import Optional
@@ -12,6 +14,17 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from ovmobilebench.config.loader import load_experiment
 from ovmobilebench.pipeline import Pipeline
 
+# Set UTF-8 encoding for Windows
+if sys.platform == "win32":
+    os.environ["PYTHONIOENCODING"] = "utf-8"
+    # Also set console code page to UTF-8 if possible
+    try:
+        import subprocess
+
+        subprocess.run("chcp 65001", shell=True, capture_output=True)
+    except Exception:
+        pass
+
 app = typer.Typer(
     name="ovmobilebench",
     help="End-to-end benchmarking pipeline for OpenVINO on mobile devices",
@@ -19,7 +32,9 @@ app = typer.Typer(
     pretty_exceptions_enable=False,  # Disable pretty exceptions
     rich_markup_mode=None,  # Disable Rich formatting
 )
-console = Console()
+
+# Configure console with safe encoding for Windows
+console = Console(legacy_windows=True if sys.platform == "win32" else None)
 
 
 @app.command()
@@ -33,7 +48,7 @@ def build(
     cfg = load_experiment(config)
     pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
     pipeline.build()
-    console.print("[bold green]✓ Build completed[/bold green]")
+    console.print("[bold green][OK] Build completed[/bold green]")
 
 
 @app.command()
@@ -47,7 +62,7 @@ def package(
     cfg = load_experiment(config)
     pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
     pipeline.package()
-    console.print("[bold green]✓ Package created[/bold green]")
+    console.print("[bold green][OK] Package created[/bold green]")
 
 
 @app.command()
@@ -61,7 +76,7 @@ def deploy(
     cfg = load_experiment(config)
     pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
     pipeline.deploy()
-    console.print("[bold green]✓ Deployment completed[/bold green]")
+    console.print("[bold green][OK] Deployment completed[/bold green]")
 
 
 @app.command()
@@ -77,7 +92,7 @@ def run(
     cfg = load_experiment(config)
     pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
     pipeline.run(timeout=timeout, cooldown=cooldown)
-    console.print("[bold green]✓ Benchmarks completed[/bold green]")
+    console.print("[bold green][OK] Benchmarks completed[/bold green]")
 
 
 @app.command()
@@ -90,7 +105,7 @@ def report(
     cfg = load_experiment(config)
     pipeline = Pipeline(cfg, verbose=verbose)
     pipeline.report()
-    console.print("[bold green]✓ Reports generated[/bold green]")
+    console.print("[bold green][OK] Reports generated[/bold green]")
 
 
 @app.command()
@@ -102,11 +117,10 @@ def all(
     cooldown: Optional[int] = typer.Option(None, "--cooldown", help="Cooldown between runs"),
 ):
     """Execute complete pipeline: build, package, deploy, run, and report."""
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
+    # Check if we're in CI environment
+    is_ci = os.environ.get("CI", "").lower() == "true"
+
+    try:
         cfg = load_experiment(config)
         pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
 
@@ -118,16 +132,42 @@ def all(
             ("Generating reports...", pipeline.report),
         ]
 
-        for description, stage_func in stages:
-            task = progress.add_task(description, total=None)
-            try:
-                stage_func()
-                progress.update(task, completed=True)
-            except Exception as e:
-                console.print(f"[bold red]✗ {description} failed: {e}[/bold red]")
-                raise
+        if is_ci or verbose:
+            # Simple output for CI or verbose mode
+            for description, stage_func in stages:
+                print(f"[*] {description}")
+                try:
+                    stage_func()
+                    print(f"[OK] {description} completed")
+                except Exception as e:
+                    print(f"[FAIL] {description} failed: {e}")
+                    raise
+            print("[OK] Pipeline completed successfully")
+        else:
+            # Rich progress bar for interactive use
+            spinner = SpinnerColumn(spinner_name="dots" if sys.platform == "win32" else "aesthetic")
 
-    console.print("[bold green]✓ Pipeline completed successfully[/bold green]")
+            with Progress(
+                spinner,
+                TextColumn("[progress.description]{task.description}"),
+                console=console,
+                transient=True,  # Clear progress when done
+            ) as progress:
+                for description, stage_func in stages:
+                    task = progress.add_task(description, total=None)
+                    try:
+                        stage_func()
+                        progress.update(task, completed=True)
+                    except Exception as e:
+                        console.print(f"[bold red][FAIL] {description} failed: {e}[/bold red]")
+                        raise
+
+            console.print("[bold green][OK] Pipeline completed successfully[/bold green]")
+    except UnicodeEncodeError as e:
+        # Fallback for encoding errors
+        print(f"Encoding error: {e}")
+        print("Pipeline failed due to encoding issues. Try setting PYTHONIOENCODING=utf-8")
+        sys.exit(1)
 
 
 @app.command()

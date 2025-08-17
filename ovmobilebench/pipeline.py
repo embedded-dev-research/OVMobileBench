@@ -13,7 +13,7 @@ from ovmobilebench.runners.benchmark import BenchmarkRunner
 from ovmobilebench.parsers.benchmark_parser import BenchmarkParser
 from ovmobilebench.report.sink import JSONSink, CSVSink
 from ovmobilebench.core.fs import ensure_dir
-from ovmobilebench.core.errors import OVMobileBenchError, DeviceError
+from ovmobilebench.core.errors import OVMobileBenchError, DeviceError, ConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -204,13 +204,17 @@ class Pipeline:
 
             # Parse SSH config from device section
             device_config = self.config.device.model_dump()
+            host = device_config.get("host")
+            if not host:
+                raise ConfigError("SSH host must be specified in device configuration")
             return LinuxSSHDevice(
-                host=device_config.get("host", "localhost"),
+                host=host,
                 username=device_config.get("username", os.environ.get("USER", "user")),
                 password=device_config.get("password"),
                 key_filename=device_config.get("key_filename"),
                 port=device_config.get("port", 22),
                 push_dir=device_config.get("push_dir", "/tmp/ovmobilebench"),
+                mock_mode=self.dry_run,  # Use mock mode in dry-run
             )
         else:
             raise OVMobileBenchError(

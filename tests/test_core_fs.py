@@ -146,31 +146,33 @@ class TestGetDigest:
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
             temp_file.write("test content")
             temp_file.flush()
+            temp_path = temp_file.name
 
-            try:
-                digest = get_digest(temp_file.name)
+        try:
+            digest = get_digest(temp_path)
 
-                # Calculate expected digest
-                expected = hashlib.sha256("test content".encode()).hexdigest()
-                assert digest == expected
-                assert len(digest) == 64  # SHA256 hex length
-            finally:
-                os.unlink(temp_file.name)
+            # Calculate expected digest
+            expected = hashlib.sha256("test content".encode()).hexdigest()
+            assert digest == expected
+            assert len(digest) == 64  # SHA256 hex length
+        finally:
+            os.unlink(temp_path)
 
     def test_get_digest_custom_algorithm(self):
         """Test digest calculation with custom algorithm."""
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
             temp_file.write("test content")
             temp_file.flush()
+            temp_path = temp_file.name
 
-            try:
-                digest = get_digest(temp_file.name, algorithm="md5")
+        try:
+            digest = get_digest(temp_path, algorithm="md5")
 
-                expected = hashlib.md5("test content".encode()).hexdigest()
-                assert digest == expected
-                assert len(digest) == 32  # MD5 hex length
-            finally:
-                os.unlink(temp_file.name)
+            expected = hashlib.md5("test content".encode()).hexdigest()
+            assert digest == expected
+            assert len(digest) == 32  # MD5 hex length
+        finally:
+            os.unlink(temp_path)
 
     def test_get_digest_large_file(self):
         """Test digest calculation for large file (chunked reading)."""
@@ -179,28 +181,30 @@ class TestGetDigest:
             large_content = "a" * 100000
             temp_file.write(large_content)
             temp_file.flush()
+            temp_path = temp_file.name
 
-            try:
-                digest = get_digest(temp_file.name)
+        try:
+            digest = get_digest(temp_path)
 
-                expected = hashlib.sha256(large_content.encode()).hexdigest()
-                assert digest == expected
-            finally:
-                os.unlink(temp_file.name)
+            expected = hashlib.sha256(large_content.encode()).hexdigest()
+            assert digest == expected
+        finally:
+            os.unlink(temp_path)
 
     def test_get_digest_with_path_object(self):
         """Test digest calculation with Path object."""
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
             temp_file.write("test content")
             temp_file.flush()
+            temp_path = temp_file.name
 
-            try:
-                digest = get_digest(Path(temp_file.name))
+        try:
+            digest = get_digest(Path(temp_path))
 
-                expected = hashlib.sha256("test content".encode()).hexdigest()
-                assert digest == expected
-            finally:
-                os.unlink(temp_file.name)
+            expected = hashlib.sha256("test content".encode()).hexdigest()
+            assert digest == expected
+        finally:
+            os.unlink(temp_path)
 
     @patch("builtins.open", side_effect=FileNotFoundError("File not found"))
     def test_get_digest_file_not_found(self, mock_open):
@@ -252,13 +256,30 @@ class TestCopyTree:
 
     def test_copy_tree_with_symlinks(self):
         """Test copying directory with symlinks."""
+        import platform
+        import pytest
+
+        # Skip on Windows if not running as admin
+        if platform.system() == "Windows":
+            import ctypes
+
+            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            if not is_admin:
+                pytest.skip("Symlink test requires admin privileges on Windows")
+
         with tempfile.TemporaryDirectory() as temp_dir:
             src_dir = Path(temp_dir) / "source"
             dst_dir = Path(temp_dir) / "destination"
 
             src_dir.mkdir()
             (src_dir / "file.txt").write_text("content")
-            (src_dir / "link.txt").symlink_to("file.txt")
+
+            try:
+                (src_dir / "link.txt").symlink_to("file.txt")
+            except OSError as e:
+                if platform.system() == "Windows":
+                    pytest.skip(f"Cannot create symlink on Windows: {e}")
+                raise
 
             copy_tree(src_dir, dst_dir, symlinks=True)
 
@@ -378,12 +399,13 @@ class TestGetSize:
             content = "test content"
             temp_file.write(content)
             temp_file.flush()
+            temp_path = temp_file.name
 
-            try:
-                size = get_size(temp_file.name)
-                assert size == len(content.encode())
-            finally:
-                os.unlink(temp_file.name)
+        try:
+            size = get_size(temp_path)
+            assert size == len(content.encode())
+        finally:
+            os.unlink(temp_path)
 
     def test_get_size_directory(self):
         """Test getting size of a directory."""
@@ -413,12 +435,13 @@ class TestGetSize:
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
             temp_file.write("test")
             temp_file.flush()
+            temp_path = temp_file.name
 
-            try:
-                size = get_size(Path(temp_file.name))
-                assert size == 4
-            finally:
-                os.unlink(temp_file.name)
+        try:
+            size = get_size(Path(temp_path))
+            assert size == 4
+        finally:
+            os.unlink(temp_path)
 
     @patch("pathlib.Path.stat", side_effect=FileNotFoundError("File not found"))
     def test_get_size_file_not_found(self, mock_stat):

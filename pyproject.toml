@@ -59,7 +59,6 @@ omit = [
     "*/__pycache__/*",
     "*/site-packages/*",
     "scripts/setup_ssh_ci.sh",
-    "scripts/test_ssh_device_ci.py",
 ]
 
 [tool.coverage.report]

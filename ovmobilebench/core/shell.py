@@ -1,7 +1,6 @@
 """Shell command execution utilities."""
 
 import subprocess
-import shlex
 import time
 from dataclasses import dataclass
 from typing import Optional, Dict, Union, List
@@ -46,12 +45,8 @@ def run(
     Returns:
         CommandResult with execution details
     """
-    if isinstance(cmd, str):
-        args = shlex.split(cmd)
-        cmd_str = cmd
-    else:
-        args = list(cmd)
-        cmd_str = " ".join(shlex.quote(arg) for arg in args)
+    # Convert to string for display
+    cmd_str = cmd if isinstance(cmd, str) else " ".join(cmd)
 
     if verbose:
         print(f"Executing: {cmd_str}")
@@ -59,57 +54,76 @@ def run(
     start = time.time()
 
     try:
-        proc = subprocess.Popen(
-            args,
+        # Use subprocess.run for simplicity and cross-platform compatibility
+        result = subprocess.run(
+            cmd,
             stdout=subprocess.PIPE if capture else None,
             stderr=subprocess.PIPE if capture else None,
             text=True,
             env=env,
             cwd=cwd,
+            timeout=timeout,
+            shell=isinstance(cmd, str),  # Use shell for string commands
+            check=False,  # Handle errors ourselves for consistent behavior
         )
 
-        try:
-            stdout, stderr = proc.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            stdout, stderr = proc.communicate()
-            result = CommandResult(
-                returncode=124,  # Standard timeout code
-                stdout=stdout or "",
-                stderr=f"TIMEOUT after {timeout}s\n{stderr or ''}",
-                duration_sec=time.time() - start,
-                cmd=cmd_str,
+        duration = time.time() - start
+
+        cmd_result = CommandResult(
+            returncode=result.returncode,
+            stdout=result.stdout or "",
+            stderr=result.stderr or "",
+            duration_sec=duration,
+            cmd=cmd_str,
+        )
+
+        if check and result.returncode != 0:
+            raise subprocess.CalledProcessError(
+                result.returncode,
+                cmd_str,
+                output=result.stdout,
+                stderr=result.stderr,
             )
-            if check:
-                raise TimeoutError(f"Command timed out after {timeout}s: {cmd_str}")
-            return result
+
+        return cmd_result
+
+    except subprocess.TimeoutExpired as e:
+        duration = time.time() - start
+        stdout_val = e.stdout if hasattr(e, "stdout") and e.stdout else b""
+        stderr_val = e.stderr if hasattr(e, "stderr") and e.stderr else b""
+
+        # Decode bytes to string
+        stdout_str = (
+            stdout_val.decode("utf-8", errors="replace")
+            if isinstance(stdout_val, bytes)
+            else stdout_val or ""
+        )
+        stderr_str = (
+            stderr_val.decode("utf-8", errors="replace")
+            if isinstance(stderr_val, bytes)
+            else stderr_val or ""
+        )
+
+        cmd_result = CommandResult(
+            returncode=124,  # Standard timeout code
+            stdout=stdout_str,
+            stderr=f"TIMEOUT after {timeout}s\n{stderr_str}",
+            duration_sec=duration,
+            cmd=cmd_str,
+        )
+        if check:
+            raise TimeoutError(f"Command timed out after {timeout}s: {cmd_str}")
+        return cmd_result
 
     except Exception as e:
-        result = CommandResult(
+        duration = time.time() - start
+        cmd_result = CommandResult(
             returncode=-1,
             stdout="",
             stderr=str(e),
-            duration_sec=time.time() - start,
+            duration_sec=duration,
             cmd=cmd_str,
         )
         if check:
             raise
-        return result
-
-    result = CommandResult(
-        returncode=proc.returncode,
-        stdout=stdout or "",
-        stderr=stderr or "",
-        duration_sec=time.time() - start,
-        cmd=cmd_str,
-    )
-
-    if check and proc.returncode != 0:
-        raise subprocess.CalledProcessError(
-            proc.returncode,
-            cmd_str,
-            output=stdout,
-            stderr=stderr,
-        )
-
-    return result
+        return cmd_result
