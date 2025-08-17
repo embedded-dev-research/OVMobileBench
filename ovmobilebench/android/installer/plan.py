@@ -155,9 +155,7 @@ class Planner:
         """
         # Check API level range
         if api < 21 or api > 35:
-            raise InvalidArgumentError(
-                "api", api, "API level must be between 21 and 35"
-            )
+            raise InvalidArgumentError("api", api, "API level must be between 21 and 35")
 
         # Check if combination is valid
         if (api, target, arch) not in self.VALID_COMBINATIONS:
@@ -171,9 +169,7 @@ class Planner:
                         valid_archs.add(combo_arch)
 
             if not valid_targets:
-                raise InvalidArgumentError(
-                    "api", api, f"No valid targets available for API {api}"
-                )
+                raise InvalidArgumentError("api", api, f"No valid targets available for API {api}")
             elif target not in valid_targets:
                 raise InvalidArgumentError(
                     "target",
@@ -212,9 +208,7 @@ class Planner:
 
     def _need_system_image(self, api: int, target: Target, arch: Arch) -> bool:
         """Check if system image needs to be installed."""
-        system_image_dir = (
-            self.sdk_root / "system-images" / f"android-{api}" / target / arch
-        )
+        system_image_dir = self.sdk_root / "system-images" / f"android-{api}" / target / arch
         return not system_image_dir.exists()
 
     def _need_emulator(self) -> bool:

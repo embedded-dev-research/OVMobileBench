@@ -51,7 +51,9 @@ class NdkResolver:
             if not spec.path.exists():
                 raise ComponentNotFoundError(f"NDK at {spec.path}")
             if not self._validate_ndk_path(spec.path):
-                raise InvalidArgumentError("ndk_path", str(spec.path), "Not a valid NDK installation")
+                raise InvalidArgumentError(
+                    "ndk_path", str(spec.path), "Not a valid NDK installation"
+                )
             return spec.path
 
         # Resolve alias to version
@@ -93,7 +95,9 @@ class NdkResolver:
             if not spec.path.exists():
                 raise ComponentNotFoundError(f"NDK at {spec.path}")
             if not self._validate_ndk_path(spec.path):
-                raise InvalidArgumentError("ndk_path", str(spec.path), "Not a valid NDK installation")
+                raise InvalidArgumentError(
+                    "ndk_path", str(spec.path), "Not a valid NDK installation"
+                )
             if self.logger:
                 self.logger.debug(f"Using NDK at: {spec.path}")
             return spec.path

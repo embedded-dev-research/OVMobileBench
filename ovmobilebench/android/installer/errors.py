@@ -48,9 +48,7 @@ class SdkManagerError(InstallerError):
     def __init__(self, command: str, exit_code: int, stderr: str):
         """Initialize with command details."""
         message = f"sdkmanager failed with exit code {exit_code}: {stderr}"
-        super().__init__(
-            message, {"command": command, "exit_code": exit_code, "stderr": stderr}
-        )
+        super().__init__(message, {"command": command, "exit_code": exit_code, "stderr": stderr})
 
 
 class AvdManagerError(InstallerError):
@@ -59,9 +57,7 @@ class AvdManagerError(InstallerError):
     def __init__(self, operation: str, avd_name: str, reason: str):
         """Initialize with AVD operation details."""
         message = f"AVD {operation} failed for '{avd_name}': {reason}"
-        super().__init__(
-            message, {"operation": operation, "avd_name": avd_name, "reason": reason}
-        )
+        super().__init__(message, {"operation": operation, "avd_name": avd_name, "reason": reason})
 
 
 class PermissionError(InstallerError):
@@ -82,7 +78,8 @@ class ComponentNotFoundError(InstallerError):
         if search_path:
             message += f" in {search_path}"
         super().__init__(
-            message, {"component": component, "search_path": str(search_path) if search_path else None}
+            message,
+            {"component": component, "search_path": str(search_path) if search_path else None},
         )
 
 
@@ -98,7 +95,12 @@ class PlatformNotSupportedError(InstallerError):
 class DependencyError(InstallerError):
     """Missing or incompatible dependency."""
 
-    def __init__(self, dependency: str, required_version: Optional[str] = None, found_version: Optional[str] = None):
+    def __init__(
+        self,
+        dependency: str,
+        required_version: Optional[str] = None,
+        found_version: Optional[str] = None,
+    ):
         """Initialize with dependency details."""
         message = f"Dependency '{dependency}' "
         if required_version and found_version:

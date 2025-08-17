@@ -3,7 +3,7 @@
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -20,7 +20,6 @@ from ovmobilebench.android.installer.errors import (
 from ovmobilebench.android.installer.types import (
     NdkSpec,
     HostInfo,
-    InstallerResult,
 )
 
 
@@ -80,9 +79,7 @@ class TestAndroidInstallerIntegration:
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_ndk_only_installation(self, mock_detect_host):
         """Test NDK-only installation flow."""
-        mock_detect_host.return_value = HostInfo(
-            os="linux", arch="x86_64", has_kvm=False
-        )
+        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=False)
 
         self._create_cmdline_tools()
         ndk_path = self._create_ndk("26.3.11579264")
@@ -170,9 +167,7 @@ class TestAndroidInstallerIntegration:
     @patch("ovmobilebench.android.installer.detect.check_disk_space")
     def test_dry_run_mode(self, mock_check_disk, mock_detect_host):
         """Test dry-run mode doesn't make changes."""
-        mock_detect_host.return_value = HostInfo(
-            os="linux", arch="x86_64", has_kvm=True
-        )
+        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=True)
         mock_check_disk.return_value = True
 
         installer = AndroidInstaller(self.sdk_root)
@@ -206,9 +201,7 @@ class TestAndroidInstallerIntegration:
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_api_function_ensure(self, mock_detect_host):
         """Test the public API ensure function."""
-        mock_detect_host.return_value = HostInfo(
-            os="linux", arch="x86_64", has_kvm=True
-        )
+        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=True)
 
         self._create_cmdline_tools()
 
@@ -280,9 +273,7 @@ class TestAndroidInstallerIntegration:
     @patch("ovmobilebench.android.installer.detect.check_disk_space")
     def test_concurrent_component_installation(self, mock_check_disk, mock_detect_host):
         """Test that components can be installed concurrently."""
-        mock_detect_host.return_value = HostInfo(
-            os="linux", arch="x86_64", has_kvm=True
-        )
+        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=True)
         mock_check_disk.return_value = True
 
         installer = AndroidInstaller(self.sdk_root)
@@ -299,7 +290,7 @@ class TestAndroidInstallerIntegration:
                     mock_emulator.return_value = self.sdk_root / "emulator"
                     mock_build.return_value = self.sdk_root / "build-tools" / "34.0.0"
 
-                    result = installer.ensure(
+                    installer.ensure(
                         api=30,
                         target="google_atd",
                         arch="arm64-v8a",
@@ -375,9 +366,7 @@ class TestEndToEndScenarios:
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_ci_environment_setup(self, mock_detect_host):
         """Test setup in CI environment."""
-        mock_detect_host.return_value = HostInfo(
-            os="linux", arch="x86_64", has_kvm=False
-        )
+        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=False)
 
         # Set CI environment variables
         with patch.dict(os.environ, {"CI": "true", "GITHUB_ACTIONS": "true"}):
@@ -397,9 +386,7 @@ class TestEndToEndScenarios:
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_development_environment_setup(self, mock_detect_host):
         """Test setup in development environment."""
-        mock_detect_host.return_value = HostInfo(
-            os="darwin", arch="arm64", has_kvm=False
-        )
+        mock_detect_host.return_value = HostInfo(os="darwin", arch="arm64", has_kvm=False)
 
         result = ensure_android_tools(
             sdk_root=self.sdk_root,
@@ -418,9 +405,7 @@ class TestEndToEndScenarios:
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_windows_environment_setup(self, mock_detect_host):
         """Test setup on Windows."""
-        mock_detect_host.return_value = HostInfo(
-            os="windows", arch="x86_64", has_kvm=True
-        )
+        mock_detect_host.return_value = HostInfo(os="windows", arch="x86_64", has_kvm=True)
 
         result = ensure_android_tools(
             sdk_root=self.sdk_root,
@@ -468,9 +453,7 @@ class TestEndToEndScenarios:
     @patch("ovmobilebench.android.installer.detect.check_disk_space")
     def test_error_recovery(self, mock_check_disk, mock_detect_host):
         """Test error recovery during installation."""
-        mock_detect_host.return_value = HostInfo(
-            os="linux", arch="x86_64", has_kvm=True
-        )
+        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=True)
         mock_check_disk.return_value = True
 
         installer = AndroidInstaller(self.sdk_root)

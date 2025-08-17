@@ -96,7 +96,9 @@ class SdkManager:
                 self.logger.debug("Command-line tools already installed")
             return self.cmdline_tools_dir
 
-        with self.logger.step("Installing SDK command-line tools") if self.logger else nullcontext():
+        with (
+            self.logger.step("Installing SDK command-line tools") if self.logger else nullcontext()
+        ):
             version = version or self.DEFAULT_SDK_TOOLS_VERSION
 
             # Download command-line tools
@@ -220,7 +222,9 @@ class SdkManager:
                 self.logger.debug(f"Build-tools {version} already installed")
             return build_tools_dir
 
-        with self.logger.step(f"Installing build-tools {version}") if self.logger else nullcontext():
+        with (
+            self.logger.step(f"Installing build-tools {version}") if self.logger else nullcontext()
+        ):
             self._run_sdkmanager([build_tools_id])
 
             if not build_tools_dir.exists():
@@ -243,16 +247,18 @@ class SdkManager:
             Path to system image directory
         """
         package_id = f"system-images;android-{api};{target};{arch}"
-        system_image_dir = (
-            self.sdk_root / "system-images" / f"android-{api}" / target / arch
-        )
+        system_image_dir = self.sdk_root / "system-images" / f"android-{api}" / target / arch
 
         if system_image_dir.exists():
             if self.logger:
                 self.logger.debug(f"System image {package_id} already installed")
             return system_image_dir
 
-        with self.logger.step(f"Installing system image: {package_id}") if self.logger else nullcontext():
+        with (
+            self.logger.step(f"Installing system image: {package_id}")
+            if self.logger
+            else nullcontext()
+        ):
             self._run_sdkmanager([package_id])
 
             if not system_image_dir.exists():

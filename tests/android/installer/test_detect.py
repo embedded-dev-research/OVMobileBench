@@ -1,12 +1,10 @@
 """Tests for host detection utilities."""
 
 import os
-import platform
 import subprocess
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
-import pytest
 
 from ovmobilebench.android.installer.detect import (
     detect_host,

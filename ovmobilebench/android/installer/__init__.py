@@ -6,7 +6,7 @@ Android SDK, NDK, and related tools across different platforms.
 Example:
     >>> from ovmobilebench.android.installer import ensure_android_tools, NdkSpec
     >>> from pathlib import Path
-    >>> 
+    >>>
     >>> result = ensure_android_tools(
     ...     sdk_root=Path("/opt/android-sdk"),
     ...     api=30,

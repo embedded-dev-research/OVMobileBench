@@ -143,7 +143,7 @@ class AndroidInstaller:
             if plan.need_cmdline_tools:
                 self.sdk.ensure_cmdline_tools()
                 performed["cmdline_tools"] = True
-            
+
             self.sdk.accept_licenses()
             performed["licenses_accepted"] = True
 
@@ -209,7 +209,7 @@ class AndroidInstaller:
         # Create SDK root if it doesn't exist
         try:
             self.sdk_root.mkdir(parents=True, exist_ok=True)
-            
+
             # Try to create a test file
             test_file = self.sdk_root / ".permission_test"
             test_file.touch()
@@ -248,6 +248,7 @@ class AndroidInstaller:
                     if self.logger:
                         self.logger.debug(f"Removing directory: {temp_dir.name}")
                     import shutil
+
                     shutil.rmtree(temp_dir)
                     cleanup_count += 1
 
@@ -294,9 +295,7 @@ class AndroidInstaller:
 
         # List installed components
         try:
-            results["components"] = [
-                comp.package_id for comp in self.sdk.list_installed()
-            ]
+            results["components"] = [comp.package_id for comp in self.sdk.list_installed()]
         except Exception:
             results["components"] = []
 

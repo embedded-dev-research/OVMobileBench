@@ -142,7 +142,7 @@ def setup(
             config_table = Table(show_header=False)
             config_table.add_column("Setting", style="cyan")
             config_table.add_column("Value")
-            
+
             config_table.add_row("SDK Root", str(sdk_root))
             config_table.add_row("API Level", str(api))
             config_table.add_row("Target", target)
@@ -155,12 +155,16 @@ def setup(
             if create_avd:
                 config_table.add_row("AVD", create_avd)
             config_table.add_row("Dry Run", "Yes" if dry_run else "No")
-            
+
             console.print(config_table)
             console.print()
 
         # Run installation
-        with console.status("[bold green]Installing Android tools...") if not verbose else nullcontext():
+        with (
+            console.status("[bold green]Installing Android tools...")
+            if not verbose
+            else nullcontext()
+        ):
             result = ensure_android_tools(
                 sdk_root=sdk_root,
                 api=api,
@@ -185,7 +189,7 @@ def setup(
                 sdk_root=result["sdk_root"],
                 ndk_path=result["ndk_path"],
             )
-            
+
             if export_env and verbose:
                 console.print(f"[green]✓[/green] Environment exported to: {export_env}")
 
@@ -208,6 +212,7 @@ def setup(
         console.print(f"[bold red]Unexpected error:[/bold red] {e}")
         if verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
 
@@ -236,43 +241,43 @@ def verify(
     """
     try:
         console.print(f"[cyan]Verifying installation at: {sdk_root}[/cyan]\n")
-        
+
         status = verify_installation(sdk_root, verbose=verbose)
-        
+
         # Create status table
         table = Table(title="Installation Status")
         table.add_column("Component", style="cyan")
         table.add_column("Status", style="green")
         table.add_column("Details")
-        
+
         # SDK root
         table.add_row(
             "SDK Root",
             "✓" if status["sdk_root_exists"] else "✗",
             str(sdk_root) if status["sdk_root_exists"] else "Not found",
         )
-        
+
         # Command-line tools
         table.add_row(
             "Command-line Tools",
             "✓" if status["cmdline_tools"] else "✗",
             "Installed" if status["cmdline_tools"] else "Not installed",
         )
-        
+
         # Platform tools
         table.add_row(
             "Platform Tools",
             "✓" if status["platform_tools"] else "✗",
             "Installed" if status["platform_tools"] else "Not installed",
         )
-        
+
         # Emulator
         table.add_row(
             "Emulator",
             "✓" if status["emulator"] else "✗",
             "Installed" if status["emulator"] else "Not installed",
         )
-        
+
         # NDK
         ndk_details = "Not installed"
         if status["ndk"] and status.get("ndk_versions"):
@@ -282,7 +287,7 @@ def verify(
             "✓" if status["ndk"] else "✗",
             ndk_details,
         )
-        
+
         # AVDs
         avd_details = "None"
         if status.get("avds"):
@@ -292,19 +297,19 @@ def verify(
             "✓" if status.get("avds") else "-",
             avd_details,
         )
-        
+
         console.print(table)
-        
+
         # Show installed components if verbose
         if verbose and status.get("components"):
             console.print("\n[bold]Installed Components:[/bold]")
             for component in status["components"]:
                 console.print(f"  • {component}")
-        
+
         # Exit code based on status
         if not status["sdk_root_exists"]:
             sys.exit(1)
-            
+
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
         sys.exit(1)
@@ -317,9 +322,9 @@ def list_targets() -> None:
     Shows all supported combinations for system images.
     """
     from .plan import Planner
-    
+
     console.print("[bold]Supported System Image Combinations:[/bold]\n")
-    
+
     # Group by API level
     combinations: Dict[int, Dict[str, list]] = {}
     for api, target, arch in Planner.VALID_COMBINATIONS:
@@ -328,17 +333,17 @@ def list_targets() -> None:
         if target not in combinations[api]:
             combinations[api][target] = []
         combinations[api][target].append(arch)
-    
+
     # Display as table
     for api in sorted(combinations.keys(), reverse=True):
         table = Table(title=f"API Level {api}")
         table.add_column("Target", style="cyan")
         table.add_column("Architectures")
-        
+
         for target in sorted(combinations[api].keys()):
             archs = ", ".join(sorted(combinations[api][target]))
             table.add_row(target, archs)
-        
+
         console.print(table)
         console.print()
 
@@ -346,8 +351,10 @@ def list_targets() -> None:
 # Context manager for when console status is not needed
 class nullcontext:
     """Null context manager."""
+
     def __enter__(self):
         return self
+
     def __exit__(self, *args):
         pass
 

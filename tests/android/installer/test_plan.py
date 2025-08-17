@@ -43,7 +43,7 @@ class TestPlanner:
         """Test validating invalid API level."""
         with pytest.raises(InvalidArgumentError, match="API level must be between"):
             self.planner._validate_combination(20, "google_atd", "arm64-v8a")
-        
+
         with pytest.raises(InvalidArgumentError, match="API level must be between"):
             self.planner._validate_combination(99, "google_atd", "arm64-v8a")
 
@@ -126,7 +126,9 @@ class TestPlanner:
 
     def test_build_plan_avd_without_emulator_fails(self):
         """Test that creating AVD without emulator fails."""
-        with pytest.raises(InvalidArgumentError, match="Cannot create AVD without installing emulator"):
+        with pytest.raises(
+            InvalidArgumentError, match="Cannot create AVD without installing emulator"
+        ):
             self.planner.build_plan(
                 api=30,
                 target="google_atd",
@@ -171,7 +173,9 @@ class TestPlanner:
         assert self.planner._need_system_image(30, "google_atd", "arm64-v8a") is True
 
         # Create system image
-        (self.sdk_root / "system-images" / "android-30" / "google_atd" / "arm64-v8a").mkdir(parents=True)
+        (self.sdk_root / "system-images" / "android-30" / "google_atd" / "arm64-v8a").mkdir(
+            parents=True
+        )
 
         assert self.planner._need_system_image(30, "google_atd", "arm64-v8a") is False
 

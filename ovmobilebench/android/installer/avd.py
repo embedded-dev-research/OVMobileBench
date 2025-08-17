@@ -208,12 +208,12 @@ class AvdManager:
         """
         try:
             result = self._run_avdmanager(["list", "avd"])
-            
+
             # Parse output to find AVD info
             lines = result.stdout.split("\n")
             avd_info = {}
             in_avd = False
-            
+
             for line in lines:
                 line = line.strip()
                 if f"Name: {name}" in line:
@@ -226,9 +226,9 @@ class AvdManager:
                     elif ":" in line:
                         key, value = line.split(":", 1)
                         avd_info[key.strip().lower().replace(" ", "_")] = value.strip()
-            
+
             return avd_info if avd_info else None
-            
+
         except (AvdManagerError, ComponentNotFoundError):
             return None
 

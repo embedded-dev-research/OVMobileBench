@@ -1,6 +1,5 @@
 """Tests for custom exceptions."""
 
-import pytest
 from pathlib import Path
 
 from ovmobilebench.android.installer.errors import (
@@ -59,7 +58,9 @@ class TestDownloadError:
     def test_creation_without_hint(self):
         """Test creating DownloadError without retry hint."""
         error = DownloadError("https://example.com/file.zip", "Connection timeout")
-        assert "Failed to download from https://example.com/file.zip: Connection timeout" in str(error)
+        assert "Failed to download from https://example.com/file.zip: Connection timeout" in str(
+            error
+        )
         assert error.details["url"] == "https://example.com/file.zip"
         assert error.details["reason"] == "Connection timeout"
         assert error.details["retry_hint"] is None

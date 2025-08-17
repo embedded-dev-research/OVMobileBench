@@ -11,7 +11,7 @@ from ovmobilebench.android.installer.errors import (
     InvalidArgumentError,
 )
 from ovmobilebench.android.installer.ndk import NdkResolver
-from ovmobilebench.android.installer.types import NdkSpec, NdkVersion
+from ovmobilebench.android.installer.types import NdkSpec
 
 
 class TestNdkResolver:
@@ -200,7 +200,7 @@ class TestNdkResolver:
         """Test getting NDK version from source.properties."""
         ndk_path = self.sdk_root / "ndk"
         ndk_path.mkdir()
-        
+
         # Create source.properties
         source_props = ndk_path / "source.properties"
         source_props.write_text("Pkg.Revision = 26.3.11579264\nPkg.Desc = Android NDK")
@@ -221,28 +221,30 @@ class TestNdkResolver:
     @patch("zipfile.ZipFile")
     @patch("ovmobilebench.android.installer.detect.get_ndk_filename")
     @patch("ovmobilebench.android.installer.detect.detect_host")
-    def test_install_via_download_zip(self, mock_detect_host, mock_get_filename, mock_zipfile, mock_urlretrieve):
+    def test_install_via_download_zip(
+        self, mock_detect_host, mock_get_filename, mock_zipfile, mock_urlretrieve
+    ):
         """Test installing NDK via direct download (ZIP)."""
         # Mock Linux host to avoid DMG
         mock_detect_host.return_value = Mock(os="linux")
         mock_get_filename.return_value = "android-ndk-r26d-linux.zip"
-        
+
         # Mock ZIP extraction
         mock_zip = MagicMock()
         mock_zipfile.return_value.__enter__.return_value = mock_zip
 
         with patch("tempfile.TemporaryDirectory") as mock_tmpdir:
             mock_tmpdir.return_value.__enter__.return_value = self.tmpdir.name
-            
+
             # Create extracted directory structure
             extracted_dir = self.sdk_root / "ndk" / "android-ndk-r26d"
             extracted_dir.mkdir(parents=True)
             (extracted_dir / "ndk-build").touch()
             (extracted_dir / "toolchains").mkdir()
-            
+
             # Mock the rename operation
             with patch.object(Path, "rename"):
-                result = self.resolver._install_via_download("r26d")
-            
+                self.resolver._install_via_download("r26d")
+
             mock_urlretrieve.assert_called_once()
             assert "android-ndk-r26d-linux.zip" in mock_urlretrieve.call_args[0][0]

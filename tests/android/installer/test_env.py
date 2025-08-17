@@ -64,7 +64,7 @@ class TestEnvExporter:
         sdk_root = Path("/opt/android-sdk")
         ndk_path = Path("/opt/android-sdk/ndk/r26d")
 
-        env_vars = exporter.export(
+        exporter.export(
             github_env=github_env,
             sdk_root=sdk_root,
             ndk_path=ndk_path,
@@ -72,7 +72,7 @@ class TestEnvExporter:
 
         mock_file.assert_called_once_with(github_env, "a", encoding="utf-8")
         handle = mock_file()
-        
+
         # Check that environment variables were written
         written_content = "".join(call.args[0] for call in handle.write.call_args_list)
         assert "ANDROID_SDK_ROOT=" in written_content
@@ -97,8 +97,8 @@ class TestEnvExporter:
 
                 # Check export format for bash
                 print_calls = [str(call) for call in mock_print.call_args_list]
-                assert any('export ANDROID_SDK_ROOT=' in str(call) for call in print_calls)
-                assert any('export ANDROID_NDK=' in str(call) for call in print_calls)
+                assert any("export ANDROID_SDK_ROOT=" in str(call) for call in print_calls)
+                assert any("export ANDROID_NDK=" in str(call) for call in print_calls)
 
     @patch("builtins.print")
     @patch("sys.platform", "win32")
@@ -130,7 +130,7 @@ class TestEnvExporter:
                 exporter = EnvExporter()
                 sdk_root = Path(tmpdir) / "android-sdk"
                 sdk_root.mkdir()
-                ndk_path = Path(tmpdir) / "ndk" / "r26d" 
+                ndk_path = Path(tmpdir) / "ndk" / "r26d"
                 ndk_path.mkdir(parents=True)
 
                 exporter.export(
@@ -168,7 +168,7 @@ class TestEnvExporter:
                     os.environ["ANDROID_SDK_ROOT"] = original_sdk
                 elif "ANDROID_SDK_ROOT" in os.environ:
                     del os.environ["ANDROID_SDK_ROOT"]
-                
+
                 if original_ndk:
                     os.environ["ANDROID_NDK"] = original_ndk
                 elif "ANDROID_NDK" in os.environ:
@@ -188,7 +188,7 @@ class TestEnvExporter:
             exporter.save_to_file(env_file, env_vars)
 
             assert env_file.exists()
-            
+
             content = env_file.read_text()
             assert "#!/bin/bash" in content
             assert 'export ANDROID_SDK_ROOT="/opt/android-sdk"' in content
@@ -204,16 +204,18 @@ class TestEnvExporter:
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = EnvExporter()
             env_file = Path(tmpdir) / "android_env.sh"
-            
+
             # Write test environment file
-            env_file.write_text("""#!/bin/bash
+            env_file.write_text(
+                """#!/bin/bash
 # Android SDK/NDK environment variables
 export ANDROID_SDK_ROOT="/opt/android-sdk"
 export ANDROID_NDK="/opt/android-sdk/ndk/r26d"
 export ANDROID_HOME="/opt/android-sdk"
 # Skip PATH modifications
 export PATH="/opt/android-sdk/platform-tools:$PATH"
-""")
+"""
+            )
 
             env_vars = exporter.load_from_file(env_file)
 

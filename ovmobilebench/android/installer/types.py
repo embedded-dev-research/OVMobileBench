@@ -164,9 +164,7 @@ class NdkVersion:
         if minor > 0:
             alias += chr(ord("a") + minor - 1)
 
-        return cls(
-            alias=alias, version=version, major=major, minor=minor, patch=patch
-        )
+        return cls(alias=alias, version=version, major=major, minor=minor, patch=patch)
 
 
 @dataclass(frozen=True)

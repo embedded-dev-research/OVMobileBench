@@ -1,8 +1,7 @@
 """Tests for public API functions."""
 
-import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -24,10 +23,10 @@ class TestEnsureAndroidTools:
         # Setup mocks
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         mock_installer = Mock()
         mock_installer_class.return_value = mock_installer
-        
+
         expected_result = InstallerResult(
             sdk_root=Path("/opt/sdk"),
             ndk_path=Path("/opt/sdk/ndk/r26d"),
@@ -62,10 +61,10 @@ class TestEnsureAndroidTools:
         """Test ensure_android_tools with all options."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         mock_installer = Mock()
         mock_installer_class.return_value = mock_installer
-        
+
         expected_result = InstallerResult(
             sdk_root=Path("/opt/sdk"),
             ndk_path=Path("/opt/sdk/ndk/r26d"),
@@ -116,7 +115,7 @@ class TestEnsureAndroidTools:
         """Test that logger is closed even on exception."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         mock_installer = Mock()
         mock_installer_class.return_value = mock_installer
         mock_installer.ensure.side_effect = Exception("Test error")
@@ -172,10 +171,10 @@ class TestVerifyInstallation:
         """Test verify_installation with verbose mode."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
-        
+
         mock_installer = Mock()
         mock_installer_class.return_value = mock_installer
-        
+
         expected_status = {
             "sdk_root_exists": True,
             "cmdline_tools": True,
@@ -203,7 +202,7 @@ class TestVerifyInstallation:
         """Test verify_installation without verbose mode."""
         mock_installer = Mock()
         mock_installer_class.return_value = mock_installer
-        
+
         expected_status = {
             "sdk_root_exists": False,
             "cmdline_tools": False,

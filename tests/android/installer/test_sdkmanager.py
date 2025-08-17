@@ -2,9 +2,8 @@
 
 import subprocess
 import tempfile
-import zipfile
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, call
+from unittest.mock import Mock, patch, MagicMock
 
 import pytest
 
@@ -69,17 +68,13 @@ class TestSdkManager:
         sdkmanager_path.parent.mkdir(parents=True)
         sdkmanager_path.touch()
 
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="Success",
-            stderr=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="Success", stderr="")
 
         result = self.manager._run_sdkmanager(["--list"])
-        
+
         assert result.returncode == 0
         mock_run.assert_called_once()
-        
+
         # Check environment
         call_env = mock_run.call_args[1]["env"]
         assert call_env["ANDROID_SDK_ROOT"] == str(self.sdk_root)
@@ -92,11 +87,7 @@ class TestSdkManager:
         sdkmanager_path.parent.mkdir(parents=True)
         sdkmanager_path.touch()
 
-        mock_run.return_value = Mock(
-            returncode=1,
-            stdout="",
-            stderr="Error: License not accepted"
-        )
+        mock_run.return_value = Mock(returncode=1, stdout="", stderr="Error: License not accepted")
 
         with pytest.raises(SdkManagerError, match="License not accepted"):
             self.manager._run_sdkmanager(["--list"])
@@ -131,7 +122,7 @@ class TestSdkManager:
     def test_ensure_cmdline_tools_install(self, mock_get_filename, mock_zipfile, mock_urlretrieve):
         """Test installing cmdline-tools."""
         mock_get_filename.return_value = "commandlinetools-linux-11076708_latest.zip"
-        
+
         # Mock ZIP extraction
         mock_zip = MagicMock()
         mock_zipfile.return_value.__enter__.return_value = mock_zip
@@ -145,7 +136,7 @@ class TestSdkManager:
         mock_zip.extractall.side_effect = create_structure
 
         result = self.manager.ensure_cmdline_tools()
-        
+
         assert result == self.manager.cmdline_tools_dir
         mock_urlretrieve.assert_called_once()
 
@@ -153,7 +144,7 @@ class TestSdkManager:
     def test_ensure_platform_tools(self, mock_run):
         """Test ensuring platform-tools."""
         mock_run.return_value = Mock(returncode=0)
-        
+
         # Create platform-tools after "installation"
         def create_platform_tools(*args):
             platform_tools = self.sdk_root / "platform-tools"
@@ -164,7 +155,7 @@ class TestSdkManager:
         mock_run.side_effect = create_platform_tools
 
         result = self.manager.ensure_platform_tools()
-        
+
         assert result == self.sdk_root / "platform-tools"
         mock_run.assert_called_once_with(["platform-tools"])
 
@@ -182,7 +173,7 @@ class TestSdkManager:
     def test_ensure_platform(self, mock_run):
         """Test ensuring platform."""
         mock_run.return_value = Mock(returncode=0)
-        
+
         # Create platform after "installation"
         def create_platform(*args):
             platform_dir = self.sdk_root / "platforms" / "android-30"
@@ -192,7 +183,7 @@ class TestSdkManager:
         mock_run.side_effect = create_platform
 
         result = self.manager.ensure_platform(30)
-        
+
         assert result == self.sdk_root / "platforms" / "android-30"
         mock_run.assert_called_once_with(["platforms;android-30"])
 
@@ -200,7 +191,7 @@ class TestSdkManager:
     def test_ensure_build_tools(self, mock_run):
         """Test ensuring build-tools."""
         mock_run.return_value = Mock(returncode=0)
-        
+
         # Create build-tools after "installation"
         def create_build_tools(*args):
             build_tools_dir = self.sdk_root / "build-tools" / "34.0.0"
@@ -210,7 +201,7 @@ class TestSdkManager:
         mock_run.side_effect = create_build_tools
 
         result = self.manager.ensure_build_tools("34.0.0")
-        
+
         assert result == self.sdk_root / "build-tools" / "34.0.0"
         mock_run.assert_called_once_with(["build-tools;34.0.0"])
 
@@ -218,7 +209,7 @@ class TestSdkManager:
     def test_ensure_system_image(self, mock_run):
         """Test ensuring system image."""
         mock_run.return_value = Mock(returncode=0)
-        
+
         # Create system image after "installation"
         def create_system_image(*args):
             image_dir = self.sdk_root / "system-images" / "android-30" / "google_atd" / "arm64-v8a"
@@ -228,7 +219,7 @@ class TestSdkManager:
         mock_run.side_effect = create_system_image
 
         result = self.manager.ensure_system_image(30, "google_atd", "arm64-v8a")
-        
+
         expected_dir = self.sdk_root / "system-images" / "android-30" / "google_atd" / "arm64-v8a"
         assert result == expected_dir
         mock_run.assert_called_once_with(["system-images;android-30;google_atd;arm64-v8a"])
@@ -237,7 +228,7 @@ class TestSdkManager:
     def test_ensure_emulator(self, mock_run):
         """Test ensuring emulator."""
         mock_run.return_value = Mock(returncode=0)
-        
+
         # Create emulator after "installation"
         def create_emulator(*args):
             emulator_dir = self.sdk_root / "emulator"
@@ -248,7 +239,7 @@ class TestSdkManager:
         mock_run.side_effect = create_emulator
 
         result = self.manager.ensure_emulator()
-        
+
         assert result == self.sdk_root / "emulator"
         mock_run.assert_called_once_with(["emulator"])
 
@@ -256,13 +247,13 @@ class TestSdkManager:
     def test_accept_licenses(self, mock_run):
         """Test accepting licenses."""
         mock_run.return_value = Mock(returncode=0)
-        
+
         self.manager.accept_licenses()
-        
+
         mock_run.assert_called_once()
         args = mock_run.call_args[0][0]
         assert "--licenses" in args
-        
+
         # Check that 'y' was passed as input
         kwargs = mock_run.call_args[1]
         assert "input_text" in kwargs
@@ -277,11 +268,11 @@ class TestSdkManager:
                       -------              | ------- | -----------
                       platform-tools       | 34.0.5  | Android SDK Platform-Tools
                       platforms;android-30 | 3       | Android SDK Platform 30
-                      emulator             | 32.1.14 | Android Emulator"""
+                      emulator             | 32.1.14 | Android Emulator""",
         )
-        
+
         components = self.manager.list_installed()
-        
+
         assert len(components) == 3
         assert any(c.package_id == "platform-tools" for c in components)
         assert any(c.package_id == "platforms;android-30" for c in components)
@@ -291,18 +282,18 @@ class TestSdkManager:
     def test_list_installed_error(self, mock_run):
         """Test listing installed components with error."""
         mock_run.side_effect = SdkManagerError("cmd", 1, "error")
-        
+
         components = self.manager.list_installed()
-        
+
         assert components == []
 
     @patch.object(SdkManager, "_run_sdkmanager")
     def test_update_all(self, mock_run):
         """Test updating all packages."""
         mock_run.return_value = Mock(returncode=0)
-        
+
         self.manager.update_all()
-        
+
         mock_run.assert_called_once_with(["--update"])
 
     def test_ensure_platform_tools_installation_failure(self):
@@ -310,7 +301,7 @@ class TestSdkManager:
         with patch.object(self.manager, "_run_sdkmanager") as mock_run:
             mock_run.return_value = Mock(returncode=0)
             # Don't create platform-tools to simulate failure
-            
+
             with pytest.raises(ComponentNotFoundError, match="platform-tools"):
                 self.manager.ensure_platform_tools()
 
@@ -319,7 +310,7 @@ class TestSdkManager:
         """Test cmdline-tools download failure."""
         with patch("urllib.request.urlretrieve") as mock_urlretrieve:
             mock_urlretrieve.side_effect = Exception("Network error")
-            
+
             with pytest.raises(DownloadError, match="Network error"):
                 self.manager.ensure_cmdline_tools()
 
@@ -330,9 +321,9 @@ class TestSdkManager:
             package_id="test;component",
             installed=True,
             version="1.0.0",
-            path=Path("/test/path")
+            path=Path("/test/path"),
         )
-        
+
         assert component.name == "Test Component"
         assert component.package_id == "test;component"
         assert component.installed is True

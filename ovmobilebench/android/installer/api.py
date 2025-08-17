@@ -55,7 +55,7 @@ def ensure_android_tools(
         >>> from pathlib import Path
         >>> from ovmobilebench.android.installer.api import ensure_android_tools
         >>> from ovmobilebench.android.installer.types import NdkSpec
-        >>> 
+        >>>
         >>> result = ensure_android_tools(
         ...     sdk_root=Path("/opt/android-sdk"),
         ...     api=30,
@@ -117,7 +117,7 @@ def export_android_env(
     Example:
         >>> from pathlib import Path
         >>> from ovmobilebench.android.installer.api import export_android_env
-        >>> 
+        >>>
         >>> env_vars = export_android_env(
         ...     sdk_root=Path("/opt/android-sdk"),
         ...     ndk_path=Path("/opt/android-sdk/ndk/26.1.10909125"),
@@ -147,7 +147,7 @@ def verify_installation(sdk_root: Path, verbose: bool = False) -> dict:
     Example:
         >>> from pathlib import Path
         >>> from ovmobilebench.android.installer.api import verify_installation
-        >>> 
+        >>>
         >>> status = verify_installation(Path("/opt/android-sdk"))
         >>> print(f"Platform tools: {status['platform_tools']}")
         >>> print(f"NDK versions: {status.get('ndk_versions', [])}")

@@ -135,3 +135,4 @@ CLAUDE.md
 experiments/results/
 ovmb_cache
 artifacts
+junit.xml

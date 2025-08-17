@@ -62,17 +62,13 @@ class TestAvdManager:
         avdmanager_path.parent.mkdir(parents=True)
         avdmanager_path.touch()
 
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="Success",
-            stderr=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="Success", stderr="")
 
         result = self.manager._run_avdmanager(["list", "avd"])
-        
+
         assert result.returncode == 0
         mock_run.assert_called_once()
-        
+
         # Check environment
         call_env = mock_run.call_args[1]["env"]
         assert call_env["ANDROID_SDK_ROOT"] == str(self.sdk_root)
@@ -85,11 +81,7 @@ class TestAvdManager:
         avdmanager_path.parent.mkdir(parents=True)
         avdmanager_path.touch()
 
-        mock_run.return_value = Mock(
-            returncode=1,
-            stdout="",
-            stderr="Error: Invalid arguments"
-        )
+        mock_run.return_value = Mock(returncode=1, stdout="", stderr="Error: Invalid arguments")
 
         with pytest.raises(AvdManagerError):
             self.manager._run_avdmanager(["invalid", "command"])
@@ -102,11 +94,7 @@ class TestAvdManager:
         avdmanager_path.parent.mkdir(parents=True)
         avdmanager_path.touch()
 
-        mock_run.return_value = Mock(
-            returncode=1,
-            stdout="",
-            stderr="Package path is not valid"
-        )
+        mock_run.return_value = Mock(returncode=1, stdout="", stderr="Package path is not valid")
 
         with pytest.raises(AvdManagerError, match="System image not installed"):
             self.manager._run_avdmanager(["create", "avd"])
@@ -127,10 +115,7 @@ class TestAvdManager:
     @patch.object(AvdManager, "_run_avdmanager")
     def test_list_empty(self, mock_run):
         """Test listing AVDs when none exist."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="")
 
         avds = self.manager.list()
         assert avds == []
@@ -138,10 +123,7 @@ class TestAvdManager:
     @patch.object(AvdManager, "_run_avdmanager")
     def test_list_with_avds(self, mock_run):
         """Test listing AVDs."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="test_avd1\ntest_avd2\ntest_avd3\n"
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="test_avd1\ntest_avd2\ntest_avd3\n")
 
         avds = self.manager.list()
         assert len(avds) == 3
@@ -165,16 +147,11 @@ class TestAvdManager:
         mock_list.side_effect = [[], ["test_avd"]]
         mock_run.return_value = Mock(returncode=0)
 
-        result = self.manager.create(
-            name="test_avd",
-            api=30,
-            target="google_atd",
-            arch="arm64-v8a"
-        )
+        result = self.manager.create(name="test_avd", api=30, target="google_atd", arch="arm64-v8a")
 
         assert result is True
         mock_run.assert_called_once()
-        
+
         # Check command arguments
         args = mock_run.call_args[0][0]
         assert "create" in args
@@ -197,11 +174,7 @@ class TestAvdManager:
         mock_run.return_value = Mock(returncode=0)
 
         result = self.manager.create(
-            name="test_avd",
-            api=30,
-            target="google_atd",
-            arch="arm64-v8a",
-            force=True
+            name="test_avd", api=30, target="google_atd", arch="arm64-v8a", force=True
         )
 
         assert result is True
@@ -215,11 +188,7 @@ class TestAvdManager:
         mock_list.return_value = ["test_avd"]
 
         result = self.manager.create(
-            name="test_avd",
-            api=30,
-            target="google_atd",
-            arch="arm64-v8a",
-            force=False
+            name="test_avd", api=30, target="google_atd", arch="arm64-v8a", force=False
         )
 
         assert result is True  # Should return True without creating
@@ -232,15 +201,11 @@ class TestAvdManager:
         mock_run.return_value = Mock(returncode=0)
 
         result = self.manager.create(
-            name="test_avd",
-            api=30,
-            target="google_atd",
-            arch="arm64-v8a",
-            device="pixel_7"
+            name="test_avd", api=30, target="google_atd", arch="arm64-v8a", device="pixel_7"
         )
 
         assert result is True
-        
+
         # Check that custom device was used
         args = mock_run.call_args[0][0]
         device_index = args.index("-d")
@@ -254,12 +219,7 @@ class TestAvdManager:
         mock_run.return_value = Mock(returncode=0)
 
         with pytest.raises(AvdManagerError, match="AVD not found after creation"):
-            self.manager.create(
-                name="test_avd",
-                api=30,
-                target="google_atd",
-                arch="arm64-v8a"
-            )
+            self.manager.create(name="test_avd", api=30, target="google_atd", arch="arm64-v8a")
 
     @patch.object(AvdManager, "_run_avdmanager")
     @patch.object(AvdManager, "list")
@@ -269,7 +229,7 @@ class TestAvdManager:
         mock_run.return_value = Mock(returncode=0)
 
         result = self.manager.delete("test_avd")
-        
+
         assert result is True
         mock_run.assert_called_once_with(["delete", "avd", "-n", "test_avd"])
 
@@ -279,7 +239,7 @@ class TestAvdManager:
         mock_list.return_value = []
 
         result = self.manager.delete("test_avd")
-        
+
         assert result is True  # Should return True even if doesn't exist
 
     @patch.object(AvdManager, "_run_avdmanager")
@@ -290,7 +250,7 @@ class TestAvdManager:
         mock_run.side_effect = AvdManagerError("delete", "test_avd", "error")
 
         result = self.manager.delete("test_avd")
-        
+
         assert result is False
 
     @patch.object(AvdManager, "_run_avdmanager")
@@ -306,11 +266,11 @@ class TestAvdManager:
     Based on: Android 11.0 (R) Tag/ABI: google_apis/arm64-v8a
     Sdcard: 512M
     Name: other_avd
-    Device: pixel_6"""
+    Device: pixel_6""",
         )
 
         info = self.manager.get_info("test_avd")
-        
+
         assert info is not None
         assert info["name"] == "test_avd"
         assert "pixel_5" in info.get("device", "")
@@ -319,13 +279,10 @@ class TestAvdManager:
     @patch.object(AvdManager, "_run_avdmanager")
     def test_get_info_not_found(self, mock_run):
         """Test getting info for non-existent AVD."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="Available Android Virtual Devices:\n"
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="Available Android Virtual Devices:\n")
 
         info = self.manager.get_info("nonexistent_avd")
-        
+
         assert info is None
 
     @patch.object(AvdManager, "_run_avdmanager")
@@ -334,19 +291,16 @@ class TestAvdManager:
         mock_run.side_effect = AvdManagerError("list", "avd", "error")
 
         info = self.manager.get_info("test_avd")
-        
+
         assert info is None
 
     @patch.object(AvdManager, "_run_avdmanager")
     def test_list_devices(self, mock_run):
         """Test listing available device profiles."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="pixel_5\npixel_6\npixel_7\nNexus_5X\n"
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="pixel_5\npixel_6\npixel_7\nNexus_5X\n")
 
         devices = self.manager.list_devices()
-        
+
         assert len(devices) == 4
         assert "pixel_5" in devices
         assert "pixel_6" in devices
@@ -359,19 +313,18 @@ class TestAvdManager:
         mock_run.side_effect = AvdManagerError("list", "device", "error")
 
         devices = self.manager.list_devices()
-        
+
         assert devices == []
 
     @patch.object(AvdManager, "_run_avdmanager")
     def test_list_targets(self, mock_run):
         """Test listing available targets."""
         mock_run.return_value = Mock(
-            returncode=0,
-            stdout="android-30\nandroid-31\nandroid-32\nandroid-33\n"
+            returncode=0, stdout="android-30\nandroid-31\nandroid-32\nandroid-33\n"
         )
 
         targets = self.manager.list_targets()
-        
+
         assert len(targets) == 4
         assert "android-30" in targets
         assert "android-31" in targets
@@ -382,5 +335,5 @@ class TestAvdManager:
         mock_run.side_effect = AvdManagerError("list", "target", "error")
 
         targets = self.manager.list_targets()
-        
+
         assert targets == []
