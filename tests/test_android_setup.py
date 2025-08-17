@@ -57,6 +57,7 @@ class TestAndroidToolsInstaller:
     def test_custom_install_directory(self):
         """Test custom installation directory."""
         from pathlib import Path
+
         custom_dir = "/custom/path/android"
         installer = AndroidToolsInstaller(install_dir=custom_dir)
 

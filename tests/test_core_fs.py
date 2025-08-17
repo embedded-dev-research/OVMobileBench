@@ -147,7 +147,7 @@ class TestGetDigest:
             temp_file.write("test content")
             temp_file.flush()
             temp_path = temp_file.name
-        
+
         try:
             digest = get_digest(temp_path)
 
@@ -164,7 +164,7 @@ class TestGetDigest:
             temp_file.write("test content")
             temp_file.flush()
             temp_path = temp_file.name
-        
+
         try:
             digest = get_digest(temp_path, algorithm="md5")
 
@@ -182,7 +182,7 @@ class TestGetDigest:
             temp_file.write(large_content)
             temp_file.flush()
             temp_path = temp_file.name
-        
+
         try:
             digest = get_digest(temp_path)
 
@@ -197,7 +197,7 @@ class TestGetDigest:
             temp_file.write("test content")
             temp_file.flush()
             temp_path = temp_file.name
-        
+
         try:
             digest = get_digest(Path(temp_path))
 
@@ -258,21 +258,22 @@ class TestCopyTree:
         """Test copying directory with symlinks."""
         import platform
         import pytest
-        
+
         # Skip on Windows if not running as admin
         if platform.system() == "Windows":
             import ctypes
+
             is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
             if not is_admin:
                 pytest.skip("Symlink test requires admin privileges on Windows")
-        
+
         with tempfile.TemporaryDirectory() as temp_dir:
             src_dir = Path(temp_dir) / "source"
             dst_dir = Path(temp_dir) / "destination"
 
             src_dir.mkdir()
             (src_dir / "file.txt").write_text("content")
-            
+
             try:
                 (src_dir / "link.txt").symlink_to("file.txt")
             except OSError as e:
@@ -399,7 +400,7 @@ class TestGetSize:
             temp_file.write(content)
             temp_file.flush()
             temp_path = temp_file.name
-        
+
         try:
             size = get_size(temp_path)
             assert size == len(content.encode())
@@ -435,7 +436,7 @@ class TestGetSize:
             temp_file.write("test")
             temp_file.flush()
             temp_path = temp_file.name
-        
+
         try:
             size = get_size(Path(temp_path))
             assert size == 4

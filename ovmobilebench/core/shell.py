@@ -66,9 +66,9 @@ def run(
             shell=isinstance(cmd, str),  # Use shell for string commands
             check=False,  # Handle errors ourselves for consistent behavior
         )
-        
+
         duration = time.time() - start
-        
+
         cmd_result = CommandResult(
             returncode=result.returncode,
             stdout=result.stdout or "",
@@ -76,7 +76,7 @@ def run(
             duration_sec=duration,
             cmd=cmd_str,
         )
-        
+
         if check and result.returncode != 0:
             raise subprocess.CalledProcessError(
                 result.returncode,
@@ -84,18 +84,26 @@ def run(
                 output=result.stdout,
                 stderr=result.stderr,
             )
-        
+
         return cmd_result
-        
+
     except subprocess.TimeoutExpired as e:
         duration = time.time() - start
-        stdout_val = e.stdout if hasattr(e, 'stdout') and e.stdout else b""
-        stderr_val = e.stderr if hasattr(e, 'stderr') and e.stderr else b""
-        
+        stdout_val = e.stdout if hasattr(e, "stdout") and e.stdout else b""
+        stderr_val = e.stderr if hasattr(e, "stderr") and e.stderr else b""
+
         # Decode bytes to string
-        stdout_str = stdout_val.decode('utf-8', errors='replace') if isinstance(stdout_val, bytes) else stdout_val or ""
-        stderr_str = stderr_val.decode('utf-8', errors='replace') if isinstance(stderr_val, bytes) else stderr_val or ""
-        
+        stdout_str = (
+            stdout_val.decode("utf-8", errors="replace")
+            if isinstance(stdout_val, bytes)
+            else stdout_val or ""
+        )
+        stderr_str = (
+            stderr_val.decode("utf-8", errors="replace")
+            if isinstance(stderr_val, bytes)
+            else stderr_val or ""
+        )
+
         cmd_result = CommandResult(
             returncode=124,  # Standard timeout code
             stdout=stdout_str,
@@ -106,7 +114,7 @@ def run(
         if check:
             raise TimeoutError(f"Command timed out after {timeout}s: {cmd_str}")
         return cmd_result
-        
+
     except Exception as e:
         duration = time.time() - start
         cmd_result = CommandResult(

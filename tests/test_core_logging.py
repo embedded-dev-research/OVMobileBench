@@ -134,7 +134,7 @@ class TestSetupLogging:
 
             # File should be created
             assert log_file.exists()
-            
+
             # Clean up handlers to release file lock
             for handler in root_logger.handlers[:]:
                 handler.close()
@@ -166,7 +166,7 @@ class TestSetupLogging:
             # File handler should also have JSON formatter
             file_handler = root_logger.handlers[1]
             assert isinstance(file_handler.formatter, JSONFormatter)
-            
+
             # Clean up handlers to release file lock
             for handler in root_logger.handlers[:]:
                 handler.close()

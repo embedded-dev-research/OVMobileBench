@@ -33,11 +33,7 @@ class TestRun:
     @patch("subprocess.run")
     def test_run_simple_command(self, mock_run):
         """Test running a simple command."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="output",
-            stderr=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="output", stderr="")
 
         result = run("echo test")
 
@@ -50,11 +46,7 @@ class TestRun:
     @patch("subprocess.run")
     def test_run_list_command(self, mock_run):
         """Test running command as list."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="output",
-            stderr=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="output", stderr="")
 
         result = run(["echo", "test"])
 
@@ -64,11 +56,7 @@ class TestRun:
     @patch("subprocess.run")
     def test_run_with_env(self, mock_run):
         """Test running with environment variables."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="",
-            stderr=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
         env = {"TEST_VAR": "value"}
         run("echo test", env=env)
@@ -80,11 +68,7 @@ class TestRun:
     @patch("subprocess.run")
     def test_run_with_cwd(self, mock_run):
         """Test running with working directory."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="",
-            stderr=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             cwd = Path(tmpdir)
@@ -97,11 +81,7 @@ class TestRun:
     @patch("subprocess.run")
     def test_run_with_timeout(self, mock_run):
         """Test running with timeout."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="",
-            stderr=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
         run("echo test", timeout=30)
 
@@ -122,11 +102,7 @@ class TestRun:
     @patch("subprocess.run")
     def test_run_no_capture(self, mock_run):
         """Test running without capturing output."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout=None,
-            stderr=None
-        )
+        mock_run.return_value = Mock(returncode=0, stdout=None, stderr=None)
 
         result = run("echo test", capture=False)
 
@@ -140,11 +116,7 @@ class TestRun:
     @patch("subprocess.run")
     def test_run_verbose(self, mock_run):
         """Test verbose mode prints command."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="",
-            stderr=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
         with patch("builtins.print") as mock_print:
             run("echo test", verbose=True)
@@ -153,11 +125,7 @@ class TestRun:
     @patch("subprocess.run")
     def test_run_check_error(self, mock_run):
         """Test check=True raises CalledProcessError on failure."""
-        mock_run.return_value = Mock(
-            returncode=1,
-            stdout="output",
-            stderr="error"
-        )
+        mock_run.return_value = Mock(returncode=1, stdout="output", stderr="error")
 
         with pytest.raises(subprocess.CalledProcessError) as exc_info:
             run("false", check=True)
@@ -186,11 +154,7 @@ class TestRun:
     @patch("subprocess.run")
     def test_run_with_special_chars(self, mock_run):
         """Test command with special characters."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="",
-            stderr=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
         result = run(["echo", "test with spaces"])
 
@@ -200,11 +164,7 @@ class TestRun:
     @patch("subprocess.run")
     def test_run_duration_tracking(self, mock_run):
         """Test that duration is tracked."""
-        mock_run.return_value = Mock(
-            returncode=0,
-            stdout="",
-            stderr=""
-        )
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
         result = run("echo test")
 

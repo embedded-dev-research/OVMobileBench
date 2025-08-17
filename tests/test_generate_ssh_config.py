@@ -78,7 +78,7 @@ class TestGenerateSSHConfig:
             assert result == str(output_file)
             assert output_file.exists()
             # Skip executable check on Windows (no executable bit)
-            if os.name != 'nt':
+            if os.name != "nt":
                 assert output_file.stat().st_mode & 0o111  # Check executable
 
             # Verify script content
@@ -98,7 +98,7 @@ class TestGenerateSSHConfig:
             assert result == str(output_file)
             assert output_file.exists()
             # Skip executable check on Windows (no executable bit)
-            if os.name != 'nt':
+            if os.name != "nt":
                 assert output_file.stat().st_mode & 0o111  # Check executable
 
             # Verify script content

@@ -56,6 +56,7 @@ cat experiments/results/*.csv
 | Windows | x86_64       | Android   | ARM64       | ADB       | adbutils  | ✅ Stable  |
 | Linux   | x86_64       | Linux     | ARM64/ARM32 | SSH       | paramiko  | ✅ Stable  |
 | macOS   | x86_64/ARM64 | Linux     | ARM64/ARM32 | SSH       | paramiko  | ✅ Stable  |
+| Windows | x86_64       | Linux     | ARM64/ARM32 | SSH       | paramiko  | ✅ Stable  |
 | Any     | Any          | iOS       | ARM64       | USB       | -         | 🚧 Planned |
 
 ## 📋 Requirements
