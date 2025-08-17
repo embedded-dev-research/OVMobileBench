@@ -194,7 +194,7 @@ avd.create(
 )
 
 # List AVDs
-avds = avd.list()
+avds = avd.list_avds()
 
 # Get AVD info
 info = avd.get_info("test_avd")

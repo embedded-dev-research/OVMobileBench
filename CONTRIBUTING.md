@@ -48,14 +48,18 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 5. **Run Quality Checks**
 
    ```bash
-   # Format code
-   black ovmobilebench tests
+   # Run all pre-commit checks
+   pre-commit run --all-files
 
-   # Lint
-   ruff ovmobilebench tests
-
-   # Type check
+   # Or run individual checks:
+   black --check ovmobilebench tests
+   ruff check ovmobilebench tests
    mypy ovmobilebench --ignore-missing-imports
+   yamllint .
+   markdownlint docs/ *.md
+
+   # Auto-fix issues
+   pre-commit run --all-files --hook-stage manual
 
    # Run tests
    pytest tests/
