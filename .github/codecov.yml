@@ -5,7 +5,6 @@ ignore:
   - "**/*.pyc"
   - "setup.py"
   - "scripts/generate_ssh_config.py"
-  - "scripts/test_ssh_device_ci.py"
 
 coverage:
   status:

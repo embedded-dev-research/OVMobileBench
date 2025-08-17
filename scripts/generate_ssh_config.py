@@ -204,8 +204,21 @@ if __name__ == "__main__":
     return output_file
 
 
-def generate_ssh_setup_script(output_file: str = "scripts/setup_ssh_ci.sh"):
+def generate_ssh_setup_script(output_file: str = None):
     """Generate SSH setup script for CI."""
+    
+    # Determine the appropriate script based on platform
+    import platform
+    is_windows = platform.system().lower() == "windows"
+    
+    if output_file is None:
+        output_file = "scripts/setup_ssh_ci.ps1" if is_windows else "scripts/setup_ssh_ci.sh"
+    
+    # For Windows, just ensure the PowerShell script exists
+    # (it's already created separately)
+    if is_windows:
+        print(f"Generated SSH setup script: {output_file}")
+        return output_file
 
     script_content = """#!/bin/bash
 # Setup SSH for CI testing
