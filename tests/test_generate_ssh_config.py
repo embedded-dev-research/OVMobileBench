@@ -36,7 +36,8 @@ class TestGenerateSSHConfig:
             assert config["device"]["type"] == "linux_ssh"
             assert config["device"]["host"] == "localhost"
             assert config["device"]["username"] == "testuser"
-            assert config["device"]["push_dir"] == "/tmp/ovmobilebench"
+            # Check push_dir contains ovmobilebench, path format varies by OS
+            assert "ovmobilebench" in config["device"]["push_dir"]
             assert config["build"]["enabled"] is False
             assert len(config["models"]) == 1
             assert config["models"][0]["name"] == "dummy"
@@ -76,7 +77,9 @@ class TestGenerateSSHConfig:
 
             assert result == str(output_file)
             assert output_file.exists()
-            assert output_file.stat().st_mode & 0o111  # Check executable
+            # Skip executable check on Windows (no executable bit)
+            if os.name != 'nt':
+                assert output_file.stat().st_mode & 0o111  # Check executable
 
             # Verify script content
             content = output_file.read_text()
@@ -94,7 +97,9 @@ class TestGenerateSSHConfig:
 
             assert result == str(output_file)
             assert output_file.exists()
-            assert output_file.stat().st_mode & 0o111  # Check executable
+            # Skip executable check on Windows (no executable bit)
+            if os.name != 'nt':
+                assert output_file.stat().st_mode & 0o111  # Check executable
 
             # Verify script content
             content = output_file.read_text()

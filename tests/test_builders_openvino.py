@@ -159,7 +159,8 @@ class TestOpenVINOBuilder:
             assert "-S" in args
             assert "/path/to/openvino" in args
             assert "-B" in args
-            assert "/build/dir" in args
+            # Check build dir argument - handle platform-specific path separators
+            assert str(Path("/build/dir")) in args
             assert "-GNinja" in args
             assert "-DCMAKE_BUILD_TYPE=Release" in args
             assert "-DCMAKE_TOOLCHAIN_FILE=/path/to/ndk/build/cmake/android.toolchain.cmake" in args
@@ -226,8 +227,10 @@ class TestOpenVINOBuilder:
 
             # Check calls for both targets
             calls = mock_run.call_args_list
-            assert calls[0][0][0] == ["ninja", "-C", "/build/dir", "benchmark_app"]
-            assert calls[1][0][0] == ["ninja", "-C", "/build/dir", "openvino"]
+            # Use Path to handle platform-specific separators
+            expected_path = str(Path("/build/dir"))
+            assert calls[0][0][0] == ["ninja", "-C", expected_path, "benchmark_app"]
+            assert calls[1][0][0] == ["ninja", "-C", expected_path, "openvino"]
 
             # Check logging
             log_calls = mock_logger.info.call_args_list

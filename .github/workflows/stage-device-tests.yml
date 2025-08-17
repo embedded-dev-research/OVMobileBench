@@ -33,6 +33,9 @@ jobs:
           python scripts/generate_ssh_config.py --type setup
           bash scripts/setup_ssh_ci.sh || echo "SSH setup had warnings, continuing..."
 
+      - name: Generate SSH config
+        run: python scripts/generate_ssh_config.py --type config
+
       - name: List SSH devices
         run: |
           ovmobilebench list-ssh-devices || echo "Command not yet implemented"
@@ -44,7 +47,6 @@ jobs:
 
       - name: Run benchmark dry-run via SSH
         run: |
-          python scripts/generate_ssh_config.py --type config
           ovmobilebench all -c experiments/ssh_localhost_ci.yaml --dry-run || true
 
       - name: Upload SSH test results

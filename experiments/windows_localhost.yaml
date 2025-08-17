@@ -1,0 +1,44 @@
+# Windows localhost test configuration for CI
+project:
+  name: windows-test
+  run_id: windows-ci-test
+  description: Windows localhost test for CI
+
+device:
+  type: local
+  name: windows-localhost
+  push_dir: C:/temp/ovmobilebench
+
+build:
+  enabled: false
+  openvino_repo: C:/temp/openvino  # Dummy path, not used when disabled
+
+models:
+  - name: dummy
+    path: C:/temp/dummy_model.xml
+    precision: FP32
+
+run:
+  repeats: 1
+  warmup: false
+  cooldown_sec: 0
+  matrix:
+    niter: [10]
+    device: [CPU]
+    nstreams: ["1"]
+    api: [sync]
+    nireq: [1]
+    infer_precision: [FP16]
+    threads: [4]
+
+report:
+  sinks:
+    - type: csv
+      path: experiments/results/windows_test.csv
+    - type: json
+      path: experiments/results/windows_test.json
+  aggregate: true
+  tags:
+    test_type: windows_localhost
+    ci: true
+    platform: windows

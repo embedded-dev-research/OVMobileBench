@@ -4,7 +4,7 @@ import json
 import hashlib
 from pathlib import Path
 from typing import Dict, Any, Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ovmobilebench.core.fs import ensure_dir, atomic_write
 
@@ -120,9 +120,9 @@ class ArtifactManager:
         # Prepare artifact record
         record: Dict[str, Any] = {
             "type": artifact_type,
-            "path": str(path.relative_to(self.base_dir)),
+            "path": path.relative_to(self.base_dir).as_posix(),
             "size": path.stat().st_size if path.is_file() else None,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "checksum": artifact_id,
         }
 
@@ -192,7 +192,7 @@ class ArtifactManager:
         """
         from datetime import timedelta
 
-        cutoff = datetime.utcnow() - timedelta(days=days)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         artifacts = self.load_metadata().get("artifacts", {})
         to_remove = []
 

@@ -163,8 +163,8 @@ class LinuxSSHDevice(Device):
             return
         except FileNotFoundError:
             # Create parent first
-            parent = str(Path(path).parent)
-            if parent != "/" and parent != ".":
+            parent = str(Path(path).parent.as_posix())
+            if parent != "/" and parent != "." and parent != path:
                 self._mkdir_p(parent)
 
             # Create this directory

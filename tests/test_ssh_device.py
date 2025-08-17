@@ -289,7 +289,8 @@ class TestLinuxSSHDevice:
         with pytest.raises(DeviceError) as exc_info:
             device.push(Path("/tmp/test.txt"), "/remote/test.txt")
 
-        assert "Failed to push /tmp/test.txt" in str(exc_info.value)
+        # Check error message contains file path (format varies by OS)
+        assert "Failed to push" in str(exc_info.value) and "test.txt" in str(exc_info.value)
 
     @patch("ovmobilebench.devices.linux_ssh.paramiko.SSHClient")
     def test_shell_no_client(self, mock_ssh_client):

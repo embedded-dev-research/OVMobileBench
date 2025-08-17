@@ -6,16 +6,20 @@ import yaml
 from datetime import datetime
 from pathlib import Path
 import argparse
+import tempfile
 
 
 def generate_ssh_config(output_file: str = "experiments/ssh_localhost_ci.yaml"):
     """Generate SSH configuration for CI testing."""
 
-    # Get current user
-    username = os.environ.get("USER", "runner")
+    # Get current user - handle both Unix and Windows
+    username = os.environ.get("USER") or os.environ.get("USERNAME", "runner")
 
     # Generate run ID with timestamp
     run_id = f"ci-test-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    
+    # Use pathlib for cross-platform paths
+    temp_dir = Path(tempfile.gettempdir())
 
     config = {
         "project": {
@@ -27,13 +31,13 @@ def generate_ssh_config(output_file: str = "experiments/ssh_localhost_ci.yaml"):
             "type": "linux_ssh",
             "host": "localhost",
             "username": username,
-            "push_dir": "/tmp/ovmobilebench",
+            "push_dir": str(temp_dir / "ovmobilebench"),
         },
         "build": {
             "enabled": False,
-            "openvino_repo": "/tmp/openvino",  # Dummy path, not used when disabled
+            "openvino_repo": str(temp_dir / "openvino"),  # Dummy path, not used when disabled
         },
-        "models": [{"name": "dummy", "path": "/tmp/dummy_model.xml", "precision": "FP32"}],
+        "models": [{"name": "dummy", "path": str(temp_dir / "dummy_model.xml"), "precision": "FP32"}],
         "run": {
             "repeats": 1,
             "warmup": False,
@@ -118,8 +122,8 @@ def test_ssh_device():
         print("Skipping SSH tests")
         return
     
-    # Get username from environment or current user
-    username = os.environ.get("USER", os.environ.get("USERNAME", "runner"))
+    # Get username from environment or current user - handle both Unix and Windows
+    username = os.environ.get("USER") or os.environ.get("USERNAME", "runner")
     
     try:
         # Connect to localhost
@@ -189,8 +193,8 @@ if __name__ == "__main__":
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Write script
-    with open(output_path, "w") as f:
+    # Write script with UTF-8 encoding
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(script_content)
 
     # Make executable
@@ -375,8 +379,8 @@ fi
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Write script
-    with open(output_path, "w") as f:
+    # Write script with UTF-8 encoding
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(script_content)
 
     # Make executable

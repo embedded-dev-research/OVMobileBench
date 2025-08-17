@@ -5,7 +5,7 @@ import json
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, mock_open, call
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from ovmobilebench.core.artifacts import ArtifactManager
 
@@ -313,7 +313,7 @@ class TestArtifactManager:
     ):
         """Test cleaning up old artifacts."""
         # Create test artifacts - some old, some new
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         old_date = (now - timedelta(days=40)).isoformat()
         new_date = (now - timedelta(days=10)).isoformat()
 
@@ -351,7 +351,7 @@ class TestArtifactManager:
     @patch("pathlib.Path.exists")
     def test_cleanup_old_artifacts_missing_files(self, mock_exists, artifact_manager):
         """Test cleanup when artifact files don't exist."""
-        old_date = (datetime.utcnow() - timedelta(days=40)).isoformat()
+        old_date = (datetime.now(timezone.utc) - timedelta(days=40)).isoformat()
 
         artifacts = {
             "missing_file": {"type": "build", "path": "build/missing.bin", "created_at": old_date}
@@ -372,7 +372,7 @@ class TestArtifactManager:
 
     def test_cleanup_old_artifacts_no_old_artifacts(self, artifact_manager):
         """Test cleanup when no artifacts are old enough."""
-        new_date = (datetime.utcnow() - timedelta(days=10)).isoformat()
+        new_date = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
 
         artifacts = {
             "new_file": {"type": "build", "path": "build/new_file.bin", "created_at": new_date}
@@ -465,8 +465,9 @@ class TestArtifactManager:
                             save_call = mock_save.call_args[0][0]
                             artifact_record = save_call["artifacts"]["test123"]
 
-                            # Path should be relative to base_dir
-                            assert artifact_record["path"] == "build/test_artifact.bin"
+                            # Path should be relative to base_dir - use as_posix() for consistent path format
+                            expected_path = Path("build/test_artifact.bin").as_posix()
+                            assert artifact_record["path"] == expected_path
 
     def test_load_metadata_file_read_error(self, artifact_manager):
         """Test load_metadata with file read error."""
@@ -482,7 +483,7 @@ class TestArtifactManager:
         self, mock_rmtree, mock_is_dir, mock_exists, artifact_manager
     ):
         """Test cleanup with file removal error."""
-        old_date = (datetime.utcnow() - timedelta(days=40)).isoformat()
+        old_date = (datetime.now(timezone.utc) - timedelta(days=40)).isoformat()
 
         artifacts = {"old_dir": {"type": "build", "path": "build/old_dir", "created_at": old_date}}
 
