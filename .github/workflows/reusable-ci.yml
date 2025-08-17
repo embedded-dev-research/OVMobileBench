@@ -122,7 +122,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   build-package:
-    needs: setup-environment
+    needs: lint-and-test
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
@@ -154,7 +154,7 @@ jobs:
           retention-days: 7
 
   dry-run:
-    needs: setup-environment
+    needs: lint-and-test
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
@@ -189,7 +189,6 @@ jobs:
   device-test-ssh:
     if: inputs.os == 'ubuntu-latest'  # SSH tests only on Ubuntu for now
     needs:
-      - setup-environment
       - build-package
       - dry-run
     runs-on: ${{ inputs.os }}
@@ -250,7 +249,6 @@ jobs:
     # Only run if explicitly triggered and only once (not for each OS in matrix)
     if: (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[device-test-adb]')) && inputs.os == 'ubuntu-latest'
     needs:
-      - setup-environment
       - build-package
       - dry-run
     runs-on: self-hosted
