@@ -28,9 +28,6 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
 
-      - name: Generate SSH config
-        run: python scripts/generate_ssh_config.py --type config
-
       - name: Test SSH with Paramiko test server
         shell: bash
         run: |

@@ -495,16 +495,16 @@ class AndroidToolsInstaller:
             ndk_build = self.ndk_dir / "ndk-build.cmd"
 
         if ndk_build.exists():
-            print(f"✓ NDK found at: {self.ndk_dir}")
+            print(f"[OK] NDK found at: {self.ndk_dir}")
         else:
-            print(f"✗ NDK not found at: {self.ndk_dir}")
+            print(f"[FAIL] NDK not found at: {self.ndk_dir}")
             success = False
 
         if not self.ndk_only:
             # Check ADB
             adb = self.sdk_dir / "platform-tools" / self.adb_cmd
             if adb.exists():
-                print(f"✓ ADB found at: {adb}")
+                print(f"[OK] ADB found at: {adb}")
 
                 # Try to run ADB version
                 try:
@@ -517,15 +517,15 @@ class AndroidToolsInstaller:
                 except Exception as e:
                     print(f"  Warning: Could not run adb: {e}")
             else:
-                print(f"✗ ADB not found at: {adb}")
+                print(f"[FAIL] ADB not found at: {adb}")
                 success = False
 
             # Check sdkmanager
             sdkmanager = self.cmdline_tools_dir / "bin" / self.sdkmanager_cmd
             if sdkmanager.exists():
-                print(f"✓ sdkmanager found at: {sdkmanager}")
+                print(f"[OK] sdkmanager found at: {sdkmanager}")
             else:
-                print(f"✗ sdkmanager not found at: {sdkmanager}")
+                print(f"[FAIL] sdkmanager not found at: {sdkmanager}")
                 success = False
 
         return success

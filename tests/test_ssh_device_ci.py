@@ -164,14 +164,14 @@ def test_ssh_in_ci():
         success = _test_ssh_with_paramiko_client("127.0.0.1", port, username)
 
         if success:
-            print("✓ SSH connection test successful!")
+            print("[OK] SSH connection test successful!")
             return True
         else:
-            print("✗ SSH test failed")
+            print("[FAIL] SSH test failed")
             return False
 
     except Exception as e:
-        print(f"✗ SSH test error: {e}")
+        print(f"[ERROR] SSH test error: {e}")
         return False
 
 

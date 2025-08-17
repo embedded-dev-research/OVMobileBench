@@ -48,7 +48,7 @@ def build(
     cfg = load_experiment(config)
     pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
     pipeline.build()
-    console.print("[bold green]✓ Build completed[/bold green]")
+    console.print("[bold green][OK] Build completed[/bold green]")
 
 
 @app.command()
@@ -62,7 +62,7 @@ def package(
     cfg = load_experiment(config)
     pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
     pipeline.package()
-    console.print("[bold green]✓ Package created[/bold green]")
+    console.print("[bold green][OK] Package created[/bold green]")
 
 
 @app.command()
@@ -76,7 +76,7 @@ def deploy(
     cfg = load_experiment(config)
     pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
     pipeline.deploy()
-    console.print("[bold green]✓ Deployment completed[/bold green]")
+    console.print("[bold green][OK] Deployment completed[/bold green]")
 
 
 @app.command()
@@ -92,7 +92,7 @@ def run(
     cfg = load_experiment(config)
     pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
     pipeline.run(timeout=timeout, cooldown=cooldown)
-    console.print("[bold green]✓ Benchmarks completed[/bold green]")
+    console.print("[bold green][OK] Benchmarks completed[/bold green]")
 
 
 @app.command()
@@ -105,7 +105,7 @@ def report(
     cfg = load_experiment(config)
     pipeline = Pipeline(cfg, verbose=verbose)
     pipeline.report()
-    console.print("[bold green]✓ Reports generated[/bold green]")
+    console.print("[bold green][OK] Reports generated[/bold green]")
 
 
 @app.command()
@@ -138,11 +138,11 @@ def all(
                 print(f"[*] {description}")
                 try:
                     stage_func()
-                    print(f"[✓] {description} completed")
+                    print(f"[OK] {description} completed")
                 except Exception as e:
-                    print(f"[✗] {description} failed: {e}")
+                    print(f"[FAIL] {description} failed: {e}")
                     raise
-            print("[✓] Pipeline completed successfully")
+            print("[OK] Pipeline completed successfully")
         else:
             # Rich progress bar for interactive use
             spinner = SpinnerColumn(spinner_name="dots" if sys.platform == "win32" else "aesthetic")
@@ -159,10 +159,10 @@ def all(
                         stage_func()
                         progress.update(task, completed=True)
                     except Exception as e:
-                        console.print(f"[bold red]✗ {description} failed: {e}[/bold red]")
+                        console.print(f"[bold red][FAIL] {description} failed: {e}[/bold red]")
                         raise
 
-            console.print("[bold green]✓ Pipeline completed successfully[/bold green]")
+            console.print("[bold green][OK] Pipeline completed successfully[/bold green]")
     except UnicodeEncodeError as e:
         # Fallback for encoding errors
         print(f"Encoding error: {e}")

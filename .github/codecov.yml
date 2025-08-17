@@ -4,7 +4,6 @@ ignore:
   - "**/__pycache__"
   - "**/*.pyc"
   - "setup.py"
-  - "scripts/generate_ssh_config.py"
 
 coverage:
   status:
