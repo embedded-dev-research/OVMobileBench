@@ -38,27 +38,9 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v --cov=ovmobilebench --cov=scripts --cov-report=xml --cov-report=term-missing
 
-      - name: Check coverage file and git info
-        run: |
-          echo "=== Git information ==="
-          git branch -a
-          git log --oneline -10
-          echo "Current commit: $(git rev-parse HEAD)"
-          echo "=== Coverage file check ==="
-          if [ -f coverage.xml ]; then
-            echo "Coverage file exists"
-            ls -la coverage.xml
-            echo "First 20 lines of coverage.xml:"
-            head -20 coverage.xml
-          else
-            echo "Coverage file not found!"
-          fi
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5.4.3
         with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-${{ inputs.os }}
-          fail_ci_if_error: false
-          verbose: true
+          files: coverage.xml
+
