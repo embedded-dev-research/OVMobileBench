@@ -31,8 +31,9 @@ jobs:
       - name: Set up SSH server (Unix)
         if: runner.os != 'Windows'
         run: |
+          set -e
           python scripts/generate_ssh_config.py --type setup
-          bash scripts/setup_ssh_ci.sh || echo "SSH setup had warnings, continuing..."
+          bash scripts/setup_ssh_ci.sh
       
       - name: Set up SSH server (Windows)
         if: runner.os == 'Windows'
@@ -46,16 +47,21 @@ jobs:
 
       - name: List SSH devices
         run: |
-          ovmobilebench list-ssh-devices || echo "Command not yet implemented"
+          ovmobilebench list-ssh-devices
 
       - name: Test SSH deployment
         run: |
+          set -e
           python scripts/generate_ssh_config.py --type test
-          python tests/test_ssh_device_ci.py || exit 0
+          python tests/test_ssh_device_ci.py
 
       - name: Run benchmark dry-run via SSH
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: 1
         run: |
-          ovmobilebench all -c experiments/ssh_localhost_ci.yaml --dry-run || true
+          set -e
+          ovmobilebench all -c experiments/ssh_localhost_ci.yaml --dry-run
 
       - name: Upload SSH test results
         if: always()

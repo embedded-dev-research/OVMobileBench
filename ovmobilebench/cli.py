@@ -3,6 +3,8 @@
 # Apply typer compatibility patch
 from ovmobilebench import typer_patch  # noqa: F401
 
+import os
+import sys
 import typer
 from pathlib import Path
 from typing import Optional
@@ -12,6 +14,16 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from ovmobilebench.config.loader import load_experiment
 from ovmobilebench.pipeline import Pipeline
 
+# Set UTF-8 encoding for Windows
+if sys.platform == "win32":
+    os.environ["PYTHONIOENCODING"] = "utf-8"
+    # Also set console code page to UTF-8 if possible
+    try:
+        import subprocess
+        subprocess.run("chcp 65001", shell=True, capture_output=True)
+    except:
+        pass
+
 app = typer.Typer(
     name="ovmobilebench",
     help="End-to-end benchmarking pipeline for OpenVINO on mobile devices",
@@ -19,7 +31,9 @@ app = typer.Typer(
     pretty_exceptions_enable=False,  # Disable pretty exceptions
     rich_markup_mode=None,  # Disable Rich formatting
 )
-console = Console()
+
+# Configure console with safe encoding for Windows
+console = Console(legacy_windows=True if sys.platform == "win32" else None)
 
 
 @app.command()
@@ -102,14 +116,13 @@ def all(
     cooldown: Optional[int] = typer.Option(None, "--cooldown", help="Cooldown between runs"),
 ):
     """Execute complete pipeline: build, package, deploy, run, and report."""
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
+    # Check if we're in CI environment
+    is_ci = os.environ.get("CI", "").lower() == "true"
+    
+    try:
         cfg = load_experiment(config)
         pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
-
+        
         stages = [
             ("Building OpenVINO runtime...", pipeline.build),
             ("Packaging bundle...", pipeline.package),
@@ -117,17 +130,43 @@ def all(
             ("Running benchmarks...", lambda: pipeline.run(timeout, cooldown)),
             ("Generating reports...", pipeline.report),
         ]
-
-        for description, stage_func in stages:
-            task = progress.add_task(description, total=None)
-            try:
-                stage_func()
-                progress.update(task, completed=True)
-            except Exception as e:
-                console.print(f"[bold red]✗ {description} failed: {e}[/bold red]")
-                raise
-
-    console.print("[bold green]✓ Pipeline completed successfully[/bold green]")
+        
+        if is_ci or verbose:
+            # Simple output for CI or verbose mode
+            for description, stage_func in stages:
+                print(f"[*] {description}")
+                try:
+                    stage_func()
+                    print(f"[✓] {description} completed")
+                except Exception as e:
+                    print(f"[✗] {description} failed: {e}")
+                    raise
+            print("[✓] Pipeline completed successfully")
+        else:
+            # Rich progress bar for interactive use
+            spinner = SpinnerColumn(spinner_name="dots" if sys.platform == "win32" else "aesthetic")
+            
+            with Progress(
+                spinner,
+                TextColumn("[progress.description]{task.description}"),
+                console=console,
+                transient=True,  # Clear progress when done
+            ) as progress:
+                for description, stage_func in stages:
+                    task = progress.add_task(description, total=None)
+                    try:
+                        stage_func()
+                        progress.update(task, completed=True)
+                    except Exception as e:
+                        console.print(f"[bold red]✗ {description} failed: {e}[/bold red]")
+                        raise
+                        
+            console.print("[bold green]✓ Pipeline completed successfully[/bold green]")
+    except UnicodeEncodeError as e:
+        # Fallback for encoding errors
+        print(f"Encoding error: {e}")
+        print("Pipeline failed due to encoding issues. Try setting PYTHONIOENCODING=utf-8")
+        sys.exit(1)
 
 
 @app.command()
