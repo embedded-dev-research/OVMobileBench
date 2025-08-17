@@ -1,20 +1,21 @@
 """Tests for core filesystem utilities module."""
 
-import pytest
-import tempfile
 import hashlib
 import os
+import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from ovmobilebench.core.fs import (
-    ensure_dir,
     atomic_write,
-    get_digest,
-    copy_tree,
     clean_dir,
-    get_size,
+    copy_tree,
+    ensure_dir,
     format_size,
+    get_digest,
+    get_size,
 )
 
 
@@ -257,6 +258,7 @@ class TestCopyTree:
     def test_copy_tree_with_symlinks(self):
         """Test copying directory with symlinks."""
         import platform
+
         import pytest
 
         # Skip on Windows if not running as admin

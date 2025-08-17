@@ -1,10 +1,10 @@
 """Logging configuration."""
 
-import logging
 import json
-from pathlib import Path
-from typing import Optional, List
+import logging
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import List, Optional
 
 
 class JSONFormatter(logging.Formatter):

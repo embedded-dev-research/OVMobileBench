@@ -1,12 +1,13 @@
 """Tests for packaging packager module."""
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
-from ovmobilebench.packaging.packager import Packager
-from ovmobilebench.config.schema import PackageConfig, ModelItem
+import pytest
+
+from ovmobilebench.config.schema import ModelItem, PackageConfig
 from ovmobilebench.core.errors import OVMobileBenchError
+from ovmobilebench.packaging.packager import Packager
 
 
 class TestPackager:

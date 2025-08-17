@@ -1,7 +1,7 @@
 """Parser for benchmark_app output."""
 
 import re
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 def parse_metrics(output: str) -> Dict[str, Any]:

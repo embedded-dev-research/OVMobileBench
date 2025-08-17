@@ -25,42 +25,42 @@ Main orchestration module for running benchmarks.
 ```python
 class Pipeline:
     """Main pipeline orchestrator"""
-    
+
     def __init__(self, config: Union[str, Path, Experiment]):
         """
         Initialize pipeline with configuration.
-        
+
         Args:
             config: Path to YAML config file or Experiment object
         """
-    
+
     def run(self, stages: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Run pipeline stages.
-        
+
         Args:
             stages: List of stages to run. If None, runs all stages.
                    Valid stages: ['build', 'package', 'deploy', 'run', 'report']
-        
+
         Returns:
             Dictionary with results from each stage
-        
+
         Raises:
             PipelineError: If any stage fails
         """
-    
+
     def build(self) -> BuildResult:
         """Build OpenVINO from source"""
-    
+
     def package(self) -> PackageResult:
         """Create deployment bundle"""
-    
+
     def deploy(self) -> DeployResult:
         """Deploy to target devices"""
-    
+
     def run_benchmarks(self) -> BenchmarkResult:
         """Execute benchmarks"""
-    
+
     def report(self) -> ReportResult:
         """Generate reports"""
 ```
@@ -95,7 +95,7 @@ Pydantic models for configuration validation.
 ```python
 class Experiment(BaseModel):
     """Top-level experiment configuration"""
-    
+
     project: ProjectConfig
     build: BuildConfig
     package: PackageConfig
@@ -103,14 +103,14 @@ class Experiment(BaseModel):
     models: List[ModelItem]
     run: RunConfig
     report: ReportConfig
-    
+
     @classmethod
     def from_yaml(cls, path: Union[str, Path]) -> "Experiment":
         """Load configuration from YAML file"""
-    
+
     def to_yaml(self, path: Union[str, Path]) -> None:
         """Save configuration to YAML file"""
-    
+
     def override(self, overrides: Dict[str, Any]) -> "Experiment":
         """Apply overrides to configuration"""
 ```
@@ -120,17 +120,17 @@ class Experiment(BaseModel):
 ```python
 class BuildConfig(BaseModel):
     """Build configuration"""
-    
+
     enabled: bool = True
     openvino_repo: str
     openvino_commit: str = "HEAD"
     build_type: Literal["Release", "Debug", "RelWithDebInfo"] = "Release"
     toolchain: Toolchain
     options: Dict[str, str] = {}
-    
+
     def validate_paths(self) -> None:
         """Validate that all paths exist"""
-    
+
     def get_cmake_args(self) -> List[str]:
         """Generate CMake arguments"""
 ```
@@ -140,16 +140,16 @@ class BuildConfig(BaseModel):
 ```python
 class RunConfig(BaseModel):
     """Benchmark execution configuration"""
-    
+
     repeats: int = 3
     warmup_runs: int = 0
     cooldown_sec: int = 0
     timeout_sec: Optional[int] = None
     matrix: RunMatrix
-    
+
     def expand_matrix(self) -> List[Dict[str, Any]]:
         """Expand matrix into individual configurations"""
-    
+
     def estimate_duration(self) -> timedelta:
         """Estimate total execution time"""
 ```
@@ -195,39 +195,39 @@ Base class for device implementations.
 ```python
 class Device(ABC):
     """Abstract base class for devices"""
-    
+
     @abstractmethod
     def connect(self) -> None:
         """Establish connection to device"""
-    
+
     @abstractmethod
     def disconnect(self) -> None:
         """Close connection to device"""
-    
+
     @abstractmethod
     def push(self, local: Path, remote: str) -> None:
         """Push file to device"""
-    
+
     @abstractmethod
     def pull(self, remote: str, local: Path) -> None:
         """Pull file from device"""
-    
+
     @abstractmethod
     def shell(self, command: str, timeout: Optional[int] = None) -> ShellResult:
         """Execute command on device"""
-    
+
     @abstractmethod
     def exists(self, path: str) -> bool:
         """Check if path exists on device"""
-    
+
     @abstractmethod
     def mkdir(self, path: str, parents: bool = True) -> None:
         """Create directory on device"""
-    
+
     @abstractmethod
     def rm(self, path: str, recursive: bool = False) -> None:
         """Remove file/directory on device"""
-    
+
     @abstractmethod
     def info(self) -> DeviceInfo:
         """Get device information"""
@@ -242,25 +242,25 @@ Android device implementation using **adbutils** library for direct Python-based
 ```python
 class AndroidDevice(Device):
     """Android device via adbutils Python library"""
-    
+
     def __init__(self, serial: str, use_root: bool = False):
         """
         Initialize Android device.
-        
+
         Args:
             serial: Device serial number
             use_root: Whether to use root access
         """
-    
+
     def get_temperature(self) -> float:
         """Get device temperature in Celsius"""
-    
+
     def get_cpu_info(self) -> CPUInfo:
         """Get CPU information"""
-    
+
     def set_cpu_governor(self, governor: str) -> None:
         """Set CPU frequency governor (requires root)"""
-    
+
     def screenshot(self, path: Path) -> None:
         """Take screenshot and save to path"""
 ```
@@ -274,7 +274,7 @@ Linux device implementation using **paramiko** library for secure SSH connection
 ```python
 class LinuxSSHDevice(Device):
     """Linux device via SSH using paramiko"""
-    
+
     def __init__(
         self,
         host: str,
@@ -286,7 +286,7 @@ class LinuxSSHDevice(Device):
     ):
         """
         Initialize SSH connection to Linux device.
-        
+
         Args:
             host: Hostname or IP address
             username: SSH username
@@ -295,7 +295,7 @@ class LinuxSSHDevice(Device):
             port: SSH port (default 22)
             push_dir: Remote directory for deployment
         """
-    
+
     def get_env(self) -> Dict[str, str]:
         """Get environment variables for benchmark execution"""
 ```
@@ -364,24 +364,24 @@ OpenVINO build management.
 ```python
 class OpenVINOBuilder:
     """Build OpenVINO from source"""
-    
+
     def __init__(self, config: BuildConfig):
         """Initialize builder with configuration"""
-    
+
     def configure(self) -> None:
         """Run CMake configuration"""
-    
+
     def build(self, targets: List[str] = None) -> None:
         """
         Build specified targets.
-        
+
         Args:
             targets: List of CMake targets. If None, builds all.
         """
-    
+
     def clean(self) -> None:
         """Clean build directory"""
-    
+
     def package(self, output_dir: Path) -> PackageInfo:
         """Package build artifacts"""
 ```
@@ -417,22 +417,22 @@ Benchmark execution management.
 ```python
 class BenchmarkRunner:
     """Execute benchmark_app"""
-    
+
     def __init__(self, device: Device, config: RunConfig):
         """
         Initialize runner.
-        
+
         Args:
             device: Target device
             config: Run configuration
         """
-    
+
     def run_single(self, params: Dict[str, Any]) -> BenchmarkResult:
         """Run single benchmark with given parameters"""
-    
+
     def run_matrix(self, model: ModelItem) -> List[BenchmarkResult]:
         """Run complete parameter matrix for a model"""
-    
+
     def run_all(self, models: List[ModelItem]) -> List[BenchmarkResult]:
         """Run benchmarks for all models"""
 ```
@@ -443,7 +443,7 @@ class BenchmarkRunner:
 @dataclass
 class BenchmarkResult:
     """Result from single benchmark run"""
-    
+
     model: str
     device: str
     parameters: Dict[str, Any]
@@ -494,25 +494,25 @@ Parse benchmark_app output.
 ```python
 class BenchmarkParser:
     """Parse benchmark_app output"""
-    
+
     def parse(self, stdout: str, stderr: str = "") -> ParsedMetrics:
         """
         Parse benchmark output.
-        
+
         Args:
             stdout: Standard output from benchmark_app
             stderr: Standard error from benchmark_app
-        
+
         Returns:
             Parsed metrics
-        
+
         Raises:
             ParserError: If output cannot be parsed
         """
-    
+
     def extract_throughput(self, text: str) -> float:
         """Extract throughput in FPS"""
-    
+
     def extract_latencies(self, text: str) -> LatencyMetrics:
         """Extract latency metrics"""
 ```
@@ -552,7 +552,7 @@ Report generation and output.
 ```python
 class ReportSink(ABC):
     """Abstract base class for report sinks"""
-    
+
     @abstractmethod
     def write(self, results: List[BenchmarkResult]) -> None:
         """Write results to sink"""
@@ -563,10 +563,10 @@ class ReportSink(ABC):
 ```python
 class JSONSink(ReportSink):
     """Write results to JSON file"""
-    
+
     def __init__(self, path: Path, indent: int = 2):
         """Initialize JSON sink"""
-    
+
     def write(self, results: List[BenchmarkResult]) -> None:
         """Write results as JSON"""
 ```
@@ -576,10 +576,10 @@ class JSONSink(ReportSink):
 ```python
 class CSVSink(ReportSink):
     """Write results to CSV file"""
-    
+
     def __init__(self, path: Path, columns: Optional[List[str]] = None):
         """Initialize CSV sink"""
-    
+
     def write(self, results: List[BenchmarkResult]) -> None:
         """Write results as CSV"""
 ```
@@ -593,14 +593,14 @@ Statistical summarization of results.
 ```python
 class Summarizer:
     """Summarize benchmark results"""
-    
+
     def summarize(self, results: List[BenchmarkResult]) -> Summary:
         """Generate statistical summary"""
-    
-    def group_by(self, results: List[BenchmarkResult], 
+
+    def group_by(self, results: List[BenchmarkResult],
                  keys: List[str]) -> Dict[tuple, List[BenchmarkResult]]:
         """Group results by specified keys"""
-    
+
     def compare(self, baseline: List[BenchmarkResult],
                 current: List[BenchmarkResult]) -> Comparison:
         """Compare two sets of results"""
@@ -657,7 +657,7 @@ def ensure_android_tools(
 ) -> InstallerResult:
     """
     Install and configure Android SDK/NDK.
-    
+
     Args:
         sdk_root: Android SDK installation directory
         api: Android API level (e.g., 30, 31, 33)
@@ -672,10 +672,10 @@ def ensure_android_tools(
         dry_run: Preview without making changes
         verbose: Enable detailed logging
         jsonl_path: Path for JSON Lines log output
-    
+
     Returns:
         Dictionary with installation results
-    
+
     Raises:
         InstallerError: If installation fails
     """
@@ -691,12 +691,12 @@ def export_android_env(
 ) -> Union[Dict[str, str], str]:
     """
     Export Android environment variables.
-    
+
     Args:
         sdk_root: Android SDK root directory
         ndk_path: NDK installation path
         format: Output format (dict, bash, fish, windows, github)
-    
+
     Returns:
         Environment variables as dictionary or formatted string
     """
@@ -711,11 +711,11 @@ def verify_installation(
 ) -> Dict[str, Any]:
     """
     Verify Android tools installation.
-    
+
     Args:
         sdk_root: Android SDK root directory
         verbose: Print verification results
-    
+
     Returns:
         Dictionary with installation status
     """
@@ -728,18 +728,18 @@ def verify_installation(
 ```python
 class AndroidInstaller:
     """Main installer orchestrator"""
-    
+
     def __init__(self, sdk_root: Path, logger: Optional[StructuredLogger] = None):
         """Initialize installer with SDK root"""
-    
-    def ensure(self, api: int, target: str, arch: str, 
+
+    def ensure(self, api: int, target: str, arch: str,
                ndk: Optional[NdkSpec] = None, **kwargs) -> InstallerResult:
         """Install Android tools with specified configuration"""
-    
+
     def verify(self) -> Dict[str, Any]:
         """Verify installation status"""
-    
-    def cleanup(self, remove_downloads: bool = True, 
+
+    def cleanup(self, remove_downloads: bool = True,
                 remove_temp: bool = True) -> None:
         """Clean up temporary files"""
 ```
@@ -814,14 +814,14 @@ def run_command(
 ) -> CommandResult:
     """
     Execute shell command.
-    
+
     Args:
         command: Command to execute
         cwd: Working directory
         env: Environment variables
         timeout: Timeout in seconds
         capture_output: Whether to capture stdout/stderr
-    
+
     Returns:
         Command result with output and return code
     """
@@ -859,19 +859,19 @@ Artifact management utilities.
 ```python
 class ArtifactManager:
     """Manage build and benchmark artifacts"""
-    
+
     def __init__(self, base_dir: Path):
         """Initialize artifact manager"""
-    
+
     def create_artifact(self, name: str, content: Any) -> Artifact:
         """Create new artifact"""
-    
+
     def get_artifact(self, artifact_id: str) -> Artifact:
         """Retrieve artifact by ID"""
-    
+
     def list_artifacts(self, filter_type: Optional[str] = None) -> List[Artifact]:
         """List all artifacts"""
-    
+
     def cleanup(self, older_than: timedelta) -> int:
         """Clean up old artifacts"""
 ```
@@ -903,18 +903,18 @@ from ovmobilebench.devices.base import Device, DeviceInfo
 
 class CustomDevice(Device):
     """Custom device implementation"""
-    
+
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-    
+
     def connect(self) -> None:
         # Implement connection logic
         pass
-    
+
     def shell(self, command: str, timeout: Optional[int] = None) -> ShellResult:
         # Implement command execution
         pass
-    
+
     # Implement other required methods...
 ```
 
@@ -925,7 +925,7 @@ from ovmobilebench.parsers.base import Parser
 
 class CustomParser(Parser):
     """Custom output parser"""
-    
+
     def parse(self, output: str) -> Dict[str, Any]:
         # Implement parsing logic
         metrics = {}
@@ -940,10 +940,10 @@ from ovmobilebench.report.sink import ReportSink
 
 class HTMLSink(ReportSink):
     """Generate HTML reports"""
-    
+
     def __init__(self, template_path: Path):
         self.template = load_template(template_path)
-    
+
     def write(self, results: List[BenchmarkResult]) -> None:
         html = self.template.render(results=results)
         # Save HTML...

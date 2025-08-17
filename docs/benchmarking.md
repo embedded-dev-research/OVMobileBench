@@ -409,7 +409,7 @@ def detect_throttling(fps_over_time):
     """Detect performance degradation over time"""
     first_quarter = np.mean(fps_over_time[:len(fps_over_time)//4])
     last_quarter = np.mean(fps_over_time[-len(fps_over_time)//4:])
-    
+
     degradation = (first_quarter - last_quarter) / first_quarter
     if degradation > 0.1:  # 10% drop
         return True, degradation
@@ -432,7 +432,7 @@ run:
 adb shell ps -A | grep -v idle
 
 # Monitor CPU frequency
-adb shell "while true; do 
+adb shell "while true; do
     cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq
     sleep 1
 done"
@@ -466,7 +466,7 @@ models:
 
 run:
   matrix:
-    input_shape: 
+    input_shape:
       - [1, 3, 224, 224]
       - [1, 3, 416, 416]
       - [1, 3, 640, 640]
@@ -478,18 +478,18 @@ run:
 def calculate_efficiency_metrics(df):
     """Calculate custom efficiency metrics"""
     metrics = {}
-    
+
     # FPS per thread
     metrics['fps_per_thread'] = df['throughput_fps'] / df['threads']
-    
+
     # FPS per watt (if power data available)
     if 'power_w' in df.columns:
         metrics['fps_per_watt'] = df['throughput_fps'] / df['power_w']
-    
+
     # Latency consistency
     if 'latency_std' in df.columns:
         metrics['latency_cv'] = df['latency_std'] / df['latency_avg']
-    
+
     return pd.DataFrame(metrics)
 ```
 

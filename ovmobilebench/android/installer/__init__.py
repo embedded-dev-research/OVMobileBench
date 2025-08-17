@@ -16,17 +16,8 @@ Example:
     ... )
 """
 
-from .api import (
-    ensure_android_tools,
-    export_android_env,
-    verify_installation,
-)
-from .types import (
-    Arch,
-    InstallerResult,
-    NdkSpec,
-    Target,
-)
+from .api import ensure_android_tools, export_android_env, verify_installation
+from .types import Arch, InstallerResult, NdkSpec, Target
 
 __version__ = "0.1.0"
 

@@ -30,15 +30,6 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
 
-      - name: Run Black
-        run: black --check ovmobilebench tests
-
-      - name: Run Ruff
-        run: ruff check ovmobilebench tests
-
-      - name: Run MyPy
-        run: mypy ovmobilebench --ignore-missing-imports
-
       - name: Run tests
         run: pytest tests/ -v --cov=ovmobilebench --cov=scripts --junitxml=junit.xml -o junit_family=legacy
 

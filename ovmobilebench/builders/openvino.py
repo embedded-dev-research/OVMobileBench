@@ -1,13 +1,13 @@
 """OpenVINO build system."""
 
+import logging
 from pathlib import Path
 from typing import Dict
-import logging
 
 from ovmobilebench.config.schema import BuildConfig
-from ovmobilebench.core.shell import run
-from ovmobilebench.core.fs import ensure_dir
 from ovmobilebench.core.errors import BuildError
+from ovmobilebench.core.fs import ensure_dir
+from ovmobilebench.core.shell import run
 
 logger = logging.getLogger(__name__)
 

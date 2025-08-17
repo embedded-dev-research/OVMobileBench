@@ -1,12 +1,12 @@
 """Report sinks for different output formats."""
 
-import json
 import csv
+import json
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-from ovmobilebench.core.fs import ensure_dir, atomic_write
+from ovmobilebench.core.fs import atomic_write, ensure_dir
 
 
 class ReportSink(ABC):

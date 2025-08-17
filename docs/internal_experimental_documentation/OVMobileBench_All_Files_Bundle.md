@@ -2,7 +2,7 @@
 
 _Generated: 2025-08-15T15:24:59_
 
-This Markdown contains every file needed to create a working OVMobileBench repo. 
+This Markdown contains every file needed to create a working OVMobileBench repo.
 Copy the **Bootstrap Script** to a shell and run it; it will materialize all files.
 
 ## Bootstrap Script
@@ -472,9 +472,9 @@ build/
 Performance regression (model/device/params).
 
 ### Steps to Reproduce
-1) 
-2) 
-3) 
+1)
+2)
+3)
 
 ### Expected / Actual
 -
@@ -2039,9 +2039,9 @@ build/
 Performance regression (model/device/params).
 
 ### Steps to Reproduce
-1) 
-2) 
-3) 
+1)
+2)
+3)
 
 ### Expected / Actual
 -

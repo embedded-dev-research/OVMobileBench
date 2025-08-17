@@ -1,12 +1,14 @@
 """Linux SSH device implementation."""
 
-from pathlib import Path
-from typing import Dict, Any, Optional, List
-import paramiko
 import os
-from .base import Device
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import paramiko
+
 from ..core.errors import DeviceError
 from ..core.logging import get_logger
+from .base import Device
 
 logger = get_logger(__name__)
 

@@ -445,15 +445,15 @@ while true; do
     # Temperature
     TEMP=$(adb -s $SERIAL shell cat /sys/class/thermal/thermal_zone0/temp)
     echo "Temp: $((TEMP/1000))°C"
-    
+
     # Battery
     BATTERY=$(adb -s $SERIAL shell dumpsys battery | grep level)
     echo "Battery: $BATTERY"
-    
+
     # CPU frequency
     FREQ=$(adb -s $SERIAL shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
     echo "CPU Freq: $((FREQ/1000)) MHz"
-    
+
     sleep 5
 done
 ```
@@ -466,16 +466,16 @@ done
 while true; do
     # Temperature
     sensors | grep "Core"
-    
+
     # CPU frequency
     cpupower frequency-info | grep "current CPU"
-    
+
     # Memory
     free -h | grep Mem
-    
+
     # Load average
     uptime
-    
+
     sleep 5
 done
 ```

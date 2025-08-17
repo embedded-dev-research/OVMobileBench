@@ -3,8 +3,8 @@
 import subprocess
 import time
 from dataclasses import dataclass
-from typing import Optional, Dict, Union, List
 from pathlib import Path
+from typing import Dict, List, Optional, Union
 
 
 @dataclass

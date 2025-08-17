@@ -56,20 +56,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install OVMobileBench
         run: |
           pip install -e .[dev]
-      
+
       - name: Build OpenVINO
         run: |
           ovmobilebench build -c ci/config.yaml
-      
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -82,19 +82,19 @@ jobs:
     runs-on: [self-hosted, android]
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: ovbundle
           path: artifacts/
-      
+
       - name: Run benchmarks
         run: |
           ovmobilebench deploy -c ci/config.yaml
           ovmobilebench run -c ci/config.yaml
           ovmobilebench report -c ci/config.yaml
-      
+
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
@@ -114,9 +114,9 @@ jobs:
         device: [pixel6, galaxy-s21, oneplus9]
         precision: [FP32, FP16, INT8]
         threads: [1, 4, 8]
-    
+
     runs-on: [self-hosted, "${{ matrix.device }}"]
-    
+
     steps:
       - name: Run benchmark
         env:
@@ -144,22 +144,22 @@ jobs:
     steps:
       - name: Checkout PR
         uses: actions/checkout@v4
-      
+
       - name: Checkout main
         uses: actions/checkout@v4
         with:
           ref: main
           path: baseline
-      
+
       - name: Run PR benchmark
         run: |
           ovmobilebench all -c ci/pr.yaml -o results/pr.json
-      
+
       - name: Run baseline benchmark
         run: |
           cd baseline
           ovmobilebench all -c ci/pr.yaml -o results/baseline.json
-      
+
       - name: Compare results
         id: compare
         run: |
@@ -167,7 +167,7 @@ jobs:
             --baseline results/baseline.json \
             --current results/pr.json \
             --threshold -5.0
-      
+
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
@@ -194,17 +194,17 @@ jobs:
     runs-on: [self-hosted, android]
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Full benchmark suite
         run: |
           ovmobilebench all -c ci/nightly.yaml
-      
+
       - name: Upload to dashboard
         run: |
           python ci/upload_dashboard.py \
             --results results/ \
             --endpoint $PERF_DASHBOARD_URL
-      
+
       - name: Check regressions
         run: |
           python ci/check_regression.py \
@@ -291,14 +291,14 @@ benchmark:mr:
     - |
       # Run benchmarks
       ovmobilebench all -c ci/mr.yaml
-      
+
       # Compare with target branch
       git checkout $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
       ovmobilebench all -c ci/mr.yaml -o baseline.json
-      
+
       # Generate comparison
       python ci/compare.py --format markdown > comparison.md
-      
+
       # Post comment
       curl -X POST \
         -H "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
@@ -313,12 +313,12 @@ benchmark:mr:
 ```groovy
 pipeline {
     agent any
-    
+
     environment {
         ANDROID_SERIAL = credentials('android-device-serial')
         OVBENCH_CONFIG = 'ci/jenkins.yaml'
     }
-    
+
     stages {
         stage('Build') {
             agent {
@@ -331,7 +331,7 @@ pipeline {
                 stash includes: 'artifacts/**', name: 'build-artifacts'
             }
         }
-        
+
         stage('Package') {
             steps {
                 unstash 'build-artifacts'
@@ -339,7 +339,7 @@ pipeline {
                 stash includes: 'bundles/**', name: 'bundles'
             }
         }
-        
+
         stage('Benchmark') {
             agent {
                 label 'android-device'
@@ -353,7 +353,7 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Analysis') {
             steps {
                 publishHTML([
@@ -361,7 +361,7 @@ pipeline {
                     reportFiles: 'index.html',
                     reportName: 'Performance Report'
                 ])
-                
+
                 perfReport(
                     sourceDataFiles: 'results/*.json',
                     compareBuildPrevious: true,
@@ -370,7 +370,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             archiveArtifacts artifacts: 'results/**', fingerprint: true
@@ -395,7 +395,7 @@ pipeline {
         choice(name: 'PRECISION', choices: ['FP32', 'FP16', 'INT8'], description: 'Inference precision')
         string(name: 'THREADS', defaultValue: '4', description: 'Number of threads')
     }
-    
+
     stages {
         stage('Benchmark') {
             steps {
@@ -460,7 +460,7 @@ devices:
     model: Pixel 6
     soc: Google Tensor
     labels: [android, arm64, tensor]
-    
+
   - id: galaxy-s21-01
     serial: RF8N1234567
     model: Galaxy S21
@@ -485,7 +485,7 @@ def check_device_health(serial):
         )
         if result.returncode != 0:
             return False, "ADB connection failed"
-        
+
         # Check temperature
         temp = subprocess.run(
             f"adb -s {serial} shell cat /sys/class/thermal/thermal_zone0/temp",
@@ -494,7 +494,7 @@ def check_device_health(serial):
         temp_c = int(temp.stdout) / 1000
         if temp_c > 45:
             return False, f"Temperature too high: {temp_c}°C"
-        
+
         # Check battery
         battery = subprocess.run(
             f"adb -s {serial} shell dumpsys battery | grep level",
@@ -503,7 +503,7 @@ def check_device_health(serial):
         level = int(battery.stdout.split(':')[1])
         if level < 20:
             return False, f"Battery too low: {level}%"
-        
+
         return True, "Healthy"
     except Exception as e:
         return False, str(e)
@@ -546,7 +546,7 @@ integration:
     - |
       # Wait for emulator
       adb wait-for-device
-      
+
       # Run integration tests
       pytest tests/integration/ -v
 ```
@@ -563,7 +563,7 @@ def test_baseline_performance():
     """Test that performance meets baseline"""
     config = load_config('tests/baseline.yaml')
     results = pipeline.run(config)
-    
+
     assert results['throughput_fps'] > 50.0
     assert results['latency_avg_ms'] < 20.0
 
@@ -572,10 +572,10 @@ def test_thread_scaling(threads):
     """Test thread scaling efficiency"""
     config = load_config('tests/scaling.yaml')
     config['run']['matrix']['threads'] = [threads]
-    
+
     results = pipeline.run(config)
     efficiency = results['throughput_fps'] / (threads * baseline_fps)
-    
+
     assert efficiency > 0.7  # At least 70% scaling efficiency
 ```
 
@@ -593,7 +593,7 @@ def collect_metrics(results_path, metadata):
     """Collect and format metrics for tracking"""
     with open(results_path) as f:
         results = json.load(f)
-    
+
     metrics = {
         'timestamp': datetime.utcnow().isoformat(),
         'commit': metadata['commit'],
@@ -606,15 +606,15 @@ def collect_metrics(results_path, metadata):
             'ndk_version': metadata['ndk_version']
         }
     }
-    
+
     return metrics
 
 # Send to time-series database
 def send_to_influxdb(metrics):
     from influxdb import InfluxDBClient
-    
+
     client = InfluxDBClient('127.0.0.1', 8086, database='ovmobilebench')
-    
+
     points = []
     for result in metrics['results']:
         points.append({
@@ -631,7 +631,7 @@ def send_to_influxdb(metrics):
             },
             'time': metrics['timestamp']
         })
-    
+
     client.write_points(points)
 ```
 
@@ -644,11 +644,11 @@ dashboard:
   panels:
     - title: "Throughput Over Time"
       query: |
-        SELECT mean("throughput_fps") 
-        FROM "benchmark" 
-        WHERE $timeFilter 
+        SELECT mean("throughput_fps")
+        FROM "benchmark"
+        WHERE $timeFilter
         GROUP BY time($interval), "model"
-    
+
     - title: "Latency Distribution"
       query: |
         SELECT percentile("latency_avg_ms", 50) as median,
@@ -669,20 +669,20 @@ from scipy import stats
 def detect_regression(baseline_data, current_data, threshold=0.05):
     """Detect performance regression using statistical test"""
     regressions = []
-    
+
     for metric in ['throughput_fps', 'latency_avg_ms']:
         baseline = [r[metric] for r in baseline_data]
         current = [r[metric] for r in current_data]
-        
+
         # Perform t-test
         t_stat, p_value = stats.ttest_ind(baseline, current)
-        
+
         # Check if significant difference
         if p_value < threshold:
             baseline_mean = np.mean(baseline)
             current_mean = np.mean(current)
             change = (current_mean - baseline_mean) / baseline_mean
-            
+
             # For throughput, decrease is regression
             # For latency, increase is regression
             if (metric == 'throughput_fps' and change < -0.05) or \
@@ -694,7 +694,7 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
                     'change': change,
                     'p_value': p_value
                 })
-    
+
     return regressions
 ```
 
@@ -775,12 +775,12 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
 1. **CI Documentation**
    ```markdown
    ## CI/CD Pipeline
-   
+
    ### Triggers
    - Push to main: Full benchmark suite
    - Pull request: Quick validation
    - Nightly: Extended testing
-   
+
    ### Required Secrets
    - ANDROID_SERIAL: Device identifier
    - PERF_API_KEY: Dashboard API key
@@ -789,12 +789,12 @@ def detect_regression(baseline_data, current_data, threshold=0.05):
 2. **Runbook**
    ```markdown
    ## Troubleshooting CI Failures
-   
+
    ### Device Offline
    1. SSH to runner machine
    2. Run `adb devices`
    3. Restart ADB: `adb kill-server && adb start-server`
-   
+
    ### Build Failure
    1. Check NDK version
    2. Clear cache

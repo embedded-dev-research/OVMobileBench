@@ -1,11 +1,11 @@
 """Tests for CLI module."""
 
 from unittest.mock import Mock, patch
+
 import pytest
 from typer.testing import CliRunner
 
 from ovmobilebench.cli import app
-
 
 runner = CliRunner()
 

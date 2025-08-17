@@ -46,13 +46,13 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    ```bash
    # Format code
    black ovmobilebench tests
-   
+
    # Lint
    ruff ovmobilebench tests
-   
+
    # Type check
    mypy ovmobilebench --ignore-missing-imports
-   
+
    # Run tests
    pytest tests/
    ```
@@ -62,7 +62,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    git add .
    git commit -m "feat: add new feature"
    ```
-   
+
    Follow [Conventional Commits](https://www.conventionalcommits.org/):
    - `feat:` new feature
    - `fix:` bug fix
@@ -76,7 +76,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    ```bash
    git push origin feature/your-feature-name
    ```
-   
+
    Then create a Pull Request on GitHub.
 
 ## Development Guidelines

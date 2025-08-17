@@ -251,7 +251,7 @@ If `sdkmanager` fails to install packages:
 If `adb devices` doesn't show your device:
 1. Enable USB debugging on your Android device
 2. Install device drivers (Windows)
-3. Add udev rules (Linux): 
+3. Add udev rules (Linux):
    ```bash
    echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0666", GROUP="plugdev"' | sudo tee /etc/udev/rules.d/51-android.rules
    sudo udevadm control --reload-rules

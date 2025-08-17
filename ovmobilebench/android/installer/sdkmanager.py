@@ -3,6 +3,7 @@
 import os
 import subprocess
 import zipfile
+from contextlib import nullcontext
 from pathlib import Path
 from typing import List, Optional
 from urllib.request import urlretrieve
@@ -355,14 +356,3 @@ class SdkManager:
 
         if self.logger:
             self.logger.success("SDK packages updated")
-
-
-# Context manager for when logger is not available
-class nullcontext:
-    """Null context manager for when logger is not available."""
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass

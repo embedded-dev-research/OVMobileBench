@@ -1,14 +1,14 @@
 """Package OpenVINO runtime and models."""
 
-import tarfile
-import shutil
 import logging
+import shutil
+import tarfile
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
 
-from ovmobilebench.config.schema import PackageConfig, ModelItem
-from ovmobilebench.core.fs import ensure_dir, get_digest
+from ovmobilebench.config.schema import ModelItem, PackageConfig
 from ovmobilebench.core.errors import OVMobileBenchError
+from ovmobilebench.core.fs import ensure_dir, get_digest
 
 logger = logging.getLogger(__name__)
 

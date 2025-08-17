@@ -312,16 +312,16 @@ All intermediate artifacts and logs are stored beneath `artifacts/`.
 - **CMake configure errors**: Confirm NDK path, ABI, API level; delete build cache and reconfigure.
 ## FAQs
 
-**Q: Can I use prebuilt OpenVINO?**  
+**Q: Can I use prebuilt OpenVINO?**
 A: Yes. Set `build.enabled: false` and point packaging to existing binaries.
 
-**Q: How are repeats aggregated?**  
+**Q: How are repeats aggregated?**
 A: By default, medians are reported; raw per-run metrics are preserved.
 
-**Q: What devices are supported?**  
+**Q: What devices are supported?**
 A: Android via ADB out of the box; Linux ARM via SSH optional; iOS is stubbed for future work.
 
-**Q: How do I add a new runner (e.g., custom app)?**  
+**Q: How do I add a new runner (e.g., custom app)?**
 A: Implement a device-agnostic `Runner` that produces comparable metrics, and plug it into the pipeline.
 ## Change Management
 
@@ -1856,13 +1856,13 @@ quality_gates:
 
 ```python
 def check_gates(latest: float, baseline: float | None, min_fps: float, allowed_pct: float) -> bool:
-    if latest is None: 
+    if latest is None:
         return False
-    if latest < min_fps: 
+    if latest < min_fps:
         return False
     if baseline is not None:
         delta = (latest - baseline) / max(baseline, 1e-9)
-        if delta < allowed_pct: 
+        if delta < allowed_pct:
             return False
     return True
 ```
@@ -1949,11 +1949,11 @@ plt.show()
 
 ## Advanced Android Stabilization
 
-- **Airplane mode** (may require permissions/root):  
+- **Airplane mode** (may require permissions/root):
   `adb shell settings put global airplane_mode_on 1 && adb shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true`
-- **Disable animations**:  
-  `adb shell settings put global window_animation_scale 0`  
-  `adb shell settings put global transition_animation_scale 0`  
+- **Disable animations**:
+  `adb shell settings put global window_animation_scale 0`
+  `adb shell settings put global transition_animation_scale 0`
   `adb shell settings put global animator_duration_scale 0`
 - **Screen off**: `adb shell input keyevent 26`
 - **CPU governor** (root): echo `performance` to `/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor`
@@ -2063,7 +2063,7 @@ def median_fps(rows):
 latest = json.load(open("experiments/out/android_fp16.json"))
 base   = json.load(open("baselines/android_fp16.json"))
 
-def key_of(r): 
+def key_of(r):
     return (r["model"], r["device"], r["threads"], r["nstreams"], r["nireq"])
 
 L = {}
@@ -2074,7 +2074,7 @@ for r in base:   B.setdefault(key_of(r), []).append(r)
 for k in sorted(set(L.keys()) | set(B.keys())):
     m_latest = median_fps(L.get(k, []))
     m_base   = median_fps(B.get(k, []))
-    if m_latest is None or m_base is None: 
+    if m_latest is None or m_base is None:
         continue
     rel = (m_latest - m_base) / max(m_base, 1e-9)
     print(k, f"{m_latest:.1f} vs {m_base:.1f} => {rel:+.1%}")

@@ -1,11 +1,12 @@
 """Tests for benchmark runner module."""
 
-import pytest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
-from ovmobilebench.runners.benchmark import BenchmarkRunner
-from ovmobilebench.devices.base import Device
+import pytest
+
 from ovmobilebench.config.schema import RunConfig, RunMatrix
+from ovmobilebench.devices.base import Device
+from ovmobilebench.runners.benchmark import BenchmarkRunner
 
 
 class TestBenchmarkRunner:

@@ -1,8 +1,10 @@
 """Configuration loader utilities."""
 
-import yaml
 from pathlib import Path
-from typing import Dict, Any, Union
+from typing import Any, Dict, Union
+
+import yaml
+
 from ovmobilebench.config.schema import Experiment
 
 

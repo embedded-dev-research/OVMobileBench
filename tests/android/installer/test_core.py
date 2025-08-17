@@ -7,14 +7,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from ovmobilebench.android.installer.core import AndroidInstaller
-from ovmobilebench.android.installer.errors import (
-    PermissionError as InstallerPermissionError,
-)
-from ovmobilebench.android.installer.types import (
-    InstallerPlan,
-    NdkSpec,
-    HostInfo,
-)
+from ovmobilebench.android.installer.errors import PermissionError as InstallerPermissionError
+from ovmobilebench.android.installer.types import HostInfo, InstallerPlan, NdkSpec
 
 
 class TestAndroidInstaller:

@@ -35,7 +35,7 @@ test_file.py::test_function           # For module-level functions
 - Complex adbutils mocking required
 - Need actual device or advanced mock setup
 
-### CLI Tests  
+### CLI Tests
 - Import path issues with dynamic imports
 - Typer framework mocking complexity
 

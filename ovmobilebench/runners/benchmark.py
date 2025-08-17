@@ -1,11 +1,11 @@
 """Benchmark runner implementation."""
 
-import time
 import logging
-from typing import Dict, Any, List, Optional, Callable
+import time
+from typing import Any, Callable, Dict, List, Optional
 
-from ovmobilebench.devices.base import Device
 from ovmobilebench.config.schema import RunConfig
+from ovmobilebench.devices.base import Device
 
 logger = logging.getLogger(__name__)
 

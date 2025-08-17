@@ -1,11 +1,12 @@
 """Tests for report sink module."""
 
-import pytest
 import json
 from pathlib import Path
 from unittest.mock import mock_open, patch
 
-from ovmobilebench.report.sink import ReportSink, JSONSink, CSVSink
+import pytest
+
+from ovmobilebench.report.sink import CSVSink, JSONSink, ReportSink
 
 
 class TestReportSink:

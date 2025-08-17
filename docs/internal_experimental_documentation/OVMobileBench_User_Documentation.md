@@ -1,10 +1,10 @@
 # OVMobileBench — User Guide & Operations Manual
 
 
-> **Version**: 1.0 · **Generated**: 2025-08-15 15:33:50  
-> **Scope**: This manual consolidates all guidance shared so far (architecture, checklists, CI, repo bundle) 
-> into a single, user-facing document. It explains how to install, configure, run, and operate OVMobileBench — 
-> an end‑to‑end automation pipeline for building OpenVINO, packaging runtime + models, deploying to mobile devices 
+> **Version**: 1.0 · **Generated**: 2025-08-15 15:33:50
+> **Scope**: This manual consolidates all guidance shared so far (architecture, checklists, CI, repo bundle)
+> into a single, user-facing document. It explains how to install, configure, run, and operate OVMobileBench —
+> an end‑to‑end automation pipeline for building OpenVINO, packaging runtime + models, deploying to mobile devices
 > (Android via ADB; optional Linux ARM via SSH), executing `benchmark_app`, parsing metrics, and producing reports.
 
 
@@ -57,12 +57,12 @@ on your host machine, to **packaging** binaries + libraries + models, **deployin
 **running** a test matrix, **parsing** metrics, and **reporting** results with rich metadata for traceability.
 
 Typical flow:
-1) **Build** (optional if using prebuilts)  
-2) **Package** (runtime libs + `benchmark_app` + models)  
-3) **Deploy** (push bundle to device run dir)  
-4) **Run** (`benchmark_app` over a matrix of parameters)  
-5) **Parse** stdout/stderr to structured metrics  
-6) **Report** to CSV/JSON/SQLite and summarize  
+1) **Build** (optional if using prebuilts)
+2) **Package** (runtime libs + `benchmark_app` + models)
+3) **Deploy** (push bundle to device run dir)
+4) **Run** (`benchmark_app` over a matrix of parameters)
+5) **Parse** stdout/stderr to structured metrics
+6) **Report** to CSV/JSON/SQLite and summarize
 7) **Trace** build flags, commit SHA, device info, timestamps
 
 
@@ -81,8 +81,8 @@ Typical flow:
 
 ## System Requirements
 
-**Host OS**: Linux/macOS/Windows (for building, Linux/macOS recommended).  
-**Python**: 3.11+  
+**Host OS**: Linux/macOS/Windows (for building, Linux/macOS recommended).
+**Python**: 3.11+
 **Android tooling** (primary target):
 - Android **NDK r26d+**
 - Android **platform‑tools** (`adb`)
@@ -118,7 +118,7 @@ pre-commit install   # optional but recommended
 ```
 
 ### Python Environment
-- Use a virtual environment (venv/conda).  
+- Use a virtual environment (venv/conda).
 - `pip install -e .[dev]` installs runtime + dev tooling (pytest, mypy, ruff, black).
 
 ### External Tooling
@@ -329,7 +329,7 @@ Recommendations:
 
 ## Build & Package OpenVINO for Android
 
-**Prerequisites**: Android NDK, CMake, Ninja.  
+**Prerequisites**: Android NDK, CMake, Ninja.
 **CMake outline**:
 1. Configure with Android toolchain, ABI (`arm64-v8a`), API level (≥ 24).
 2. Build `benchmark_app` target.
@@ -496,16 +496,16 @@ jobs:
 
 ## FAQ
 
-**Q: Can I use prebuilt OpenVINO?**  
+**Q: Can I use prebuilt OpenVINO?**
 A: Yes. Set `build.enabled: false` and package your prebuilt runtime.
 
-**Q: Which metrics are reported?**  
+**Q: Which metrics are reported?**
 A: Throughput (FPS), latency (min/avg/median/max), count, device info, and full provenance.
 
-**Q: Can I run on non‑Android devices?**  
+**Q: Can I run on non‑Android devices?**
 A: Yes, via `linux_ssh` device type (e.g., Jetson/SBC). iOS is a stub for future app‑based runner.
 
-**Q: How do I compare runs?**  
+**Q: How do I compare runs?**
 A: Use medians across repeats and compare by identical (model, device, threads, nstreams, nireq) tuples.
 
 
@@ -716,11 +716,11 @@ def median_fps(rows):
   adb shell settings put global transition_animation_scale 0
   adb shell settings put global animator_duration_scale 0
   ```
-- Screen off: `adb shell input keyevent 26`  
-- Airplane mode (may require permissions/root).  
-- CPU governor (root): set `performance` for predictable runs.  
+- Screen off: `adb shell input keyevent 26`
+- Airplane mode (may require permissions/root).
+- CPU governor (root): set `performance` for predictable runs.
 - Pinning (taskset): `adb shell taskset 0xF <cmd>` (adjust mask to your SoC).
-- Thermals: `adb shell dumpsys thermalservice`  
+- Thermals: `adb shell dumpsys thermalservice`
 - Power stats: `adb shell dumpsys batterystats`
 
 

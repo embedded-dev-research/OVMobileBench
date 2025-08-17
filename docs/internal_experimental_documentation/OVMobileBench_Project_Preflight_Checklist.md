@@ -420,9 +420,9 @@ build/
 Performance regression (model/device/params).
 
 ### Steps to Reproduce
-1) 
-2) 
-3) 
+1)
+2)
+3)
 
 ### Expected / Actual
 -

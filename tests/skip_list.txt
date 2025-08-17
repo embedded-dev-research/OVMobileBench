@@ -93,7 +93,7 @@ tests/test_android_device_complete.py::TestAndroidDeviceComplete::test_set_prop
 tests/test_android_device_complete.py::TestAndroidDeviceComplete::test_clear_logcat
 tests/test_android_device_complete.py::TestAndroidDeviceComplete::test_get_logcat
 
-# Additional CLI tests - import and mock issues  
+# Additional CLI tests - import and mock issues
 tests/test_cli.py::TestCLI::test_list_devices_command
 tests/test_cli.py::TestCLI::test_list_ssh_devices_command
 tests/test_cli.py::TestCLI::test_list_ssh_devices_empty

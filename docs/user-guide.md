@@ -222,7 +222,7 @@ models:
     tags:
       dataset: "imagenet"
       accuracy: "76.1%"
-  
+
   - name: "mobilenet_v2"
     path: "models/mobilenet_v2_int8.xml"
     precision: "INT8"

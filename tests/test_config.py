@@ -3,11 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from ovmobilebench.config.schema import (
-    Experiment,
-    DeviceConfig,
-    ModelItem,
-)
+from ovmobilebench.config.schema import DeviceConfig, Experiment, ModelItem
 
 
 class TestModelItem:

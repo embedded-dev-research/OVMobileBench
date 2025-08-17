@@ -13,14 +13,8 @@ from ovmobilebench.android.installer.api import (
     verify_installation,
 )
 from ovmobilebench.android.installer.core import AndroidInstaller
-from ovmobilebench.android.installer.errors import (
-    InstallerError,
-    InvalidArgumentError,
-)
-from ovmobilebench.android.installer.types import (
-    NdkSpec,
-    HostInfo,
-)
+from ovmobilebench.android.installer.errors import InstallerError, InvalidArgumentError
+from ovmobilebench.android.installer.types import HostInfo, NdkSpec
 
 
 @pytest.mark.integration

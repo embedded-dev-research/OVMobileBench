@@ -1,11 +1,12 @@
 """Tests for OpenVINO builder module."""
 
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from ovmobilebench.builders.openvino import OpenVINOBuilder
-from ovmobilebench.config.schema import BuildConfig, Toolchain, BuildOptions
+from ovmobilebench.config.schema import BuildConfig, BuildOptions, Toolchain
 from ovmobilebench.core.errors import BuildError
 
 

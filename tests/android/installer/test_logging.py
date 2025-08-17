@@ -1,19 +1,15 @@
 """Tests for structured logging utilities."""
 
 import json
+import logging
 import tempfile
 import time
 from pathlib import Path
 from unittest.mock import patch
-import logging
 
 import pytest
 
-from ovmobilebench.android.installer.logging import (
-    StructuredLogger,
-    get_logger,
-    set_logger,
-)
+from ovmobilebench.android.installer.logging import StructuredLogger, get_logger, set_logger
 
 
 class TestStructuredLogger:

@@ -1,10 +1,12 @@
 """Tests for AndroidDevice with adbutils."""
 
-import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
-from ovmobilebench.devices.android import AndroidDevice, list_android_devices
+
+import pytest
+
 from ovmobilebench.core.errors import DeviceError
+from ovmobilebench.devices.android import AndroidDevice, list_android_devices
 
 
 class TestAndroidDevice:

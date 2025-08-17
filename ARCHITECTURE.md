@@ -201,25 +201,25 @@ Raw Output → Parsing → Aggregation → Format Conversion → Sink Writing
 project:
   name: string
   run_id: string
-  
+
 build:
   openvino_repo: path
   toolchain:
     android_ndk: path
-    
+
 device:
   kind: android|linux_ssh
   serials: [string]
-  
+
 models:
   - name: string
     path: path
-    
+
 run:
   matrix:
     threads: [int]
     nstreams: [string]
-    
+
 report:
   sinks:
     - type: json|csv

@@ -5,6 +5,7 @@ import subprocess
 import tarfile
 import tempfile
 import zipfile
+from contextlib import nullcontext
 from pathlib import Path
 from typing import List, Optional, Tuple
 from urllib.request import urlretrieve
@@ -402,14 +403,3 @@ class NdkResolver:
 
         # Fall back to directory name
         return ndk_path.name
-
-
-# Context manager for when logger is not available
-class nullcontext:
-    """Null context manager for when logger is not available."""
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass
