@@ -75,7 +75,7 @@ class TestNdkResolverCoverage:
         ndk_path = self.sdk_root / "ndk" / "26.1.10909125"
         ndk_path.mkdir(parents=True)
         (ndk_path / "source.properties").write_text("Pkg.Revision = 26.1.10909125")
-        
+
         version = self.resolver.get_version(ndk_path)
         assert version == "26.1.10909125"
 
@@ -83,7 +83,7 @@ class TestNdkResolverCoverage:
         """Test getting version from directory name when source.properties missing."""
         ndk_path = self.sdk_root / "ndk" / "26.1.10909125"
         ndk_path.mkdir(parents=True)
-        
+
         version = self.resolver.get_version(ndk_path)
         assert version == "26.1.10909125"
 
@@ -91,7 +91,7 @@ class TestNdkResolverCoverage:
         """Test getting version when unable to determine."""
         ndk_path = self.sdk_root / "ndk" / "unknown"
         ndk_path.mkdir(parents=True)
-        
+
         version = self.resolver.get_version(ndk_path)
         assert version == "unknown"
 
@@ -106,11 +106,11 @@ class TestNdkResolverCoverage:
         mock_sdkmanager = Mock()
         mock_sdkmanager_class.return_value = mock_sdkmanager
         mock_sdkmanager.ensure_ndk.side_effect = Exception("sdkmanager failed")
-        
+
         with patch.object(self.resolver, "_install_via_download") as mock_download:
             ndk_dir = self.sdk_root / "ndk" / "26.1.10909125"
             mock_download.return_value = ndk_dir
-            
+
             result = self.resolver._install_ndk("r26d")
             assert result == ndk_dir
             mock_download.assert_called_once_with("r26d")
@@ -120,9 +120,10 @@ class TestNdkResolverCoverage:
         ndk_path = self.sdk_root / "custom-ndk"
         ndk_path.mkdir()
         (ndk_path / "source.properties").write_text("Pkg.Revision = 26.1.10909125")
-        
+
         with patch.dict("os.environ", {"NDK_HOME": str(ndk_path)}):
             from ovmobilebench.android.installer.types import NdkSpec
+
             spec = NdkSpec(alias="r26d")  # Provide required alias
             result = self.resolver.resolve_path(spec)
             assert result is not None
@@ -133,9 +134,10 @@ class TestNdkResolverCoverage:
         ndk_path = self.sdk_root / "android-ndk"
         ndk_path.mkdir()
         (ndk_path / "source.properties").write_text("Pkg.Revision = 26.1.10909125")
-        
+
         with patch.dict("os.environ", {"ANDROID_NDK": str(ndk_path)}):
             from ovmobilebench.android.installer.types import NdkSpec
+
             spec = NdkSpec(alias="r26d")  # Provide required alias
             result = self.resolver.resolve_path(spec)
             assert result is not None
@@ -145,6 +147,7 @@ class TestNdkResolverCoverage:
         """Test resolving path from environment with invalid path."""
         with patch.dict("os.environ", {"NDK_HOME": "/nonexistent/path"}):
             from ovmobilebench.android.installer.types import NdkSpec
+
             spec = NdkSpec(alias="r26d")  # Provide required alias
             result = self.resolver.resolve_path(spec)
             assert result is None
@@ -158,7 +161,7 @@ class TestNdkResolverCoverage:
             (ndk_path / "source.properties").write_text(f"Pkg.Revision = {version}")
             # Add ndk-build to make it valid
             (ndk_path / "ndk-build").touch()
-        
+
         ndks = self.resolver.list_installed()
         assert len(ndks) == 3
         assert "25.2.9519653" in [n["version"] for n in ndks]

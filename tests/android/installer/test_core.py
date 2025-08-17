@@ -161,11 +161,11 @@ class TestAndroidInstaller:
         """Test permission check failure."""
         import os
         import platform
-        
+
         # Skip on Windows as permission model is different
         if platform.system() == "Windows":
             pytest.skip("Windows permission model differs")
-        
+
         # Make directory read-only
         os.chmod(self.sdk_root, 0o444)
 
