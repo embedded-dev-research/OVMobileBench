@@ -36,11 +36,11 @@ jobs:
         run: mypy ovmobilebench --ignore-missing-imports
 
       - name: Run tests
-        run: pytest tests/ -v --cov=ovmobilebench --cov=scripts --cov-report=xml --cov-report=term-missing
+        run: pytest tests/ -v --cov=ovmobilebench --cov=scripts --junitxml=junit.xml -o junit_family=legacy
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5.4.3
-        with:
-          files: coverage.xml
-
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
