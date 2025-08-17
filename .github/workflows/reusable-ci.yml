@@ -11,13 +11,91 @@ on:
         type: string
 
 jobs:
+  setup-environment:
+    runs-on: ${{ inputs.os }}
+    outputs:
+      python-path: ${{ steps.setup-python.outputs.python-path }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: |
+          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install all dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+          pip install build setuptools wheel
+
+      - name: Package installed dependencies
+        run: |
+          # Create directory for artifacts
+          mkdir -p deps-artifact
+          
+          # Save pip freeze output
+          pip freeze > deps-artifact/requirements-frozen.txt
+          
+          # Get site-packages location
+          python -c "import site; print(site.getsitepackages()[0])" > deps-artifact/site-packages-path.txt
+          
+          # Archive the entire Python environment
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            echo "Windows not fully supported yet"
+          else
+            # For Unix-like systems
+            tar -czf deps-artifact/python-env.tar.gz \
+              $(python -c "import site; print(site.getsitepackages()[0])") \
+              $(which python) \
+              $(python -c "import os, sys; print(os.path.dirname(sys.executable))")
+          fi
+
+      - name: Upload dependencies artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-deps-${{ inputs.os }}
+          path: deps-artifact/
+          retention-days: 1
+
   lint-and-test:
+    needs: setup-environment
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup dependencies
-        uses: ./.github/actions/setup-dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Download dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: python-deps-${{ inputs.os }}
+          path: deps-artifact/
+
+      - name: Restore dependencies
+        run: |
+          # Quick reinstall from frozen requirements
+          pip install --upgrade pip
+          pip install -r deps-artifact/requirements-frozen.txt
+          pip install -e .
 
       - name: Run Black
         run: black --check ovmobilebench tests
@@ -44,15 +122,26 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   build-package:
-    needs: lint-and-test
+    needs: setup-environment
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup build dependencies
-        uses: ./.github/actions/setup-dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          cache-key-suffix: build-only
+          python-version: '3.11'
+
+      - name: Download dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: python-deps-${{ inputs.os }}
+          path: deps-artifact/
+
+      - name: Restore build dependencies
+        run: |
+          pip install --upgrade pip
+          pip install build setuptools wheel
 
       - name: Build package
         run: python -m build
@@ -65,13 +154,27 @@ jobs:
           retention-days: 7
 
   dry-run:
-    needs: lint-and-test
+    needs: setup-environment
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup dependencies
-        uses: ./.github/actions/setup-dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Download dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: python-deps-${{ inputs.os }}
+          path: deps-artifact/
+
+      - name: Restore dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r deps-artifact/requirements-frozen.txt
+          pip install -e .
 
       - name: Validate example config
         run: |
@@ -86,14 +189,29 @@ jobs:
   device-test-ssh:
     if: inputs.os == 'ubuntu-latest'  # SSH tests only on Ubuntu for now
     needs:
+      - setup-environment
       - build-package
       - dry-run
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup dependencies
-        uses: ./.github/actions/setup-dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Download dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: python-deps-${{ inputs.os }}
+          path: deps-artifact/
+
+      - name: Restore dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r deps-artifact/requirements-frozen.txt
+          pip install -e .
 
       - name: Set up SSH server
         run: |
@@ -132,14 +250,29 @@ jobs:
     # Only run if explicitly triggered and only once (not for each OS in matrix)
     if: (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[device-test-adb]')) && inputs.os == 'ubuntu-latest'
     needs:
+      - setup-environment
       - build-package
       - dry-run
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup dependencies
-        uses: ./.github/actions/setup-dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Download dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: python-deps-${{ inputs.os }}
+          path: deps-artifact/
+
+      - name: Restore dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r deps-artifact/requirements-frozen.txt
+          pip install -e .
 
       - name: Check ADB devices
         run: adb devices
