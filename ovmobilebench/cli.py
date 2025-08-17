@@ -20,6 +20,7 @@ if sys.platform == "win32":
     # Also set console code page to UTF-8 if possible
     try:
         import subprocess
+
         subprocess.run("chcp 65001", shell=True, capture_output=True)
     except:
         pass
@@ -118,11 +119,11 @@ def all(
     """Execute complete pipeline: build, package, deploy, run, and report."""
     # Check if we're in CI environment
     is_ci = os.environ.get("CI", "").lower() == "true"
-    
+
     try:
         cfg = load_experiment(config)
         pipeline = Pipeline(cfg, verbose=verbose, dry_run=dry_run)
-        
+
         stages = [
             ("Building OpenVINO runtime...", pipeline.build),
             ("Packaging bundle...", pipeline.package),
@@ -130,7 +131,7 @@ def all(
             ("Running benchmarks...", lambda: pipeline.run(timeout, cooldown)),
             ("Generating reports...", pipeline.report),
         ]
-        
+
         if is_ci or verbose:
             # Simple output for CI or verbose mode
             for description, stage_func in stages:
@@ -145,7 +146,7 @@ def all(
         else:
             # Rich progress bar for interactive use
             spinner = SpinnerColumn(spinner_name="dots" if sys.platform == "win32" else "aesthetic")
-            
+
             with Progress(
                 spinner,
                 TextColumn("[progress.description]{task.description}"),
@@ -160,7 +161,7 @@ def all(
                     except Exception as e:
                         console.print(f"[bold red]✗ {description} failed: {e}[/bold red]")
                         raise
-                        
+
             console.print("[bold green]✓ Pipeline completed successfully[/bold green]")
     except UnicodeEncodeError as e:
         # Fallback for encoding errors
