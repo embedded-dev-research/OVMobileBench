@@ -3,8 +3,8 @@
 import os
 import subprocess
 import zipfile
+from contextlib import nullcontext
 from pathlib import Path
-from typing import List, Optional
 from urllib.request import urlretrieve
 
 from .detect import detect_host, get_sdk_tools_filename
@@ -19,7 +19,7 @@ class SdkManager:
     SDK_BASE_URL = "https://dl.google.com/android/repository"
     DEFAULT_SDK_TOOLS_VERSION = "11076708"  # Latest as of 2024
 
-    def __init__(self, sdk_root: Path, logger: Optional[StructuredLogger] = None):
+    def __init__(self, sdk_root: Path, logger: StructuredLogger | None = None):
         """Initialize SDK Manager.
 
         Args:
@@ -40,7 +40,7 @@ class SdkManager:
             return self.cmdline_tools_dir / "bin" / "sdkmanager"
 
     def _run_sdkmanager(
-        self, args: List[str], input_text: Optional[str] = None, timeout: int = 300
+        self, args: list[str], input_text: str | None = None, timeout: int = 300
     ) -> subprocess.CompletedProcess:
         """Run sdkmanager command.
 
@@ -82,7 +82,7 @@ class SdkManager:
         except subprocess.TimeoutExpired:
             raise SdkManagerError(" ".join(cmd), -1, f"Command timed out after {timeout}s")
 
-    def ensure_cmdline_tools(self, version: Optional[str] = None) -> Path:
+    def ensure_cmdline_tools(self, version: str | None = None) -> Path:
         """Ensure command-line tools are installed.
 
         Args:
@@ -310,7 +310,7 @@ class SdkManager:
             if self.logger:
                 self.logger.debug("Licenses already accepted or no new licenses")
 
-    def list_installed(self) -> List[SdkComponent]:
+    def list_installed(self) -> list[SdkComponent]:
         """List installed SDK components.
 
         Returns:
@@ -355,14 +355,3 @@ class SdkManager:
 
         if self.logger:
             self.logger.success("SDK packages updated")
-
-
-# Context manager for when logger is not available
-class nullcontext:
-    """Null context manager for when logger is not available."""
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass

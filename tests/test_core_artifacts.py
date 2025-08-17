@@ -1,11 +1,12 @@
 """Tests for core artifacts module."""
 
-import pytest
 import json
 import tempfile
-from pathlib import Path
-from unittest.mock import patch, mock_open, call
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from unittest.mock import call, mock_open, patch
+
+import pytest
 
 from ovmobilebench.core.artifacts import ArtifactManager
 

@@ -1,10 +1,12 @@
 """Tests for LinuxSSHDevice."""
 
-import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
-from ovmobilebench.devices.linux_ssh import LinuxSSHDevice, list_ssh_devices
+
+import pytest
+
 from ovmobilebench.core.errors import DeviceError
+from ovmobilebench.devices.linux_ssh import LinuxSSHDevice, list_ssh_devices
 
 
 class TestLinuxSSHDevice:

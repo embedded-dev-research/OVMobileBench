@@ -1,10 +1,9 @@
 """Logging configuration."""
 
-import logging
 import json
-from pathlib import Path
-from typing import Optional, List
+import logging
 from datetime import datetime, timezone
+from pathlib import Path
 
 
 class JSONFormatter(logging.Formatter):
@@ -31,13 +30,13 @@ class JSONFormatter(logging.Formatter):
 
 def setup_logging(
     level: str = "INFO",
-    log_file: Optional[Path] = None,
+    log_file: Path | None = None,
     json_format: bool = False,
 ):
     """Configure logging."""
     log_level = getattr(logging, level.upper(), logging.INFO)
 
-    handlers: List[logging.Handler] = []
+    handlers: list[logging.Handler] = []
 
     # Console handler
     console_handler = logging.StreamHandler()

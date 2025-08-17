@@ -1,16 +1,17 @@
 """Tests for type definitions."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from ovmobilebench.android.installer.types import (
     AndroidVersion,
+    HostInfo,
+    InstallerPlan,
     NdkSpec,
     NdkVersion,
-    SystemImageSpec,
-    InstallerPlan,
     SdkComponent,
-    HostInfo,
+    SystemImageSpec,
 )
 
 

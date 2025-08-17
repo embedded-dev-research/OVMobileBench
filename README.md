@@ -99,8 +99,18 @@ Apache License 2.0 - See [LICENSE](LICENSE) for details.
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
+### CI/CD Pipeline
+
+Our CI runs on every push and pull request with the following stages:
+
+1. **Pre-commit checks** (Ubuntu only) - Code formatting, linting, and style checks
+2. **Tests** - Unit tests on Ubuntu, macOS, and Windows
+3. **Build** - Package building verification
+4. **Validation** - Configuration and CLI validation
+5. **Device tests** - Integration tests with Android devices (when available)
+
 ## 💬 Support
 
 - 📝 [GitHub Issues](https://github.com/embedded-dev-research/OVMobileBench/issues) - Bug reports and feature requests
 - 💡 [Discussions](https://github.com/embedded-dev-research/OVMobileBench/discussions) - Questions and ideas
-- 📧 Contact: nesterov.alexander@outlook.com
+- 📧 Contact: <nesterov.alexander@outlook.com>

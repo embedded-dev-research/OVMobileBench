@@ -1,8 +1,8 @@
 """Patch for Typer compatibility issues."""
 
+import click.core
 import typer.core
 import typer.rich_utils
-import click.core
 
 
 # Override format_help to bypass Rich formatting

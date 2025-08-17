@@ -2,11 +2,12 @@
 """Test SSH device connectivity in CI environment using Paramiko test server."""
 
 import os
-import sys
 import socket
+import sys
 import threading
 import time
 from pathlib import Path
+
 import paramiko
 
 

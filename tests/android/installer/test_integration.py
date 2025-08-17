@@ -13,14 +13,8 @@ from ovmobilebench.android.installer.api import (
     verify_installation,
 )
 from ovmobilebench.android.installer.core import AndroidInstaller
-from ovmobilebench.android.installer.errors import (
-    InstallerError,
-    InvalidArgumentError,
-)
-from ovmobilebench.android.installer.types import (
-    NdkSpec,
-    HostInfo,
-)
+from ovmobilebench.android.installer.errors import InstallerError, InvalidArgumentError
+from ovmobilebench.android.installer.types import HostInfo, NdkSpec
 
 
 @pytest.mark.integration
@@ -110,7 +104,7 @@ class TestAndroidInstallerIntegration:
         installer = AndroidInstaller(self.sdk_root)
 
         # Mock AVD list
-        with patch.object(installer.avd, "list") as mock_avd_list:
+        with patch.object(installer.avd, "list_avds") as mock_avd_list:
             with patch.object(installer.sdk, "list_installed") as mock_sdk_list:
                 mock_avd_list.return_value = ["test_avd"]
                 mock_sdk_list.return_value = []

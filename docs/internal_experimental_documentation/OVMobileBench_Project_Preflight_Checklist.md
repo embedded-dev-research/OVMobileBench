@@ -378,6 +378,7 @@
 ## Appendices: File Templates & Examples
 
 ### .gitignore (minimal)
+
 ```
 .artifacts/
 artifacts/
@@ -393,6 +394,7 @@ build/
 ```
 
 ### CODEOWNERS (example)
+
 ```
 *                 @team/owners
 /ovmobilebench/core/    @team/core
@@ -401,6 +403,7 @@ build/
 ```
 
 ### Pull Request Template (example)
+
 ```
 ## What & Why
 -
@@ -415,14 +418,15 @@ build/
 ```
 
 ### Issue Template — Performance Regression
+
 ```
 ### Description
 Performance regression (model/device/params).
 
 ### Steps to Reproduce
-1) 
-2) 
-3) 
+1)
+2)
+3)
 
 ### Expected / Actual
 -
@@ -430,7 +434,6 @@ Performance regression (model/device/params).
 ### Attachments
 - Logs, JSON/CSV, tooling versions
 ```
-
 
 ## Expanded Task Index
 

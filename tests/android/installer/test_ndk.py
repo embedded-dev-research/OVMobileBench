@@ -2,14 +2,11 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from ovmobilebench.android.installer.errors import (
-    ComponentNotFoundError,
-    InvalidArgumentError,
-)
+from ovmobilebench.android.installer.errors import ComponentNotFoundError, InvalidArgumentError
 from ovmobilebench.android.installer.ndk import NdkResolver
 from ovmobilebench.android.installer.types import NdkSpec
 

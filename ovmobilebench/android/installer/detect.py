@@ -3,7 +3,6 @@
 import platform
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 from .types import HostInfo
 
@@ -46,7 +45,7 @@ def detect_host() -> HostInfo:
     return HostInfo(os=os_name, arch=arch, has_kvm=has_kvm, java_version=java_version)
 
 
-def detect_java_version() -> Optional[str]:
+def detect_java_version() -> str | None:
     """Detect installed Java version.
 
     Returns:
@@ -192,7 +191,7 @@ def is_ci_environment() -> bool:
     return any(os.environ.get(var) for var in ci_env_vars)
 
 
-def get_recommended_settings(host: Optional[HostInfo] = None) -> dict:
+def get_recommended_settings(host: HostInfo | None = None) -> dict:
     """Get recommended installation settings for host.
 
     Args:

@@ -2,10 +2,11 @@
 
 from pathlib import Path
 from unittest.mock import Mock, patch
+
 import pytest
 
-from ovmobilebench.pipeline import Pipeline
 from ovmobilebench.core.errors import BuildError, DeviceError
+from ovmobilebench.pipeline import Pipeline
 
 
 class TestPipeline:

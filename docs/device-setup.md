@@ -101,6 +101,7 @@ device:
 ### Step 1: Enable SSH
 
 #### Raspberry Pi
+
 ```bash
 # On Raspberry Pi
 sudo systemctl enable ssh
@@ -108,6 +109,7 @@ sudo systemctl start ssh
 ```
 
 #### Ubuntu/Debian
+
 ```bash
 sudo apt-get install openssh-server
 sudo systemctl enable ssh
@@ -163,6 +165,7 @@ device:
 ```
 
 **Note:** The SSH implementation uses paramiko for all operations including:
+
 - Secure SSH connections
 - SFTP file transfers
 - Remote command execution
@@ -182,6 +185,7 @@ device:
 ### Android Stabilization
 
 #### Disable Animations
+
 ```bash
 adb shell settings put global window_animation_scale 0
 adb shell settings put global transition_animation_scale 0
@@ -189,6 +193,7 @@ adb shell settings put global animator_duration_scale 0
 ```
 
 #### Screen Management
+
 ```bash
 # Turn screen off
 adb shell input keyevent 26
@@ -201,6 +206,7 @@ adb shell settings put system screen_brightness 0
 ```
 
 #### Network Management
+
 ```bash
 # Enable airplane mode (may require root)
 adb shell settings put global airplane_mode_on 1
@@ -213,6 +219,7 @@ adb shell svc data disable
 ```
 
 #### Background Apps
+
 ```bash
 # Stop unnecessary services
 adb shell am force-stop com.android.chrome
@@ -225,6 +232,7 @@ adb shell "echo 3 > /proc/sys/vm/drop_caches"
 ### Linux Stabilization
 
 #### CPU Governor
+
 ```bash
 # Check available governors
 cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
@@ -239,6 +247,7 @@ done
 ```
 
 #### Disable CPU Throttling
+
 ```bash
 # Disable turbo boost (Intel)
 echo 1 | sudo tee /sys/devices/system/cpu/intel_pstate/no_turbo
@@ -252,6 +261,7 @@ sudo cpupower frequency-set -f max
 ### Android Performance
 
 #### CPU Affinity (Root Required)
+
 ```bash
 # Pin to big cores (device-specific)
 # Example for Snapdragon 888 (cores 4-7 are big)
@@ -259,6 +269,7 @@ adb shell "taskset 0xF0 benchmark_app ..."
 ```
 
 #### Memory Settings
+
 ```bash
 # Increase memory limits (root)
 adb shell "echo 2048 > /proc/sys/vm/min_free_kbytes"
@@ -266,6 +277,7 @@ adb shell "echo 0 > /proc/sys/vm/swappiness"
 ```
 
 #### Thermal Management
+
 ```bash
 # Monitor temperature
 adb shell "cat /sys/class/thermal/thermal_zone0/temp"
@@ -277,6 +289,7 @@ adb shell dumpsys thermalservice
 ### Linux Performance
 
 #### NUMA Affinity
+
 ```bash
 # Check NUMA nodes
 numactl --hardware
@@ -286,12 +299,14 @@ numactl --cpunodebind=0 --membind=0 benchmark_app
 ```
 
 #### IRQ Affinity
+
 ```bash
 # Move IRQs away from benchmark cores
 echo 1 | sudo tee /proc/irq/default_smp_affinity
 ```
 
 #### Huge Pages
+
 ```bash
 # Enable transparent huge pages
 echo always | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
@@ -302,6 +317,7 @@ echo always | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
 ### Android Device Farm
 
 #### USB Hub Setup
+
 ```bash
 # List all connected devices
 adb devices -l
@@ -311,6 +327,7 @@ adb -s R3CN30XXXX shell "command"
 ```
 
 #### Parallel Configuration
+
 ```yaml
 device:
   kind: "android"
@@ -322,6 +339,7 @@ device:
 ```
 
 #### Device Identification Script
+
 ```bash
 #!/bin/bash
 # identify_devices.sh
@@ -337,6 +355,7 @@ done
 ### Linux SSH Farm
 
 #### Multiple Host Configuration
+
 ```yaml
 # Use environment variables for different hosts
 device:
@@ -347,6 +366,7 @@ device:
 ```
 
 #### Ansible Inventory
+
 ```ini
 [arm_devices]
 rpi4-1 ansible_host=192.168.1.101 ansible_user=pi
@@ -359,6 +379,7 @@ jetson-1 ansible_host=192.168.1.110 ansible_user=ubuntu
 ### Android Issues
 
 #### Device Not Found
+
 ```bash
 # Restart ADB server
 adb kill-server
@@ -371,6 +392,7 @@ lsusb | grep -i google  # For Pixel devices
 ```
 
 #### Permission Denied
+
 ```bash
 # Check SELinux status
 adb shell getenforce
@@ -383,6 +405,7 @@ adb shell mkdir -p /sdcard/ovmobilebench
 ```
 
 #### Insufficient Storage
+
 ```bash
 # Check available space
 adb shell df -h
@@ -397,6 +420,7 @@ adb shell mkdir -p /sdcard/Android/data/ovmobilebench
 ### Linux SSH Issues
 
 #### Connection Refused
+
 ```bash
 # Check SSH service
 sudo systemctl status ssh
@@ -409,6 +433,7 @@ sudo ufw allow 22/tcp
 ```
 
 #### Authentication Failed
+
 ```bash
 # Check key permissions
 chmod 600 ~/.ssh/id_rsa
@@ -422,6 +447,7 @@ ssh -o PreferredAuthentications=password user@host
 ```
 
 #### Slow Transfer
+
 ```bash
 # Use compression
 scp -C file user@host:/path
@@ -436,6 +462,7 @@ rsync -avz --progress file user@host:/path
 ## Device Health Monitoring
 
 ### Android Monitoring Script
+
 ```bash
 #!/bin/bash
 # monitor_android.sh
@@ -445,20 +472,21 @@ while true; do
     # Temperature
     TEMP=$(adb -s $SERIAL shell cat /sys/class/thermal/thermal_zone0/temp)
     echo "Temp: $((TEMP/1000))°C"
-    
+
     # Battery
     BATTERY=$(adb -s $SERIAL shell dumpsys battery | grep level)
     echo "Battery: $BATTERY"
-    
+
     # CPU frequency
     FREQ=$(adb -s $SERIAL shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
     echo "CPU Freq: $((FREQ/1000)) MHz"
-    
+
     sleep 5
 done
 ```
 
 ### Linux Monitoring Script
+
 ```bash
 #!/bin/bash
 # monitor_linux.sh
@@ -466,16 +494,16 @@ done
 while true; do
     # Temperature
     sensors | grep "Core"
-    
+
     # CPU frequency
     cpupower frequency-info | grep "current CPU"
-    
+
     # Memory
     free -h | grep Mem
-    
+
     # Load average
     uptime
-    
+
     sleep 5
 done
 ```

@@ -10,7 +10,7 @@ from ovmobilebench.android.installer.api import (
     export_android_env,
     verify_installation,
 )
-from ovmobilebench.android.installer.types import NdkSpec, InstallerResult
+from ovmobilebench.android.installer.types import InstallerResult, NdkSpec
 
 
 class TestEnsureAndroidTools:

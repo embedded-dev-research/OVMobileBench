@@ -1,12 +1,13 @@
 """Tests for configuration loader module."""
 
+from pathlib import Path
+from unittest.mock import MagicMock, mock_open, patch
+
 import pytest
 import yaml
-from pathlib import Path
-from unittest.mock import mock_open, patch, MagicMock
 from pydantic import ValidationError
 
-from ovmobilebench.config.loader import load_yaml, load_experiment, save_experiment
+from ovmobilebench.config.loader import load_experiment, load_yaml, save_experiment
 from ovmobilebench.config.schema import Experiment
 
 
@@ -33,7 +34,7 @@ class TestLoadYaml:
         result = load_yaml(path)
 
         assert result == {"key": "value"}
-        mock_file.assert_called_once_with(path, "r")
+        mock_file.assert_called_once_with(path)
         mock_yaml_load.assert_called_once()
 
     @patch("pathlib.Path.exists")

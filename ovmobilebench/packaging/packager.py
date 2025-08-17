@@ -1,14 +1,13 @@
 """Package OpenVINO runtime and models."""
 
-import tarfile
-import shutil
 import logging
+import shutil
+import tarfile
 from pathlib import Path
-from typing import List, Dict
 
-from ovmobilebench.config.schema import PackageConfig, ModelItem
-from ovmobilebench.core.fs import ensure_dir, get_digest
+from ovmobilebench.config.schema import ModelItem, PackageConfig
 from ovmobilebench.core.errors import OVMobileBenchError
+from ovmobilebench.core.fs import ensure_dir, get_digest
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ class Packager:
     def __init__(
         self,
         config: PackageConfig,
-        models: List[ModelItem],
+        models: list[ModelItem],
         output_dir: Path,
     ):
         self.config = config
@@ -28,7 +27,7 @@ class Packager:
 
     def create_bundle(
         self,
-        artifacts: Dict[str, Path],
+        artifacts: dict[str, Path],
         bundle_name: str = "ovbundle",
     ) -> Path:
         """Create deployable bundle."""

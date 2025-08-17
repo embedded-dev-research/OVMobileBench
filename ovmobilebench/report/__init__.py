@@ -1,5 +1,5 @@
 """Reporting module."""
 
-from .sink import ReportSink, JSONSink, CSVSink
+from .sink import CSVSink, JSONSink, ReportSink
 
 __all__ = ["ReportSink", "JSONSink", "CSVSink"]

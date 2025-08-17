@@ -7,14 +7,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from ovmobilebench.android.installer.core import AndroidInstaller
-from ovmobilebench.android.installer.errors import (
-    PermissionError as InstallerPermissionError,
-)
-from ovmobilebench.android.installer.types import (
-    InstallerPlan,
-    NdkSpec,
-    HostInfo,
-)
+from ovmobilebench.android.installer.errors import PermissionError as InstallerPermissionError
+from ovmobilebench.android.installer.types import HostInfo, InstallerPlan, NdkSpec
 
 
 class TestAndroidInstaller:
@@ -220,7 +214,7 @@ class TestAndroidInstaller:
         (self.sdk_root / "emulator" / "emulator").touch()
 
         with patch.object(self.installer.ndk, "list_installed") as mock_ndk_list:
-            with patch.object(self.installer.avd, "list") as mock_avd_list:
+            with patch.object(self.installer.avd, "list_avds") as mock_avd_list:
                 with patch.object(self.installer.sdk, "list_installed") as mock_sdk_list:
                     mock_ndk_list.return_value = [("r26d", Path("/opt/ndk"))]
                     mock_avd_list.return_value = ["test_avd"]
@@ -243,7 +237,7 @@ class TestAndroidInstaller:
 
         shutil.rmtree(self.sdk_root)
 
-        with patch.object(self.installer.avd, "list") as mock_avd_list:
+        with patch.object(self.installer.avd, "list_avds") as mock_avd_list:
             with patch.object(self.installer.sdk, "list_installed") as mock_sdk_list:
                 mock_avd_list.return_value = []
                 mock_sdk_list.return_value = []

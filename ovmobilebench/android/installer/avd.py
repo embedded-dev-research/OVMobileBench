@@ -2,8 +2,8 @@
 
 import os
 import subprocess
+from contextlib import nullcontext
 from pathlib import Path
-from typing import List, Optional
 
 from .detect import detect_host
 from .errors import AvdManagerError, ComponentNotFoundError
@@ -14,7 +14,7 @@ from .types import Arch, Target
 class AvdManager:
     """Manage Android Virtual Devices."""
 
-    def __init__(self, sdk_root: Path, logger: Optional[StructuredLogger] = None):
+    def __init__(self, sdk_root: Path, logger: StructuredLogger | None = None):
         """Initialize AVD Manager.
 
         Args:
@@ -34,7 +34,7 @@ class AvdManager:
             return self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager"
 
     def _run_avdmanager(
-        self, args: List[str], input_text: Optional[str] = None, timeout: int = 60
+        self, args: list[str], input_text: str | None = None, timeout: int = 60
     ) -> subprocess.CompletedProcess:
         """Run avdmanager command.
 
@@ -89,7 +89,7 @@ class AvdManager:
                 f"Command timed out after {timeout}s",
             )
 
-    def list(self) -> List[str]:
+    def list_avds(self) -> list[str]:
         """List all AVDs.
 
         Returns:
@@ -111,7 +111,7 @@ class AvdManager:
         api: int,
         target: Target,
         arch: Arch,
-        device: Optional[str] = None,
+        device: str | None = None,
         force: bool = True,
     ) -> bool:
         """Create an AVD.
@@ -128,7 +128,7 @@ class AvdManager:
             True if created successfully
         """
         # Check if already exists
-        existing_avds = self.list()
+        existing_avds = self.list_avds()
         if name in existing_avds:
             if not force:
                 if self.logger:
@@ -163,7 +163,7 @@ class AvdManager:
                 self._run_avdmanager(args, input_text=input_text)
 
                 # Verify creation
-                if name not in self.list():
+                if name not in self.list_avds():
                     raise AvdManagerError("create", name, "AVD not found after creation")
 
                 if self.logger:
@@ -184,7 +184,7 @@ class AvdManager:
         Returns:
             True if deleted successfully
         """
-        if name not in self.list():
+        if name not in self.list_avds():
             if self.logger:
                 self.logger.debug(f"AVD '{name}' does not exist")
             return True
@@ -197,7 +197,7 @@ class AvdManager:
         except AvdManagerError:
             return False
 
-    def get_info(self, name: str) -> Optional[dict]:
+    def get_info(self, name: str) -> dict | None:
         """Get AVD information.
 
         Args:
@@ -232,7 +232,7 @@ class AvdManager:
         except (AvdManagerError, ComponentNotFoundError):
             return None
 
-    def list_devices(self) -> List[str]:
+    def list_devices(self) -> list[str]:
         """List available device profiles.
 
         Returns:
@@ -248,7 +248,7 @@ class AvdManager:
         except (AvdManagerError, ComponentNotFoundError):
             return []
 
-    def list_targets(self) -> List[str]:
+    def list_targets(self) -> list[str]:
         """List available system image targets.
 
         Returns:
@@ -263,14 +263,3 @@ class AvdManager:
             return targets
         except (AvdManagerError, ComponentNotFoundError):
             return []
-
-
-# Context manager for when logger is not available
-class nullcontext:
-    """Null context manager for when logger is not available."""
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass

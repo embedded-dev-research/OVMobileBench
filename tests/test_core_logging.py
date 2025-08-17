@@ -5,7 +5,7 @@ import logging
 import tempfile
 from pathlib import Path
 
-from ovmobilebench.core.logging import JSONFormatter, setup_logging, get_logger
+from ovmobilebench.core.logging import JSONFormatter, get_logger, setup_logging
 
 
 class TestJSONFormatter:

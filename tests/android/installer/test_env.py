@@ -4,14 +4,11 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
-from ovmobilebench.android.installer.env import (
-    EnvExporter,
-    export_android_env,
-)
+from ovmobilebench.android.installer.env import EnvExporter, export_android_env
 
 
 class TestEnvExporter:

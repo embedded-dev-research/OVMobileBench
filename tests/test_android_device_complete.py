@@ -2,10 +2,11 @@
 
 from pathlib import Path
 from unittest.mock import Mock, patch
+
 import pytest
 
-from ovmobilebench.devices.android import AndroidDevice
 from ovmobilebench.core.errors import DeviceError
+from ovmobilebench.devices.android import AndroidDevice
 
 
 class TestAndroidDeviceComplete:

@@ -1,13 +1,14 @@
 """Tests for typer_patch module."""
 
 from unittest.mock import Mock, patch
-import typer.core
+
 import click.core
+import typer.core
 
 from ovmobilebench.typer_patch import (
     patched_format_help,
-    patched_get_help_record_option,
     patched_get_help_record_argument,
+    patched_get_help_record_option,
 )
 
 

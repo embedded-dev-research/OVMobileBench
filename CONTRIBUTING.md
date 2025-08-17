@@ -18,12 +18,14 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 ### Submitting Pull Requests
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/embedded-dev-research/OVMobileBench
    cd OVMobileBench
    ```
 
 2. **Create Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -31,6 +33,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    ```
 
 3. **Set Up Development Environment**
+
    ```bash
    pip install -r requirements.txt
    pip install -e .
@@ -43,26 +46,32 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    - Update documentation if needed
 
 5. **Run Quality Checks**
+
    ```bash
-   # Format code
-   black ovmobilebench tests
-   
-   # Lint
-   ruff ovmobilebench tests
-   
-   # Type check
+   # Run all pre-commit checks
+   pre-commit run --all-files
+
+   # Or run individual checks:
+   black --check ovmobilebench tests
+   ruff check ovmobilebench tests
    mypy ovmobilebench --ignore-missing-imports
-   
+   yamllint .
+   markdownlint docs/ *.md
+
+   # Auto-fix issues
+   pre-commit run --all-files --hook-stage manual
+
    # Run tests
    pytest tests/
    ```
 
 6. **Commit Changes**
+
    ```bash
    git add .
    git commit -m "feat: add new feature"
    ```
-   
+
    Follow [Conventional Commits](https://www.conventionalcommits.org/):
    - `feat:` new feature
    - `fix:` bug fix
@@ -73,10 +82,11 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
    - `ci:` CI/CD changes
 
 7. **Push and Create PR**
+
    ```bash
    git push origin feature/your-feature-name
    ```
-   
+
    Then create a Pull Request on GitHub.
 
 ## Development Guidelines

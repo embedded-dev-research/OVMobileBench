@@ -1,12 +1,10 @@
 # OVMobileBench — User Guide & Operations Manual
 
-
-> **Version**: 1.0 · **Generated**: 2025-08-15 15:33:50  
-> **Scope**: This manual consolidates all guidance shared so far (architecture, checklists, CI, repo bundle) 
-> into a single, user-facing document. It explains how to install, configure, run, and operate OVMobileBench — 
-> an end‑to‑end automation pipeline for building OpenVINO, packaging runtime + models, deploying to mobile devices 
+> **Version**: 1.0 · **Generated**: 2025-08-15 15:33:50
+> **Scope**: This manual consolidates all guidance shared so far (architecture, checklists, CI, repo bundle)
+> into a single, user-facing document. It explains how to install, configure, run, and operate OVMobileBench —
+> an end‑to‑end automation pipeline for building OpenVINO, packaging runtime + models, deploying to mobile devices
 > (Android via ADB; optional Linux ARM via SSH), executing `benchmark_app`, parsing metrics, and producing reports.
-
 
 ## Table of Contents
 
@@ -48,7 +46,6 @@
 29. [Appendix F — Extended Checklists (RU/EN)](#appendix-f--extended-checklists-ruen)
 30. [Changelog & Next Steps](#changelog--next-steps)
 
-
 ## What is OVMobileBench?
 
 **OVMobileBench** is a Python project that automates the full pipeline for measuring inference performance of neural
@@ -57,14 +54,14 @@ on your host machine, to **packaging** binaries + libraries + models, **deployin
 **running** a test matrix, **parsing** metrics, and **reporting** results with rich metadata for traceability.
 
 Typical flow:
-1) **Build** (optional if using prebuilts)  
-2) **Package** (runtime libs + `benchmark_app` + models)  
-3) **Deploy** (push bundle to device run dir)  
-4) **Run** (`benchmark_app` over a matrix of parameters)  
-5) **Parse** stdout/stderr to structured metrics  
-6) **Report** to CSV/JSON/SQLite and summarize  
-7) **Trace** build flags, commit SHA, device info, timestamps
 
+1) **Build** (optional if using prebuilts)
+2) **Package** (runtime libs + `benchmark_app` + models)
+3) **Deploy** (push bundle to device run dir)
+4) **Run** (`benchmark_app` over a matrix of parameters)
+5) **Parse** stdout/stderr to structured metrics
+6) **Report** to CSV/JSON/SQLite and summarize
+7) **Trace** build flags, commit SHA, device info, timestamps
 
 ## Key Features
 
@@ -78,36 +75,41 @@ Typical flow:
 - CI‑friendly: GitHub Actions workflow + self‑hosted device runner.
 - Best practices for thermal/power stability and reproducibility.
 
-
 ## System Requirements
 
-**Host OS**: Linux/macOS/Windows (for building, Linux/macOS recommended).  
-**Python**: 3.11+  
+**Host OS**: Linux/macOS/Windows (for building, Linux/macOS recommended).
+**Python**: 3.11+
 **Android tooling** (primary target):
+
 - Android **NDK r26d+**
 - Android **platform‑tools** (`adb`)
 - **CMake ≥ 3.24**, **Ninja ≥ 1.11**
 
 **Optional**:
+
 - SSH access to Linux ARM device (Paramiko)
 - Open Model Zoo tools (`omz_downloader`, `omz_converter`) for model acquisition
-
 
 ## Install & Setup
 
 ### From the All‑Files Markdown Bundle
+
 If you have `OVMobileBench_All_Files_Bundle.md`, it contains a **Bootstrap Script** that materializes a full repo.
 
 Steps:
+
 1. Open the bundle and copy the entire **Bootstrap Script** block.
 2. Paste into a terminal inside an empty directory:
+
    ```bash
    bash <(sed -n '/^```bash$/,/^```$/p' OVMobileBench_All_Files_Bundle.md | sed '1d;$d')
    ```
+
    Or simply copy the shown script and run it.
 3. A new `repo/` folder will be created with all files.
 
 ### Fresh Repo Setup
+
 ```bash
 git clone <your-repo-url> ovmobilebench
 cd ovmobilebench
@@ -118,24 +120,28 @@ pre-commit install   # optional but recommended
 ```
 
 ### Python Environment
-- Use a virtual environment (venv/conda).  
+
+- Use a virtual environment (venv/conda).
 - `pip install -e .[dev]` installs runtime + dev tooling (pytest, mypy, ruff, black).
 
 ### External Tooling
+
 Ensure the following are installed and on PATH:
+
 - `adb` (Android platform‑tools)
 - Android NDK (e.g., `/opt/android-ndk-r26d`)
 - `cmake`, `ninja`
 
 Mac:
+
 ```bash
 brew install cmake ninja android-platform-tools
 ```
 
-
 ## Quickstart
 
 1. **Prepare an experiment YAML**, e.g. `experiments/android_mcpu_fp16.yaml`:
+
    ```yaml
    project:
      name: "ovmobilebench-mobile"
@@ -194,12 +200,12 @@ brew install cmake ninja android-platform-tools
    ```
 
 2. **Run the pipeline**:
+
    ```bash
    ovmobilebench all -c experiments/android_mcpu_fp16.yaml --verbose
    ```
 
 3. **Inspect results** under `experiments/out/` (CSV/JSON), and logs under `artifacts/`.
-
 
 ## Project Layout
 
@@ -234,7 +240,6 @@ artifacts/              # Build cache & device bundles (git-ignored)
 .github/workflows/      # CI
 ```
 
-
 ## Core Concepts
 
 - **Bundle**: tar.gz with `bin/benchmark_app`, `lib/*.so*`, `models/*.xml/.bin`, and optional notes.
@@ -243,10 +248,10 @@ artifacts/              # Build cache & device bundles (git-ignored)
 - **Repeat**: each spec can be repeated N times; medians commonly reported.
 - **Provenance**: store build commit, flags, NDK/ABI, device props, model checksums.
 
-
 ## Configuring Experiments (YAML)
 
 ### Top‑Level Sections
+
 - `project`: name, `run_id`
 - `build`: whether to build; repo/commit; toolchain; cmake options
 - `package`: include symbols; extra files
@@ -256,7 +261,9 @@ artifacts/              # Build cache & device bundles (git-ignored)
 - `report`: sinks (JSON/CSV/SQLite) + tags (metadata)
 
 ### Run Matrix
+
 Common knobs:
+
 - `niter`: number of iterations per run
 - `api`: `sync` or `async`
 - `nireq`: number of infer requests
@@ -266,6 +273,7 @@ Common knobs:
 - `infer_precision`: desired inference precision label
 
 ### Example Configs
+
 Besides the Android FP16 example (see Quickstart), a Linux ARM config may look like:
 
 ```yaml
@@ -309,7 +317,6 @@ report:
       path: "experiments/out/linux_fp32.csv"
 ```
 
-
 ## Models: Getting & Managing
 
 Use **Open Model Zoo (OMZ)** for permissively licensed models:
@@ -322,20 +329,22 @@ cp public/resnet-50-tf/FP16/resnet-50-tf.bin models/resnet50_fp16.bin
 ```
 
 Recommendations:
+
 - Keep models out of git if large/proprietary (store in artifacts/buckets).
 - Record `sha256` checksums in the bundle to ensure integrity.
 - Ensure `.xml` and `.bin` are co‑located with matching base names.
 
-
 ## Build & Package OpenVINO for Android
 
-**Prerequisites**: Android NDK, CMake, Ninja.  
+**Prerequisites**: Android NDK, CMake, Ninja.
 **CMake outline**:
+
 1. Configure with Android toolchain, ABI (`arm64-v8a`), API level (≥ 24).
 2. Build `benchmark_app` target.
 3. Collect required `.so` libs into `lib/`.
 
 **Packaging layout**:
+
 ```
 ovbundle/
   bin/benchmark_app
@@ -343,14 +352,16 @@ ovbundle/
   models/*.xml + *.bin
   README_device.txt (optional)
 ```
-Archive as `ovbundle_android.tar.gz` and deploy to device.
 
+Archive as `ovbundle_android.tar.gz` and deploy to device.
 
 ## Deploy to Devices
 
 **Android (ADB)**:
+
 - Default run dir: `/data/local/tmp/ovmobilebench`
 - Example (performed by OVMobileBench pipeline):
+
   ```bash
   adb -s <serial> push ovbundle_android.tar.gz /data/local/tmp/ovmobilebench/bundle.tar.gz
   adb -s <serial> shell 'cd /data/local/tmp/ovmobilebench && tar -xzf bundle.tar.gz && mv ovbundle/* .'
@@ -358,34 +369,36 @@ Archive as `ovbundle_android.tar.gz` and deploy to device.
   ```
 
 **Linux ARM (SSH)**:
+
 - Use SFTP for pushing files, and `ssh` to run commands.
 - Ensure run dir is writable and your user has execution rights.
-
 
 ## Run Benchmarks
 
 `ovmobilebench run -c <yaml>` executes the matrix defined in `run.matrix` for each model and device.
 
 Under the hood, it builds a `benchmark_app` command like:
+
 ```bash
 /data/local/tmp/ovmobilebench/bin/benchmark_app   -m /data/local/tmp/ovmobilebench/models/resnet50_fp16.xml   -d CPU -api sync -niter 200 -nireq 2 -nstreams 2 -nthreads 4
 ```
-OVMobileBench repeats runs as configured, captures stdout/stderr, and parses metrics.
 
+OVMobileBench repeats runs as configured, captures stdout/stderr, and parses metrics.
 
 ## Parse & Report
 
 OVMobileBench extracts:
+
 - **Throughput** (FPS)
 - **Latency**: min/avg/median/max (ms)
 - **Iterations** (`count`)
 - **Device info** line (if present)
 
 Outputs:
+
 - JSON (full per‑run records)
 - CSV (flat table for analysis)
 - (Optional) SQLite DB with query‑friendly schema
-
 
 ## Interpreting Results
 
@@ -394,22 +407,22 @@ Outputs:
 - Record ambient/thermal context when possible for fair comparisons.
 - Track build commit/flags to correlate changes with perf diffs.
 
-
 ## Stability & Performance Best Practices
 
 - **Cooldown** between runs; add a **warm‑up** run not counted in statistics.
 - Android stabilization (where permitted):
   - Disable animations:
+
     ```bash
     adb shell settings put global window_animation_scale 0
     adb shell settings put global transition_animation_scale 0
     adb shell settings put global animator_duration_scale 0
     ```
+
   - Turn screen off: `adb shell input keyevent 26`
   - Airplane mode (may require permissions/root).
 - For rooted/test devices only: set CPU **governor** to `performance`; consider `taskset` for core affinity.
 - Keep charging state consistent; reduce background load; avoid thermal throttling.
-
 
 ## Device Farm Usage
 
@@ -418,14 +431,15 @@ Outputs:
 - Run devices **in parallel**, but serialize runs on a **single** device to simplify logs and thermals.
 - Health checks (periodic `adb devices`, `adb shell true`); auto‑recover with `adb kill-server && adb start-server`.
 
-
 ## CI/CD Integration
 
 A typical GitHub Actions flow:
+
 - **Build job** (Ubuntu runner): build OpenVINO + `benchmark_app`, package the bundle, upload as artifact.
 - **Run‑on‑device job** (self‑hosted with attached Android device): download bundle, deploy, run, report, upload results.
 
 Workflow excerpt:
+
 ```yaml
 jobs:
   build-android:
@@ -474,7 +488,6 @@ jobs:
         with: { name: results, path: experiments/out/* }
 ```
 
-
 ## Security, Licensing & Compliance
 
 - Choose a repository license (MIT/Apache‑2.0/BSD‑3/etc.).
@@ -482,7 +495,6 @@ jobs:
 - Avoid PII in logs; record only necessary metadata (device serials are OK when required).
 - Respect Open Model Zoo and model licenses; keep proprietary models outside git (artifacts only).
 - (Optional) SBOM for bundles; dependency license scan.
-
 
 ## Troubleshooting
 
@@ -493,21 +505,19 @@ jobs:
 - **Low/unstable FPS**: add cooldown, disable animations/screen, stabilize power, check thermal throttling.
 - **CMake configure errors**: confirm NDK path, ABI, API level; clean build dir and reconfigure.
 
-
 ## FAQ
 
-**Q: Can I use prebuilt OpenVINO?**  
+**Q: Can I use prebuilt OpenVINO?**
 A: Yes. Set `build.enabled: false` and package your prebuilt runtime.
 
-**Q: Which metrics are reported?**  
+**Q: Which metrics are reported?**
 A: Throughput (FPS), latency (min/avg/median/max), count, device info, and full provenance.
 
-**Q: Can I run on non‑Android devices?**  
+**Q: Can I run on non‑Android devices?**
 A: Yes, via `linux_ssh` device type (e.g., Jetson/SBC). iOS is a stub for future app‑based runner.
 
-**Q: How do I compare runs?**  
+**Q: How do I compare runs?**
 A: Use medians across repeats and compare by identical (model, device, threads, nstreams, nireq) tuples.
-
 
 ## Reference: CLI
 
@@ -519,7 +529,6 @@ Assuming `ovmobilebench = "ovmobilebench.cli:app"` entrypoint:
 - `ovmobilebench deploy -c <yaml>` — push to device(s), prepare env
 - `ovmobilebench run -c <yaml>` — execute matrix + repeats
 - `ovmobilebench report -c <yaml>` — parse, aggregate, export sinks
-
 
 ## Reference: Config Schema
 
@@ -600,7 +609,6 @@ class Experiment(BaseModel):
     report: ReportConfig
 ```
 
-
 ## Reference: JSON Result Schema
 
 A run record typically includes:
@@ -637,7 +645,6 @@ A run record typically includes:
 }
 ```
 
-
 ## Appendix A — Ready‑Made Files
 
 - **Makefile** (targets: `build`, `package`, `deploy`, `run`, `report`, `all`, `lint`, `fmt`, `type`, `test`, `clean`)
@@ -647,14 +654,13 @@ A run record typically includes:
 
 > See the “All‑Files Bundle” or repo root for full text of these files.
 
-
 ## Appendix B — GitHub Actions Workflow
 
 A complete `bench.yml` is provided in the All‑Files Bundle. It includes:
+
 - `build-android` job (Ubuntu runner)
 - `run-on-device` job (self‑hosted with ADB device)
 - Artifact upload/download, PR‑friendly outputs
-
 
 ## Appendix C — HTML Report Template (Minimal)
 
@@ -675,10 +681,10 @@ A complete `bench.yml` is provided in the All‑Files Bundle. It includes:
 </body></html>
 ```
 
-
 ## Appendix D — Regression Gates & Baselines
 
 **Quality gates (YAML):**
+
 ```yaml
 quality_gates:
   regression_allowed_pct: -0.03   # fail if drop < -3%
@@ -686,6 +692,7 @@ quality_gates:
 ```
 
 **Gate function (pseudo‑Python):**
+
 ```python
 def check_gates(latest: float, baseline: float | None, min_fps: float, allowed_pct: float) -> bool:
     if latest is None:
@@ -698,7 +705,9 @@ def check_gates(latest: float, baseline: float | None, min_fps: float, allowed_p
             return False
     return True
 ```
+
 **Baseline diff script (sample):**
+
 ```python
 import json, statistics as st
 
@@ -707,30 +716,30 @@ def median_fps(rows):
     return st.median(vals) if vals else None
 ```
 
-
 ## Appendix E — Android Stabilization Cheatsheet
 
 - Disable animations:
+
   ```bash
   adb shell settings put global window_animation_scale 0
   adb shell settings put global transition_animation_scale 0
   adb shell settings put global animator_duration_scale 0
   ```
-- Screen off: `adb shell input keyevent 26`  
-- Airplane mode (may require permissions/root).  
-- CPU governor (root): set `performance` for predictable runs.  
-- Pinning (taskset): `adb shell taskset 0xF <cmd>` (adjust mask to your SoC).
-- Thermals: `adb shell dumpsys thermalservice`  
-- Power stats: `adb shell dumpsys batterystats`
 
+- Screen off: `adb shell input keyevent 26`
+- Airplane mode (may require permissions/root).
+- CPU governor (root): set `performance` for predictable runs.
+- Pinning (taskset): `adb shell taskset 0xF <cmd>` (adjust mask to your SoC).
+- Thermals: `adb shell dumpsys thermalservice`
+- Power stats: `adb shell dumpsys batterystats`
 
 ## Appendix F — Extended Checklists (RU/EN)
 
 Two comprehensive preflight checklists exist (Russian & English) covering repo policies,
 CI gates, device farm, security & more. Use them before publishing or enabling CI:
+
 - `OVMobileBench_Project_Preflight_Checklist.md` (RU)
 - `OVMobileBench_Project_Preflight_Checklist_EN.md` (EN)
-
 
 ## Changelog & Next Steps
 

@@ -194,7 +194,7 @@ avd.create(
 )
 
 # List AVDs
-avds = avd.list()
+avds = avd.list_avds()
 
 # Get AVD info
 info = avd.get_info("test_avd")
@@ -328,6 +328,7 @@ def ensure_android_tools(
 ```
 
 **Parameters:**
+
 - `sdk_root`: Android SDK installation directory
 - `api`: Android API level (e.g., 30, 31, 33)
 - `target`: System image target ("google_atd", "google_apis", "default")
@@ -344,6 +345,7 @@ def ensure_android_tools(
 
 **Returns:**
 `InstallerResult` dictionary with:
+
 - `sdk_root`: SDK installation path
 - `ndk_path`: NDK installation path (if installed)
 - `avd_created`: Whether AVD was created
@@ -362,6 +364,7 @@ def export_android_env(
 ```
 
 **Parameters:**
+
 - `sdk_root`: Android SDK root directory
 - `ndk_path`: NDK installation path
 - `format`: Output format ("dict", "bash", "fish", "windows", "github")
@@ -381,6 +384,7 @@ def verify_installation(
 ```
 
 **Parameters:**
+
 - `sdk_root`: Android SDK root directory
 - `verbose`: Print verification results
 
@@ -489,26 +493,31 @@ print("Would install:", result["performed"])
 ## Supported Platforms
 
 ### Host Operating Systems
+
 - **Linux**: x86_64, arm64 (Ubuntu 20.04+, RHEL 8+)
 - **macOS**: x86_64, arm64 (macOS 11+)
 - **Windows**: x86_64 (Windows 10+)
 
 ### Android API Levels
+
 - API 21-34 (Android 5.0 - 14)
 
 ### System Image Targets
+
 - `default`: Basic Android system image
 - `google_apis`: Includes Google Play Services
 - `google_atd`: Automated Test Device (faster, for testing)
 - `google_apis_playstore`: Includes Play Store
 
 ### Architectures
+
 - `arm64-v8a`: 64-bit ARM (recommended for M1/M2 Macs)
 - `armeabi-v7a`: 32-bit ARM
 - `x86_64`: 64-bit x86 (recommended for Intel with KVM)
 - `x86`: 32-bit x86
 
 ### NDK Versions
+
 - Aliases: r21e, r22b, r23c, r24, r25c, r26d
 - Direct versions: 21.4.7075529, 22.1.7171670, etc.
 
@@ -553,12 +562,14 @@ except InstallerError as e:
 The module supports multiple logging modes:
 
 ### Console Logging
+
 ```python
 # Verbose console output
 ensure_android_tools(..., verbose=True)
 ```
 
 ### JSON Lines Logging
+
 ```python
 # Structured logging to file
 ensure_android_tools(..., jsonl_path="/tmp/install.jsonl")
@@ -572,6 +583,7 @@ with open("/tmp/install.jsonl") as f:
 ```
 
 ### Custom Logger
+
 ```python
 from ovmobilebench.android.installer.logging import StructuredLogger
 from ovmobilebench.android.installer import set_logger
@@ -586,6 +598,7 @@ ensure_android_tools(...)
 ## Best Practices
 
 ### 1. Use Dry Run First
+
 Always test with `dry_run=True` before actual installation:
 
 ```python
@@ -597,6 +610,7 @@ if result["performed"]:
 ```
 
 ### 2. Verify After Installation
+
 Always verify the installation succeeded:
 
 ```python
@@ -607,6 +621,7 @@ assert status["ndk"], "Missing NDK"
 ```
 
 ### 3. Handle Errors Gracefully
+
 Wrap installations in try-except blocks:
 
 ```python
@@ -619,11 +634,13 @@ except DownloadError:
 ```
 
 ### 4. Use Appropriate Targets
+
 - Use `google_atd` for CI/testing (faster)
 - Use `google_apis` for development
 - Use `google_apis_playstore` for Play Store testing
 
 ### 5. Clean Up Temporary Files
+
 Remove downloads after installation:
 
 ```python
@@ -639,33 +656,43 @@ installer.cleanup(remove_downloads=True)
 ### Common Issues
 
 #### 1. SSL Certificate Errors
+
 ```
 DownloadError: certificate verify failed
 ```
+
 **Solution**: Update certificates or use corporate proxy settings
 
 #### 2. Permission Denied
+
 ```
 PermissionError: Permission denied: /opt/android-sdk
 ```
+
 **Solution**: Ensure write permissions or use user directory
 
 #### 3. Disk Space
+
 ```
 Warning: Low disk space detected (< 15GB free)
 ```
+
 **Solution**: Free up space or use different location
 
 #### 4. Java Not Found
+
 ```
 Warning: Java not detected
 ```
+
 **Solution**: Install JDK 11+ and ensure it's in PATH
 
 #### 5. KVM Not Available
+
 ```
 Info: KVM not available, using software acceleration
 ```
+
 **Solution**: Enable virtualization in BIOS or use ARM images on ARM hosts
 
 ### Debug Mode

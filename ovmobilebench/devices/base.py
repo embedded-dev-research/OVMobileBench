@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Tuple, Dict, Any, Optional
+from typing import Any
 
 
 class Device(ABC):
@@ -22,7 +22,7 @@ class Device(ABC):
         pass
 
     @abstractmethod
-    def shell(self, cmd: str, timeout: Optional[int] = None) -> Tuple[int, str, str]:
+    def shell(self, cmd: str, timeout: int | None = None) -> tuple[int, str, str]:
         """Execute shell command on device.
 
         Returns:
@@ -46,7 +46,7 @@ class Device(ABC):
         pass
 
     @abstractmethod
-    def info(self) -> Dict[str, Any]:
+    def info(self) -> dict[str, Any]:
         """Get device information."""
         pass
 
@@ -60,6 +60,6 @@ class Device(ABC):
         if self.exists(remote_path):
             self.rm(remote_path, recursive=True)
 
-    def get_env(self) -> Dict[str, str]:
+    def get_env(self) -> dict[str, str]:
         """Get environment variables for benchmark execution."""
         return {}

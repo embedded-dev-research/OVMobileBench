@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, Optional, TypedDict
+from typing import Literal, TypedDict
 
 # Supported targets and architectures
 Target = Literal["google_atd", "google_apis", "default", "aosp_atd"]
@@ -26,8 +26,8 @@ class SystemImageSpec:
 class NdkSpec:
     """NDK specification with alias or path."""
 
-    alias: Optional[str] = None  # e.g. "r26d" or "26.1.10909125"
-    path: Optional[Path] = None  # absolute path overrides alias if provided
+    alias: str | None = None  # e.g. "r26d" or "26.1.10909125"
+    path: Path | None = None  # absolute path overrides alias if provided
 
     def __post_init__(self):
         """Validate that at least one field is provided."""
@@ -45,7 +45,7 @@ class InstallerPlan:
     need_system_image: bool
     need_emulator: bool
     need_ndk: bool
-    create_avd_name: Optional[str] = None
+    create_avd_name: str | None = None
 
     def has_work(self) -> bool:
         """Check if any installation is needed."""
@@ -174,7 +174,7 @@ class HostInfo:
     os: str  # "linux", "darwin", "windows"
     arch: str  # "x86_64", "arm64", etc.
     has_kvm: bool  # Linux KVM support
-    java_version: Optional[str] = None
+    java_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -184,5 +184,5 @@ class SdkComponent:
     name: str
     package_id: str
     installed: bool
-    version: Optional[str] = None
-    path: Optional[Path] = None
+    version: str | None = None
+    path: Path | None = None

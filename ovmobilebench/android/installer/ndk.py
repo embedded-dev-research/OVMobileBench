@@ -5,8 +5,8 @@ import subprocess
 import tarfile
 import tempfile
 import zipfile
+from contextlib import nullcontext
 from pathlib import Path
-from typing import List, Optional, Tuple
 from urllib.request import urlretrieve
 
 from .detect import detect_host, get_ndk_filename
@@ -21,7 +21,7 @@ class NdkResolver:
 
     NDK_BASE_URL = "https://dl.google.com/android/repository"
 
-    def __init__(self, sdk_root: Path, logger: Optional[StructuredLogger] = None):
+    def __init__(self, sdk_root: Path, logger: StructuredLogger | None = None):
         """Initialize NDK resolver.
 
         Args:
@@ -363,13 +363,13 @@ class NdkResolver:
         # Need at least 2 of the required items
         return found_count >= 2
 
-    def list_installed(self) -> List[Tuple[str, Path]]:
+    def list_installed(self) -> list[tuple[str, Path]]:
         """List installed NDK versions.
 
         Returns:
             List of (version, path) tuples
         """
-        installed: List[Tuple[str, Path]] = []
+        installed: list[tuple[str, Path]] = []
 
         if not self.ndk_dir.exists():
             return installed
@@ -381,7 +381,7 @@ class NdkResolver:
 
         return installed
 
-    def get_version(self, ndk_path: Path) -> Optional[str]:
+    def get_version(self, ndk_path: Path) -> str | None:
         """Get NDK version from installation.
 
         Args:
@@ -393,7 +393,7 @@ class NdkResolver:
         # Try to read from source.properties
         source_props = ndk_path / "source.properties"
         if source_props.exists():
-            with open(source_props, "r") as f:
+            with open(source_props) as f:
                 for line in f:
                     if line.startswith("Pkg.Revision"):
                         parts = line.split("=")
@@ -402,14 +402,3 @@ class NdkResolver:
 
         # Fall back to directory name
         return ndk_path.name
-
-
-# Context manager for when logger is not available
-class nullcontext:
-    """Null context manager for when logger is not available."""
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass

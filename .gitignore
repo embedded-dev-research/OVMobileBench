@@ -136,3 +136,5 @@ experiments/results/
 ovmb_cache
 artifacts
 junit.xml
+
+*.DS_Store*

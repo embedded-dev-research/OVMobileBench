@@ -1,20 +1,21 @@
 """Tests for core filesystem utilities module."""
 
-import pytest
-import tempfile
 import hashlib
 import os
+import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from ovmobilebench.core.fs import (
-    ensure_dir,
     atomic_write,
-    get_digest,
-    copy_tree,
     clean_dir,
-    get_size,
+    copy_tree,
+    ensure_dir,
     format_size,
+    get_digest,
+    get_size,
 )
 
 
@@ -152,7 +153,7 @@ class TestGetDigest:
             digest = get_digest(temp_path)
 
             # Calculate expected digest
-            expected = hashlib.sha256("test content".encode()).hexdigest()
+            expected = hashlib.sha256(b"test content").hexdigest()
             assert digest == expected
             assert len(digest) == 64  # SHA256 hex length
         finally:
@@ -168,7 +169,7 @@ class TestGetDigest:
         try:
             digest = get_digest(temp_path, algorithm="md5")
 
-            expected = hashlib.md5("test content".encode()).hexdigest()
+            expected = hashlib.md5(b"test content").hexdigest()
             assert digest == expected
             assert len(digest) == 32  # MD5 hex length
         finally:
@@ -201,7 +202,7 @@ class TestGetDigest:
         try:
             digest = get_digest(Path(temp_path))
 
-            expected = hashlib.sha256("test content".encode()).hexdigest()
+            expected = hashlib.sha256(b"test content").hexdigest()
             assert digest == expected
         finally:
             os.unlink(temp_path)
@@ -257,6 +258,7 @@ class TestCopyTree:
     def test_copy_tree_with_symlinks(self):
         """Test copying directory with symlinks."""
         import platform
+
         import pytest
 
         # Skip on Windows if not running as admin

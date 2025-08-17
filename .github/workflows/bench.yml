@@ -2,9 +2,9 @@ name: OVMobileBench CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
     inputs:
       device_serial:
@@ -17,7 +17,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Run pre-commit only once on ubuntu-latest
+  pre-commit:
+    uses: ./.github/workflows/stage-pre-commit.yml
+    secrets: inherit
+
+  # Run CI matrix for all OS after pre-commit passes
   ci-matrix:
+    needs: pre-commit
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]

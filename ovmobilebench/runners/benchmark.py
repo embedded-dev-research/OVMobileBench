@@ -1,11 +1,12 @@
 """Benchmark runner implementation."""
 
-import time
 import logging
-from typing import Dict, Any, List, Optional, Callable
+import time
+from collections.abc import Callable
+from typing import Any
 
-from ovmobilebench.devices.base import Device
 from ovmobilebench.config.schema import RunConfig
+from ovmobilebench.devices.base import Device
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +26,9 @@ class BenchmarkRunner:
 
     def run_single(
         self,
-        spec: Dict[str, Any],
-        timeout: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        spec: dict[str, Any],
+        timeout: int | None = None,
+    ) -> dict[str, Any]:
         """Run single benchmark configuration."""
         cmd = self._build_command(spec)
 
@@ -54,9 +55,9 @@ class BenchmarkRunner:
 
     def run_matrix(
         self,
-        matrix_specs: List[Dict[str, Any]],
-        progress_callback: Optional[Callable] = None,
-    ) -> List[Dict[str, Any]]:
+        matrix_specs: list[dict[str, Any]],
+        progress_callback: Callable | None = None,
+    ) -> list[dict[str, Any]]:
         """Run complete matrix of configurations."""
         results = []
         total = len(matrix_specs) * self.config.repeats
@@ -84,7 +85,7 @@ class BenchmarkRunner:
 
         return results
 
-    def _build_command(self, spec: Dict[str, Any]) -> str:
+    def _build_command(self, spec: dict[str, Any]) -> str:
         """Build benchmark_app command line."""
         cmd_parts = [
             f"cd {self.remote_dir} &&",

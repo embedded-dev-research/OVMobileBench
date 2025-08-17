@@ -3,7 +3,6 @@
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Optional
 
 from .logging import StructuredLogger
 
@@ -11,7 +10,7 @@ from .logging import StructuredLogger
 class EnvExporter:
     """Export Android SDK/NDK environment variables."""
 
-    def __init__(self, logger: Optional[StructuredLogger] = None):
+    def __init__(self, logger: StructuredLogger | None = None):
         """Initialize environment exporter.
 
         Args:
@@ -21,11 +20,11 @@ class EnvExporter:
 
     def export(
         self,
-        github_env: Optional[Path] = None,
+        github_env: Path | None = None,
         print_stdout: bool = False,
-        sdk_root: Optional[Path] = None,
-        ndk_path: Optional[Path] = None,
-    ) -> Dict[str, str]:
+        sdk_root: Path | None = None,
+        ndk_path: Path | None = None,
+    ) -> dict[str, str]:
         """Export environment variables.
 
         Args:
@@ -37,7 +36,7 @@ class EnvExporter:
         Returns:
             Dictionary of exported variables
         """
-        env_vars: Dict[str, str] = {}
+        env_vars: dict[str, str] = {}
 
         # Build environment variables
         if sdk_root and sdk_root.exists():
@@ -76,7 +75,7 @@ class EnvExporter:
 
         return env_vars
 
-    def _export_to_github_env(self, github_env: Path, env_vars: Dict[str, str]) -> None:
+    def _export_to_github_env(self, github_env: Path, env_vars: dict[str, str]) -> None:
         """Export variables to GitHub environment file.
 
         Args:
@@ -94,7 +93,7 @@ class EnvExporter:
                     path=str(github_env),
                     count=len(env_vars),
                 )
-        except IOError as e:
+        except OSError as e:
             if self.logger:
                 self.logger.error(
                     f"Failed to write to GitHub environment file: {e}",
@@ -103,7 +102,7 @@ class EnvExporter:
                 )
             raise
 
-    def _print_to_stdout(self, env_vars: Dict[str, str]) -> None:
+    def _print_to_stdout(self, env_vars: dict[str, str]) -> None:
         """Print variables to stdout for shell evaluation.
 
         Args:
@@ -136,7 +135,7 @@ class EnvExporter:
             else:
                 print(f'export PATH="{platform_tools}:$PATH"')
 
-    def _set_in_process(self, env_vars: Dict[str, str]) -> None:
+    def _set_in_process(self, env_vars: dict[str, str]) -> None:
         """Set variables in current process environment.
 
         Args:
@@ -146,7 +145,7 @@ class EnvExporter:
             if key != "ANDROID_PLATFORM_TOOLS":  # Don't modify PATH in process
                 os.environ[key] = value
 
-    def save_to_file(self, path: Path, env_vars: Dict[str, str]) -> None:
+    def save_to_file(self, path: Path, env_vars: dict[str, str]) -> None:
         """Save environment variables to a file.
 
         Args:
@@ -174,7 +173,7 @@ class EnvExporter:
         if self.logger:
             self.logger.info(f"Saved environment script to: {path}", path=str(path))
 
-    def load_from_file(self, path: Path) -> Dict[str, str]:
+    def load_from_file(self, path: Path) -> dict[str, str]:
         """Load environment variables from a file.
 
         Args:
@@ -183,14 +182,14 @@ class EnvExporter:
         Returns:
             Dictionary of loaded variables
         """
-        env_vars: Dict[str, str] = {}
+        env_vars: dict[str, str] = {}
 
         if not path.exists():
             if self.logger:
                 self.logger.warning(f"Environment file not found: {path}")
             return env_vars
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 # Skip comments and empty lines
@@ -221,12 +220,12 @@ class EnvExporter:
 
 
 def export_android_env(
-    github_env: Optional[Path] = None,
+    github_env: Path | None = None,
     print_stdout: bool = False,
-    sdk_root: Optional[Path] = None,
-    ndk_path: Optional[Path] = None,
-    logger: Optional[StructuredLogger] = None,
-) -> Dict[str, str]:
+    sdk_root: Path | None = None,
+    ndk_path: Path | None = None,
+    logger: StructuredLogger | None = None,
+) -> dict[str, str]:
     """Convenience function to export Android environment variables.
 
     Args:

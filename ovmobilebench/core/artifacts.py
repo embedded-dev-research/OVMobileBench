@@ -1,12 +1,12 @@
 """Artifact management utilities."""
 
-import json
 import hashlib
-from pathlib import Path
-from typing import Dict, Any, Optional, List
+import json
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
-from ovmobilebench.core.fs import ensure_dir, atomic_write
+from ovmobilebench.core.fs import atomic_write, ensure_dir
 
 
 class ArtifactManager:
@@ -72,7 +72,7 @@ class ArtifactManager:
         """
         return ensure_dir(self.logs_dir / run_id) / f"{stage}.log"
 
-    def save_metadata(self, metadata: Dict[str, Any]) -> None:
+    def save_metadata(self, metadata: dict[str, Any]) -> None:
         """Save artifact metadata.
 
         Args:
@@ -88,7 +88,7 @@ class ArtifactManager:
         content = json.dumps(existing, indent=2, default=str)
         atomic_write(self.metadata_file, content)
 
-    def load_metadata(self) -> Dict[str, Any]:
+    def load_metadata(self) -> dict[str, Any]:
         """Load artifact metadata.
 
         Returns:
@@ -97,12 +97,12 @@ class ArtifactManager:
         if not self.metadata_file.exists():
             return {}
 
-        with open(self.metadata_file, "r") as f:
-            data: Dict[str, Any] = json.load(f)
+        with open(self.metadata_file) as f:
+            data: dict[str, Any] = json.load(f)
             return data
 
     def register_artifact(
-        self, artifact_type: str, path: Path, metadata: Optional[Dict[str, Any]] = None
+        self, artifact_type: str, path: Path, metadata: dict[str, Any] | None = None
     ) -> str:
         """Register new artifact.
 
@@ -118,7 +118,7 @@ class ArtifactManager:
         artifact_id = self._calculate_checksum(path)
 
         # Prepare artifact record
-        record: Dict[str, Any] = {
+        record: dict[str, Any] = {
             "type": artifact_type,
             "path": path.relative_to(self.base_dir).as_posix(),
             "size": path.stat().st_size if path.is_file() else None,
@@ -136,7 +136,7 @@ class ArtifactManager:
 
         return artifact_id
 
-    def get_artifact(self, artifact_id: str) -> Optional[Dict[str, Any]]:
+    def get_artifact(self, artifact_id: str) -> dict[str, Any] | None:
         """Get artifact by ID.
 
         Args:
@@ -146,12 +146,12 @@ class ArtifactManager:
             Artifact record or None
         """
         artifacts = self.load_metadata().get("artifacts", {})
-        result: Optional[Dict[str, Any]] = artifacts.get(artifact_id)
+        result: dict[str, Any] | None = artifacts.get(artifact_id)
         return result
 
     def list_artifacts(
-        self, artifact_type: Optional[str] = None, since: Optional[datetime] = None
-    ) -> List[Dict[str, Any]]:
+        self, artifact_type: str | None = None, since: datetime | None = None
+    ) -> list[dict[str, Any]]:
         """List artifacts.
 
         Args:

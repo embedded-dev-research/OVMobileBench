@@ -1,13 +1,13 @@
 """Custom exceptions for Android installer module."""
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 class InstallerError(Exception):
     """Base exception for all installer errors."""
 
-    def __init__(self, message: str, details: Optional[dict] = None):
+    def __init__(self, message: str, details: dict | None = None):
         """Initialize with message and optional details."""
         super().__init__(message)
         self.details = details or {}
@@ -25,7 +25,7 @@ class InvalidArgumentError(InstallerError):
 class DownloadError(InstallerError):
     """Error downloading a component."""
 
-    def __init__(self, url: str, reason: str, retry_hint: Optional[str] = None):
+    def __init__(self, url: str, reason: str, retry_hint: str | None = None):
         """Initialize with download details."""
         message = f"Failed to download from {url}: {reason}"
         if retry_hint:
@@ -72,7 +72,7 @@ class PermissionError(InstallerError):
 class ComponentNotFoundError(InstallerError):
     """Required component not found."""
 
-    def __init__(self, component: str, search_path: Optional[Path] = None):
+    def __init__(self, component: str, search_path: Path | None = None):
         """Initialize with component details."""
         message = f"Component '{component}' not found"
         if search_path:
@@ -98,8 +98,8 @@ class DependencyError(InstallerError):
     def __init__(
         self,
         dependency: str,
-        required_version: Optional[str] = None,
-        found_version: Optional[str] = None,
+        required_version: str | None = None,
+        found_version: str | None = None,
     ):
         """Initialize with dependency details."""
         message = f"Dependency '{dependency}' "

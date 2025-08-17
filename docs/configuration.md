@@ -31,6 +31,7 @@ project:
 ```
 
 **Example:**
+
 ```yaml
 project:
   name: "mobile-benchmark"
@@ -51,7 +52,7 @@ build:
   build_type: string                 # CMAKE_BUILD_TYPE (default: "Release")
   build_dir: path                    # Build directory (optional)
   clean_build: boolean               # Clean before build (default: false)
-  
+
   toolchain:
     android_ndk: path                # Android NDK path (Android only)
     abi: string                      # Target ABI (default: "arm64-v8a")
@@ -59,7 +60,7 @@ build:
     cmake: path                      # CMake executable (default: "cmake")
     ninja: path                      # Ninja executable (default: "ninja")
     compiler: string                 # Compiler choice (optional)
-    
+
   options:                           # CMake options
     ENABLE_INTEL_CPU: ON|OFF
     ENABLE_INTEL_GPU: ON|OFF
@@ -77,6 +78,7 @@ build:
 **Examples:**
 
 Android build:
+
 ```yaml
 build:
   enabled: true
@@ -93,6 +95,7 @@ build:
 ```
 
 Linux ARM build:
+
 ```yaml
 build:
   enabled: true
@@ -107,6 +110,7 @@ build:
 ```
 
 Using prebuilt:
+
 ```yaml
 build:
   enabled: false
@@ -129,6 +133,7 @@ package:
 ```
 
 **Example:**
+
 ```yaml
 package:
   include_symbols: false
@@ -149,18 +154,18 @@ Defines target device(s) for deployment.
 ```yaml
 device:
   kind: android|linux_ssh|ios      # Device type (required)
-  
+
   # Android-specific
   serials: [string]                # Device serials from 'adb devices'
   use_root: boolean                # Use root access (default: false)
-  
+
   # Linux SSH-specific
   host: string                     # Hostname or IP
   port: integer                    # SSH port (default: 22)
   user: string                     # SSH username
   password: string                 # SSH password (not recommended)
   key_path: path                   # SSH private key path
-  
+
   # Common options
   push_dir: path                   # Remote directory (required)
   env_vars: {string: string}       # Environment variables
@@ -171,6 +176,7 @@ device:
 **Examples:**
 
 Android devices:
+
 ```yaml
 device:
   kind: "android"
@@ -182,6 +188,7 @@ device:
 ```
 
 Linux SSH device:
+
 ```yaml
 device:
   kind: "linux_ssh"
@@ -210,6 +217,7 @@ models:
 ```
 
 **Example:**
+
 ```yaml
 models:
   - name: "resnet50"
@@ -222,7 +230,7 @@ models:
     tags:
       dataset: "imagenet"
       accuracy_top1: 76.1
-      
+
   - name: "yolo_v5"
     path: "models/yolov5s.xml"
     precision: "INT8"
@@ -243,7 +251,7 @@ run:
   warmup_runs: integer              # Warmup iterations (default: 0)
   cooldown_sec: integer             # Cooldown between runs (default: 0)
   timeout_sec: integer              # Timeout per run (optional)
-  
+
   matrix:                           # Parameter combinations to test
     niter: [integer]                # Iterations per run
     api: [sync|async]               # Inference API
@@ -253,19 +261,20 @@ run:
     threads: [integer]              # Number of threads
     infer_precision: [string]       # Inference precision hint
     batch: [integer]                # Batch size (optional)
-    
+
   advanced:                         # Advanced options
     pin_threads: boolean            # Pin threads to cores
     numa_node: integer              # NUMA node affinity
     enable_profiling: boolean       # Enable performance profiling
     cache_dir: path                 # Model cache directory
-    
+
   custom_args: [string]             # Additional benchmark_app arguments
 ```
 
 **Examples:**
 
 Simple matrix:
+
 ```yaml
 run:
   repeats: 3
@@ -276,6 +285,7 @@ run:
 ```
 
 Complex matrix:
+
 ```yaml
 run:
   repeats: 5
@@ -306,26 +316,26 @@ Configures output generation.
 ```yaml
 report:
   enabled: boolean                  # Enable reporting (default: true)
-  
+
   sinks:                           # Output destinations
     - type: json|csv|sqlite|html   # Sink type
       path: path                    # Output file path
       options: {}                   # Type-specific options
-      
+
   aggregation:                      # Statistical aggregation
     metrics: [string]               # Metrics to compute
     percentiles: [float]            # Percentiles to calculate
-    
+
   filters:                          # Result filtering
     min_throughput: float           # Minimum FPS threshold
     max_latency: float              # Maximum latency threshold
-    
+
   comparison:                       # Baseline comparison
     baseline_path: path             # Path to baseline results
     regression_threshold: float     # Regression threshold (%)
-    
+
   tags: {string: any}               # Metadata tags
-  
+
   artifacts:                        # Additional artifacts
     save_logs: boolean              # Save raw logs
     save_stdout: boolean            # Save benchmark stdout
@@ -335,6 +345,7 @@ report:
 **Examples:**
 
 Multiple output formats:
+
 ```yaml
 report:
   sinks:
@@ -342,13 +353,13 @@ report:
       path: "results/output.json"
       options:
         indent: 2
-        
+
     - type: "csv"
       path: "results/output.csv"
       options:
         sep: ","
         index: false
-        
+
     - type: "html"
       path: "results/report.html"
       options:
@@ -356,6 +367,7 @@ report:
 ```
 
 With aggregation and filtering:
+
 ```yaml
 report:
   aggregation:
@@ -414,7 +426,7 @@ models:
     precision: "FP16"
     tags:
       dataset: "imagenet"
-  
+
   - name: "mobilenet_v2"
     path: "models/mobilenet_v2_int8.xml"
     precision: "INT8"

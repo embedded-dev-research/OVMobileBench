@@ -24,11 +24,13 @@ This guide covers building OpenVINO and benchmark_app for mobile platforms.
 ### Platform-Specific Requirements
 
 #### Android
+
 - Android NDK r26d or later
 - Android SDK (for adb)
 - Java JDK 8+ (for Android SDK)
 
 #### Linux ARM
+
 - Cross-compilation toolchain (for cross-compiling)
 - OR native build environment (when building on target)
 
@@ -284,10 +286,10 @@ build:
   options:
     # For ARMv8.2-A with FP16
     CMAKE_CXX_FLAGS: "-march=armv8.2-a+fp16+dotprod"
-    
+
     # Enable ARM Compute Library
     ENABLE_ARM_COMPUTE: "ON"
-    
+
     # Enable oneDNN for ARM
     ENABLE_ONEDNN_FOR_ARM: "ON"
 ```
@@ -323,7 +325,7 @@ build:
     ENABLE_INTEL_GPU: "OFF"
     ENABLE_INTEL_NPU: "OFF"
     ENABLE_INTEL_GNA: "OFF"
-    
+
     # Enable specific features
     ENABLE_OPENCV: "OFF"  # Disable if not needed
     ENABLE_PYTHON: "OFF"  # Disable for smaller size
@@ -483,17 +485,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup NDK
         run: |
           wget https://dl.google.com/android/repository/android-ndk-r26d-linux.zip
           unzip -q android-ndk-r26d-linux.zip
           echo "ANDROID_NDK=$PWD/android-ndk-r26d" >> $GITHUB_ENV
-      
+
       - name: Build
         run: |
           ovmobilebench build -c config.yaml
-      
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

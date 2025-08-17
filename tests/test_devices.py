@@ -1,6 +1,6 @@
 """Tests for device listing functionality."""
 
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from ovmobilebench.devices.android import list_android_devices
 

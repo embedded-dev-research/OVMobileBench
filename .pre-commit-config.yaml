@@ -18,6 +18,12 @@ repos:
       - id: name-tests-test
         args: ['--pytest-test-first']
 
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.19.1
+    hooks:
+      - id: pyupgrade
+        args: ['--py311-plus']
+
   - repo: https://github.com/psf/black
     rev: 24.4.2
     hooks:
@@ -35,9 +41,9 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
-        additional_dependencies: [types-all]
+        additional_dependencies: [types-PyYAML, types-paramiko]
         args: ['--ignore-missing-imports']
-        exclude: '^tests/'
+        files: '^ovmobilebench/(?!android/installer/).*\.py$'
 
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
@@ -45,18 +51,33 @@ repos:
       - id: isort
         args: ['--profile', 'black', '--line-length', '100']
 
-  - repo: https://github.com/pycqa/docformatter
-    rev: v1.7.5
-    hooks:
-      - id: docformatter
-        args: ['--in-place', '--wrap-summaries', '100', '--wrap-descriptions', '100']
-
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v3.27.0
     hooks:
       - id: commitizen
         stages: [commit-msg]
 
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: ['--strict']
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.43.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        args: ['--skip=*.json,*.yaml,*.yml,*.txt,*.csv,*.lock', '--ignore-words-list=nd,teh,hist']
+
 ci:
   autofix_prs: false
-  autoupdate_schedule: monthly
+  autoupdate_schedule: weekly
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  skip: []
+  submodules: false

@@ -1,7 +1,6 @@
 """Installation planning and validation utilities."""
 
 from pathlib import Path
-from typing import Optional
 
 from .errors import InvalidArgumentError
 from .logging import StructuredLogger
@@ -66,7 +65,7 @@ class Planner:
         (30, "google_apis", "x86"),
     }
 
-    def __init__(self, sdk_root: Path, logger: Optional[StructuredLogger] = None):
+    def __init__(self, sdk_root: Path, logger: StructuredLogger | None = None):
         """Initialize planner.
 
         Args:
@@ -85,7 +84,7 @@ class Planner:
         install_platform_tools: bool,
         install_emulator: bool,
         ndk: NdkSpec,
-        create_avd_name: Optional[str] = None,
+        create_avd_name: str | None = None,
     ) -> InstallerPlan:
         """Build installation plan.
 

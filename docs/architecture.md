@@ -35,6 +35,7 @@ OVMobileBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devi
 **Purpose**: Define and validate experiment configurations.
 
 **Key Classes**:
+
 - `Experiment`: Top-level configuration container
 - `BuildConfig`: OpenVINO build settings
 - `DeviceConfig`: Target device specifications
@@ -48,6 +49,7 @@ OVMobileBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devi
 **Purpose**: Command-line interface for user interaction.
 
 **Commands**:
+
 - `build`: Build OpenVINO from source
 - `package`: Create deployment bundle
 - `deploy`: Push to device(s)
@@ -62,6 +64,7 @@ OVMobileBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devi
 **Purpose**: Coordinate execution of all pipeline stages.
 
 **Responsibilities**:
+
 - Stage dependency management
 - Error handling and recovery
 - Progress tracking
@@ -74,11 +77,13 @@ OVMobileBench is an end-to-end benchmarking pipeline for OpenVINO on mobile devi
 **Purpose**: Uniform interface for different device types.
 
 **Implementations**:
+
 - `AndroidDevice`: Python adbutils-based Android device control (no external ADB binary needed)
 - `LinuxDevice`: SSH-based Linux device control (planned)
 - `iOSDevice`: iOS device control (stub)
 
 **Interface**:
+
 ```python
 class Device(ABC):
     def push(local, remote)
@@ -95,12 +100,14 @@ class Device(ABC):
 **Purpose**: Build OpenVINO runtime for target platforms.
 
 **Features**:
+
 - CMake configuration generation
 - Cross-compilation support (Android NDK)
 - Build caching
 - Artifact collection
 
 **Supported Platforms**:
+
 - Android (arm64-v8a)
 - Linux ARM (aarch64)
 
@@ -109,6 +116,7 @@ class Device(ABC):
 **Purpose**: Bundle runtime, libraries, and models.
 
 **Bundle Structure**:
+
 ```
 ovbundle.tar.gz
 ├── bin/
@@ -127,6 +135,7 @@ ovbundle.tar.gz
 **Purpose**: Execute benchmark_app with various configurations.
 
 **Features**:
+
 - Matrix expansion (device, threads, streams, precision)
 - Timeout handling
 - Cooldown between runs
@@ -138,6 +147,7 @@ ovbundle.tar.gz
 **Purpose**: Extract metrics from benchmark_app output.
 
 **Metrics**:
+
 - Throughput (FPS)
 - Latencies (avg, median, min, max)
 - Device utilization
@@ -148,6 +158,7 @@ ovbundle.tar.gz
 **Purpose**: Generate structured reports from results.
 
 **Formats**:
+
 - JSON: Machine-readable format
 - CSV: Spreadsheet-compatible
 - SQLite: Database format (planned)
@@ -156,6 +167,7 @@ ovbundle.tar.gz
 ### 10. Core Utilities (`ovmobilebench/core/`)
 
 **Shared Components**:
+
 - `shell.py`: Command execution with timeout
 - `fs.py`: File system operations
 - `artifacts.py`: Artifact management
@@ -165,31 +177,37 @@ ovbundle.tar.gz
 ## Data Flow
 
 ### 1. Configuration Loading
+
 ```
 YAML File → Pydantic Validation → Experiment Object
 ```
 
 ### 2. Build Flow
+
 ```
 Git Checkout → CMake Configure → Ninja Build → Artifact Collection
 ```
 
 ### 3. Package Flow
+
 ```
 Build Artifacts + Models → Tar Archive → Checksum Generation
 ```
 
 ### 4. Deployment Flow
+
 ```
 Bundle → Device Push → Remote Extraction → Permission Setup
 ```
 
 ### 5. Execution Flow
+
 ```
 Matrix Expansion → Device Preparation → Benchmark Execution → Output Collection
 ```
 
 ### 6. Reporting Flow
+
 ```
 Raw Output → Parsing → Aggregation → Format Conversion → Sink Writing
 ```
@@ -197,29 +215,30 @@ Raw Output → Parsing → Aggregation → Format Conversion → Sink Writing
 ## Configuration Schema
 
 ### Experiment Configuration
+
 ```yaml
 project:
   name: string
   run_id: string
-  
+
 build:
   openvino_repo: path
   toolchain:
     android_ndk: path
-    
+
 device:
   kind: android|linux_ssh
   serials: [string]
-  
+
 models:
   - name: string
     path: path
-    
+
 run:
   matrix:
     threads: [int]
     nstreams: [string]
-    
+
 report:
   sinks:
     - type: json|csv
@@ -229,16 +248,19 @@ report:
 ## Security Considerations
 
 ### Input Validation
+
 - All user inputs validated via Pydantic
 - Shell commands parameterized to prevent injection
 - Path traversal prevention
 
 ### Secrets Management
+
 - No hardcoded credentials
 - Environment variables for sensitive data
 - SSH key-based authentication
 
 ### Device Security
+
 - USB debugging authorization required
 - Limited command set execution
 - Temporary file cleanup
@@ -246,16 +268,19 @@ report:
 ## Performance Optimizations
 
 ### Build Caching
+
 - CMake build cache
 - ccache integration (planned)
 - Incremental builds
 
 ### Parallel Execution
+
 - Multiple device support
 - Concurrent stage execution (where safe)
 - Async I/O for file operations
 
 ### Resource Management
+
 - Automatic cleanup of temporary files
 - Connection pooling for SSH
 - Memory-mapped file I/O for large files
@@ -263,16 +288,19 @@ report:
 ## Extensibility Points
 
 ### Adding New Device Types
+
 1. Inherit from `Device` base class
 2. Implement required methods
 3. Register in `pipeline.py`
 
 ### Adding New Report Formats
+
 1. Inherit from `ReportSink`
 2. Implement `write()` method
 3. Register in configuration schema
 
 ### Adding New Benchmark Tools
+
 1. Create runner in `runners/`
 2. Create parser in `parsers/`
 3. Update configuration schema
@@ -280,16 +308,19 @@ report:
 ## Testing Strategy
 
 ### Unit Tests
+
 - Configuration validation
 - Parser accuracy
 - Device command generation
 
 ### Integration Tests
+
 - Pipeline stage transitions
 - File operations
 - Mock device operations
 
 ### System Tests
+
 - End-to-end pipeline execution
 - Real device testing (CI)
 - Performance regression tests
@@ -297,20 +328,24 @@ report:
 ## CI/CD Pipeline
 
 ### Build Stage
+
 - Lint (Black, Ruff)
 - Type check (MyPy)
 - Unit tests (pytest)
 - Coverage report
 
 ### Package Stage
+
 - Build distribution
 - Generate artifacts
 
 ### Test Stage
+
 - Integration tests
 - Dry-run validation
 
 ### Deploy Stage (manual)
+
 - PyPI publishing
 - Docker image creation
 - Documentation update
@@ -318,12 +353,14 @@ report:
 ## Future Enhancements
 
 ### Near Term
+
 - SQLite report sink
 - Linux SSH device support
 - HTML report generation
 - Docker development environment
 
 ### Long Term
+
 - Web UI dashboard
 - Real-time monitoring
 - Cloud device farm integration
@@ -334,6 +371,7 @@ report:
 ## Dependencies
 
 ### Runtime
+
 - Python 3.11+
 - typer: CLI framework
 - pydantic: Data validation
@@ -343,11 +381,13 @@ report:
 - rich: Terminal formatting
 
 ### Build
+
 - Android NDK r26d+
 - CMake 3.24+
 - Ninja 1.11+
 
 ### Development
+
 - pip: Dependency management
 - pytest: Testing framework
 - black: Code formatting

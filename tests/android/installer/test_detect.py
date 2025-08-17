@@ -5,17 +5,16 @@ import subprocess
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-
 from ovmobilebench.android.installer.detect import (
+    check_disk_space,
     detect_host,
     detect_java_version,
-    get_platform_suffix,
-    get_sdk_tools_filename,
-    get_ndk_filename,
     get_best_emulator_arch,
-    check_disk_space,
-    is_ci_environment,
+    get_ndk_filename,
+    get_platform_suffix,
     get_recommended_settings,
+    get_sdk_tools_filename,
+    is_ci_environment,
 )
 
 

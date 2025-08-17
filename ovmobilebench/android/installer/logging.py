@@ -6,7 +6,7 @@ import sys
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class StructuredLogger:
@@ -16,7 +16,7 @@ class StructuredLogger:
         self,
         name: str = "android_installer",
         verbose: bool = False,
-        jsonl_path: Optional[Path] = None,
+        jsonl_path: Path | None = None,
     ):
         """Initialize structured logger.
 
@@ -51,7 +51,7 @@ class StructuredLogger:
             self.jsonl_path.parent.mkdir(parents=True, exist_ok=True)
             self.jsonl_file = open(self.jsonl_path, "a", encoding="utf-8")
 
-    def _write_jsonl(self, record: Dict[str, Any]) -> None:
+    def _write_jsonl(self, record: dict[str, Any]) -> None:
         """Write a record to JSONL file."""
         if self.jsonl_file:
             record["timestamp"] = time.time()
@@ -134,13 +134,13 @@ class StructuredLogger:
 
 
 # Global logger instance
-_logger: Optional[StructuredLogger] = None
+_logger: StructuredLogger | None = None
 
 
 def get_logger(
     name: str = "android_installer",
     verbose: bool = False,
-    jsonl_path: Optional[Path] = None,
+    jsonl_path: Path | None = None,
 ) -> StructuredLogger:
     """Get or create the global logger instance.
 

@@ -30,7 +30,8 @@ jobs:
 
       - name: Validate example config
         run: |
-          python -c "from ovmobilebench.config.loader import load_experiment; load_experiment('experiments/android_example.yaml')"
+          python -c "from ovmobilebench.config.loader import load_experiment; \
+            load_experiment('experiments/android_example.yaml')"
 
       - name: CLI help test
         run: |
