@@ -79,6 +79,7 @@ class TestEnvExporter:
         assert "ANDROID_NDK=" in written_content
 
     @patch("builtins.print")
+    @patch("sys.platform", "linux")
     def test_export_to_stdout_bash(self, mock_print):
         """Test exporting to stdout in bash format."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -123,6 +124,7 @@ class TestEnvExporter:
             assert any("set ANDROID_NDK=" in str(call) for call in print_calls)
 
     @patch("builtins.print")
+    @patch("sys.platform", "linux")
     def test_export_to_stdout_fish(self, mock_print):
         """Test exporting to stdout in fish format."""
         with tempfile.TemporaryDirectory() as tmpdir:
