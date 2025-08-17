@@ -32,12 +32,16 @@ runs:
         # Get pip cache dir
         pip_cache = subprocess.check_output([sys.executable, "-m", "pip", "cache", "dir"]).decode().strip()
         
+        # Get Python bin directory
+        python_bin = os.path.dirname(sys.executable)
+        
         # Output for GitHub Actions
         output_file = os.environ.get('GITHUB_OUTPUT', '')
         if output_file:
             with open(output_file, 'a') as f:
                 f.write(f"site-packages={site_packages}\n")
                 f.write(f"pip-cache={pip_cache}\n")
+                f.write(f"python-bin={python_bin}\n")
                 f.write(f"python-version={sys.version}\n")
         EOF
 
@@ -53,7 +57,7 @@ runs:
           ~/Library/Python
           /opt/hostedtoolcache/Python/*/x64/bin
           /opt/hostedtoolcache/Python/*/x64/lib/python*/site-packages
-        key: ${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('requirements.txt', 'pyproject.toml') }}-v2
+        key: ${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('requirements.txt', 'pyproject.toml') }}-v3
         restore-keys: |
           ${{ runner.os }}-py${{ inputs.python-version }}-
 
@@ -63,28 +67,33 @@ runs:
         echo "Cache hit: ${{ steps.python-cache.outputs.cache-hit }}"
         echo "Python version: ${{ steps.python-paths.outputs.python-version }}"
         echo "Site packages: ${{ steps.python-paths.outputs.site-packages }}"
+        echo "Python bin: ${{ steps.python-paths.outputs.python-bin }}"
+        
+        # Set up PATH first
+        export PATH="${{ steps.python-paths.outputs.python-bin }}:$HOME/.local/bin:$PATH"
+        echo "PATH=${{ steps.python-paths.outputs.python-bin }}:$HOME/.local/bin:$PATH" >> $GITHUB_ENV
         
         # Always ensure pip is up to date
-        pip install --upgrade pip
+        python -m pip install --upgrade pip
         
         if [[ "${{ steps.python-cache.outputs.cache-hit }}" != "true" ]]; then
           echo "Cache miss - installing all dependencies"
-          pip install -r requirements.txt
-          pip install -e .
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
         else
-          echo "Cache hit - verifying and reinstalling if needed"
-          # Check if black is available
-          if ! command -v black &> /dev/null; then
-            echo "Tools not in PATH, reinstalling..."
-            pip install -r requirements.txt
-          fi
-          # Always reinstall the local package in case code changed
-          pip install -e . --no-deps --force-reinstall
+          echo "Cache hit - reinstalling packages to ensure they're available"
+          # Even with cache, we need to reinstall to ensure everything is in PATH
+          python -m pip install --force-reinstall --no-deps -r requirements.txt
+          python -m pip install -e . --no-deps --force-reinstall
         fi
         
-        # Ensure tools are in PATH
-        export PATH="$HOME/.local/bin:$PATH"
-        echo "PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+        # Verify tools are available
+        echo "Checking tool availability:"
+        which python
+        which pip
+        which black || echo "black not found in PATH"
+        which ruff || echo "ruff not found in PATH"
+        which pytest || echo "pytest not found in PATH"
 
     - name: Verify installation
       shell: bash
