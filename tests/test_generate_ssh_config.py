@@ -91,7 +91,7 @@ class TestGenerateSSHConfig:
     def test_generate_ssh_setup_script(self):
         """Test SSH setup script generation."""
         import platform
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             is_windows = platform.system().lower() == "windows"
             script_ext = ".ps1" if is_windows else ".sh"
@@ -100,7 +100,7 @@ class TestGenerateSSHConfig:
             result = generate_ssh_setup_script(str(output_file))
 
             assert result == str(output_file)
-            
+
             # On Windows, the function returns early without creating the file
             # (the PS1 file is pre-created separately)
             if is_windows:
