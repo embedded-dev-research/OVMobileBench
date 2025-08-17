@@ -61,7 +61,7 @@ def test_ssh_in_ci():
         else:
             print(f"SSH test failed. stdout: {result.stdout}")
             print(f"stderr: {result.stderr}")
-            
+
             # Show more diagnostic info
             if "Connection refused" in result.stderr:
                 print("SSH server is not running or not accepting connections")
@@ -69,7 +69,7 @@ def test_ssh_in_ci():
                 print("SSH authentication failed - check keys and permissions")
             elif "Host key verification failed" in result.stderr:
                 print("SSH host key verification issue")
-                
+
             return False
 
     except subprocess.TimeoutExpired:
