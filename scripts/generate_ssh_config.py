@@ -99,7 +99,7 @@ def test_ssh_device():
     
     # Check if SSH is unavailable in CI (marker from setup script)
     ssh_unavailable_marker = Path.home() / ".ssh" / "ci_ssh_unavailable"
-    
+
     if ssh_unavailable_marker.exists():
         print("SSH is not available in CI environment")
         print("Running mock tests instead...")
@@ -124,7 +124,7 @@ def test_ssh_device():
     
     # Get username from environment or current user - handle both Unix and Windows
     username = os.environ.get("USER") or os.environ.get("USERNAME", "runner")
-    
+
     try:
         # Connect to localhost
         device = LinuxSSHDevice(
