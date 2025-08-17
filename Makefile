@@ -47,8 +47,7 @@ devices:
 	ovmobilebench list-devices
 
 lint:
-	ruff check ovmobilebench
-	mypy ovmobilebench --ignore-missing-imports
+	pre-commit run --all-files
 
 test:
 	pytest tests/ -v
