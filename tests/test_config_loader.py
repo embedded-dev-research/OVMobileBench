@@ -34,7 +34,7 @@ class TestLoadYaml:
         result = load_yaml(path)
 
         assert result == {"key": "value"}
-        mock_file.assert_called_once_with(path, "r")
+        mock_file.assert_called_once_with(path)
         mock_yaml_load.assert_called_once()
 
     @patch("pathlib.Path.exists")

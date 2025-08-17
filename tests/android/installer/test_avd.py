@@ -137,7 +137,7 @@ class TestAvdManager:
         """Test listing AVDs when none exist."""
         mock_run.return_value = Mock(returncode=0, stdout="")
 
-        avds = self.manager.list()
+        avds = self.manager.list_avds()
         assert avds == []
 
     @patch.object(AvdManager, "_run_avdmanager")
@@ -145,7 +145,7 @@ class TestAvdManager:
         """Test listing AVDs."""
         mock_run.return_value = Mock(returncode=0, stdout="test_avd1\ntest_avd2\ntest_avd3\n")
 
-        avds = self.manager.list()
+        avds = self.manager.list_avds()
         assert len(avds) == 3
         assert "test_avd1" in avds
         assert "test_avd2" in avds
@@ -156,11 +156,11 @@ class TestAvdManager:
         """Test listing AVDs with error."""
         mock_run.side_effect = AvdManagerError("list", "avd", "error")
 
-        avds = self.manager.list()
+        avds = self.manager.list_avds()
         assert avds == []
 
     @patch.object(AvdManager, "_run_avdmanager")
-    @patch.object(AvdManager, "list")
+    @patch.object(AvdManager, "list_avds")
     def test_create_new_avd(self, mock_list, mock_run):
         """Test creating a new AVD."""
         # AVD doesn't exist initially
@@ -184,7 +184,7 @@ class TestAvdManager:
         assert "-f" in args
 
     @patch.object(AvdManager, "_run_avdmanager")
-    @patch.object(AvdManager, "list")
+    @patch.object(AvdManager, "list_avds")
     @patch.object(AvdManager, "delete")
     def test_create_existing_avd_with_force(self, mock_delete, mock_list, mock_run):
         """Test creating an AVD that already exists with force."""
@@ -201,7 +201,7 @@ class TestAvdManager:
         mock_delete.assert_called_once_with("test_avd")
         mock_run.assert_called_once()
 
-    @patch.object(AvdManager, "list")
+    @patch.object(AvdManager, "list_avds")
     def test_create_existing_avd_without_force(self, mock_list):
         """Test creating an AVD that already exists without force."""
         # AVD exists
@@ -214,7 +214,7 @@ class TestAvdManager:
         assert result is True  # Should return True without creating
 
     @patch.object(AvdManager, "_run_avdmanager")
-    @patch.object(AvdManager, "list")
+    @patch.object(AvdManager, "list_avds")
     def test_create_with_custom_device(self, mock_list, mock_run):
         """Test creating AVD with custom device profile."""
         mock_list.side_effect = [[], ["test_avd"]]
@@ -232,7 +232,7 @@ class TestAvdManager:
         assert args[device_index + 1] == "pixel_7"
 
     @patch.object(AvdManager, "_run_avdmanager")
-    @patch.object(AvdManager, "list")
+    @patch.object(AvdManager, "list_avds")
     def test_create_failure(self, mock_list, mock_run):
         """Test AVD creation failure."""
         mock_list.side_effect = [[], []]  # AVD not created
@@ -242,7 +242,7 @@ class TestAvdManager:
             self.manager.create(name="test_avd", api=30, target="google_atd", arch="arm64-v8a")
 
     @patch.object(AvdManager, "_run_avdmanager")
-    @patch.object(AvdManager, "list")
+    @patch.object(AvdManager, "list_avds")
     def test_delete_existing_avd(self, mock_list, mock_run):
         """Test deleting an existing AVD."""
         mock_list.return_value = ["test_avd"]
@@ -253,7 +253,7 @@ class TestAvdManager:
         assert result is True
         mock_run.assert_called_once_with(["delete", "avd", "-n", "test_avd"])
 
-    @patch.object(AvdManager, "list")
+    @patch.object(AvdManager, "list_avds")
     def test_delete_nonexistent_avd(self, mock_list):
         """Test deleting a non-existent AVD."""
         mock_list.return_value = []
@@ -263,7 +263,7 @@ class TestAvdManager:
         assert result is True  # Should return True even if doesn't exist
 
     @patch.object(AvdManager, "_run_avdmanager")
-    @patch.object(AvdManager, "list")
+    @patch.object(AvdManager, "list_avds")
     def test_delete_failure(self, mock_list, mock_run):
         """Test AVD deletion failure."""
         mock_list.return_value = ["test_avd"]

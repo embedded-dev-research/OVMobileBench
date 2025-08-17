@@ -104,7 +104,7 @@ class TestAndroidInstallerIntegration:
         installer = AndroidInstaller(self.sdk_root)
 
         # Mock AVD list
-        with patch.object(installer.avd, "list") as mock_avd_list:
+        with patch.object(installer.avd, "list_avds") as mock_avd_list:
             with patch.object(installer.sdk, "list_installed") as mock_sdk_list:
                 mock_avd_list.return_value = ["test_avd"]
                 mock_sdk_list.return_value = []
