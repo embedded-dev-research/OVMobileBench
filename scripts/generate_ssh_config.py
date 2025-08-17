@@ -252,6 +252,11 @@ fi
 # Setup authorized keys
 mkdir -p ~/.ssh
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+
+# Fix permissions (critical for SSH to work)
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_rsa
+chmod 644 ~/.ssh/id_rsa.pub
 chmod 600 ~/.ssh/authorized_keys
 
 # Configure SSH client
@@ -260,8 +265,19 @@ Host localhost
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null
     LogLevel ERROR
+    PubkeyAuthentication yes
+    PasswordAuthentication no
 EOF
 chmod 600 ~/.ssh/config
+
+# On macOS, also need to fix ACLs
+if [[ "$OS" == "Darwin" ]]; then
+    echo "Fixing macOS ACLs for SSH keys..."
+    chmod -R go-rwx ~/.ssh
+    # Remove any ACLs that might interfere
+    chmod -N ~/.ssh 2>/dev/null || true
+    chmod -N ~/.ssh/* 2>/dev/null || true
+fi
 
 # Start SSH service based on OS
 if [[ "$OS" == "Linux" ]]; then
@@ -339,11 +355,21 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     RETRY_COUNT=$((RETRY_COUNT + 1))
     echo "Connection attempt $RETRY_COUNT/$MAX_RETRIES..."
     
-    # Capture output for diagnostics
-    SSH_OUTPUT=$(ssh -o ConnectTimeout=5 -o PasswordAuthentication=no \\
+    # Try localhost first, then 127.0.0.1 (some systems have issues with localhost)
+    if [[ "$OS" == "Darwin" ]] && [ $RETRY_COUNT -gt 2 ]; then
+        # After 2 failed attempts on macOS, try 127.0.0.1
+        SSH_TARGET="127.0.0.1"
+        echo "  -> Trying 127.0.0.1 instead of localhost..."
+    else
+        SSH_TARGET="localhost"
+    fi
+    
+    # Capture output for diagnostics - use verbose mode for better debugging
+    SSH_OUTPUT=$(ssh -v -o ConnectTimeout=5 -o PasswordAuthentication=no \\
                      -o PubkeyAuthentication=yes -o StrictHostKeyChecking=no \\
                      -o UserKnownHostsFile=/dev/null \\
-                     localhost "echo 'SSH connection successful'" 2>&1)
+                     -i ~/.ssh/id_rsa \\
+                     $SSH_TARGET "echo 'SSH connection successful'" 2>&1)
     SSH_EXIT_CODE=$?
     
     if [ $SSH_EXIT_CODE -eq 0 ] && echo "$SSH_OUTPUT" | grep -q "SSH connection successful"; then
@@ -352,7 +378,29 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     else
         echo "  Failed with exit code: $SSH_EXIT_CODE"
         
-        # Diagnostic information
+        # Diagnostic information based on exit code
+        case $SSH_EXIT_CODE in
+            255)
+                echo "  -> SSH connection/authentication error (exit 255)"
+                echo "  -> Common causes: permission issues, key rejection, or connection problems"
+                # Check key permissions
+                echo "  -> Key permissions:"
+                ls -la ~/.ssh/id_rsa ~/.ssh/authorized_keys 2>/dev/null || true
+                # Check if we can at least connect
+                nc -zv localhost 22 2>&1 | head -1 || echo "    Cannot connect to port 22"
+                ;;
+            1)
+                echo "  -> General SSH error (exit 1)"
+                ;;
+            2)
+                echo "  -> SSH usage error (exit 2)"
+                ;;
+            *)
+                echo "  -> Unknown exit code: $SSH_EXIT_CODE"
+                ;;
+        esac
+        
+        # Show specific error patterns
         if echo "$SSH_OUTPUT" | grep -q "Connection refused"; then
             echo "  -> SSH server not accepting connections"
             if [[ "$OS" == "Darwin" ]]; then
@@ -361,10 +409,14 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
                 pgrep -x sshd > /dev/null && echo "    sshd running" || echo "    sshd NOT running"
             fi
         elif echo "$SSH_OUTPUT" | grep -q "Permission denied"; then
-            echo "  -> Authentication failed - check keys"
-        else
-            echo "  -> Error: ${SSH_OUTPUT:0:100}"
+            echo "  -> Authentication failed - permission denied"
+        elif echo "$SSH_OUTPUT" | grep -q "Host key verification failed"; then
+            echo "  -> Host key verification issue"
         fi
+        
+        # Show last few relevant log lines
+        echo "  -> Last SSH debug output:"
+        echo "$SSH_OUTPUT" | grep -E "(debug1: Trying|Permission denied|Authentication|Offering|key_load)" | tail -5 || true
         
         if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
             echo "  -> Retrying in 3 seconds..."
