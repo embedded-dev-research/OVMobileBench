@@ -292,10 +292,12 @@ class TestGetRecommendedSettings:
         assert settings["install_emulator"] is True
         assert settings["create_avd"] is True  # Auto-create in CI
 
+    @patch("ovmobilebench.android.installer.detect.is_ci_environment")
     @patch("ovmobilebench.android.installer.detect.get_best_emulator_arch")
-    def test_windows_settings(self, mock_arch):
+    def test_windows_settings(self, mock_arch, mock_is_ci):
         """Test recommended settings for Windows."""
         mock_arch.return_value = "x86_64"
+        mock_is_ci.return_value = False  # Not in CI for this test
 
         host = Mock(os="windows", arch="x86_64", has_kvm=False)
         settings = get_recommended_settings(host)
