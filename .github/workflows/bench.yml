@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest] # , windows-latest]
-    uses: ./.github/workflows/reusable-ci.yml
+    uses: ./.github/workflows/reusable-ci-simple.yml
     with:
       os: ${{ matrix.os }}
       device_serial: ${{ github.event.inputs.device_serial || 'emulator-5554' }}
