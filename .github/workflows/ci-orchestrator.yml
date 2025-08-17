@@ -37,7 +37,7 @@ jobs:
 
   # Stage 4: Device Tests (runs after build and validation)
   device-tests:
-    needs: [build, validation]
+#    needs: [build, validation]
     uses: ./.github/workflows/stage-device-tests.yml
     with:
       os: ${{ inputs.os }}
