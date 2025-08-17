@@ -145,13 +145,13 @@ class TestGenerateSSHConfig:
         """Test main function with setup script generation."""
         mock_args.return_value.type = "setup"
         mock_args.return_value.output = None
-        
+
         # Test Unix platform
         mock_platform.return_value = "Linux"
         with patch("scripts.generate_ssh_config.generate_ssh_setup_script") as mock_gen:
             main()
             mock_gen.assert_called_once_with("scripts/setup_ssh_ci.sh")
-        
+
         # Test Windows platform
         mock_platform.return_value = "Windows"
         with patch("scripts.generate_ssh_config.generate_ssh_setup_script_ps1") as mock_gen_ps1:
@@ -174,12 +174,14 @@ class TestGenerateSSHConfig:
                     mock_config.assert_called_once()
                     mock_test.assert_called_once()
                     mock_setup.assert_called_once()
-        
+
         # Test Windows platform
         mock_platform.return_value = "Windows"
         with patch("scripts.generate_ssh_config.generate_ssh_config") as mock_config:
             with patch("scripts.generate_ssh_config.generate_ssh_test_script") as mock_test:
-                with patch("scripts.generate_ssh_config.generate_ssh_setup_script_ps1") as mock_setup_ps1:
+                with patch(
+                    "scripts.generate_ssh_config.generate_ssh_setup_script_ps1"
+                ) as mock_setup_ps1:
                     main()
                     mock_config.assert_called_once()
                     mock_test.assert_called_once()
