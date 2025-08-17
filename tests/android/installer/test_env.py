@@ -96,7 +96,7 @@ class TestEnvExporter:
                 )
 
                 # Check export format for bash
-                print_calls = [str(call) for call in mock_print.call_args_list]
+                print_calls = mock_print.call_args_list
                 assert any("export ANDROID_SDK_ROOT=" in str(call) for call in print_calls)
                 assert any("export ANDROID_NDK=" in str(call) for call in print_calls)
 
@@ -118,7 +118,7 @@ class TestEnvExporter:
             )
 
             # Check export format for Windows
-            print_calls = [str(call) for call in mock_print.call_args_list]
+            print_calls = mock_print.call_args_list
             assert any("set ANDROID_SDK_ROOT=" in str(call) for call in print_calls)
             assert any("set ANDROID_NDK=" in str(call) for call in print_calls)
 
@@ -140,7 +140,7 @@ class TestEnvExporter:
                 )
 
                 # Check export format for fish
-                print_calls = [str(call) for call in mock_print.call_args_list]
+                print_calls = mock_print.call_args_list
                 assert any("set -x ANDROID_SDK_ROOT" in str(call) for call in print_calls)
 
     def test_set_in_process(self):

@@ -38,7 +38,11 @@ class TestAvdManager:
         mock_detect.return_value = Mock(os="linux")
         manager = AvdManager(self.sdk_root)
         path = manager._get_avdmanager_path()
-        assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager"
+        # Platform-aware assertion
+        if path.suffix == ".bat":
+            assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager.bat"
+        else:
+            assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager"
 
     @pytest.mark.skip(reason="Platform-specific test fails on non-Windows")
     @patch("ovmobilebench.android.installer.detect.detect_host")
@@ -57,10 +61,14 @@ class TestAvdManager:
     @patch("subprocess.run")
     def test_run_avdmanager_success(self, mock_run):
         """Test successful avdmanager execution."""
-        # Create avdmanager
-        avdmanager_path = self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager"
-        avdmanager_path.parent.mkdir(parents=True)
+        # Create avdmanager (platform-aware)
+        avdmanager_dir = self.sdk_root / "cmdline-tools" / "latest" / "bin"
+        avdmanager_dir.mkdir(parents=True)
+        avdmanager_path = avdmanager_dir / "avdmanager"
         avdmanager_path.touch()
+        # Also create .bat version for Windows
+        avdmanager_bat = avdmanager_dir / "avdmanager.bat"
+        avdmanager_bat.touch()
 
         mock_run.return_value = Mock(returncode=0, stdout="Success", stderr="")
 
@@ -76,10 +84,14 @@ class TestAvdManager:
     @patch("subprocess.run")
     def test_run_avdmanager_failure(self, mock_run):
         """Test avdmanager execution failure."""
-        # Create avdmanager
-        avdmanager_path = self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager"
-        avdmanager_path.parent.mkdir(parents=True)
+        # Create avdmanager (platform-aware)
+        avdmanager_dir = self.sdk_root / "cmdline-tools" / "latest" / "bin"
+        avdmanager_dir.mkdir(parents=True)
+        avdmanager_path = avdmanager_dir / "avdmanager"
         avdmanager_path.touch()
+        # Also create .bat version for Windows
+        avdmanager_bat = avdmanager_dir / "avdmanager.bat"
+        avdmanager_bat.touch()
 
         mock_run.return_value = Mock(returncode=1, stdout="", stderr="Error: Invalid arguments")
 
@@ -89,10 +101,14 @@ class TestAvdManager:
     @patch("subprocess.run")
     def test_run_avdmanager_system_image_error(self, mock_run):
         """Test avdmanager error for missing system image."""
-        # Create avdmanager
-        avdmanager_path = self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager"
-        avdmanager_path.parent.mkdir(parents=True)
+        # Create avdmanager (platform-aware)
+        avdmanager_dir = self.sdk_root / "cmdline-tools" / "latest" / "bin"
+        avdmanager_dir.mkdir(parents=True)
+        avdmanager_path = avdmanager_dir / "avdmanager"
         avdmanager_path.touch()
+        # Also create .bat version for Windows
+        avdmanager_bat = avdmanager_dir / "avdmanager.bat"
+        avdmanager_bat.touch()
 
         mock_run.return_value = Mock(returncode=1, stdout="", stderr="Package path is not valid")
 
@@ -102,10 +118,14 @@ class TestAvdManager:
     @patch("subprocess.run")
     def test_run_avdmanager_timeout(self, mock_run):
         """Test avdmanager execution timeout."""
-        # Create avdmanager
-        avdmanager_path = self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager"
-        avdmanager_path.parent.mkdir(parents=True)
+        # Create avdmanager (platform-aware)
+        avdmanager_dir = self.sdk_root / "cmdline-tools" / "latest" / "bin"
+        avdmanager_dir.mkdir(parents=True)
+        avdmanager_path = avdmanager_dir / "avdmanager"
         avdmanager_path.touch()
+        # Also create .bat version for Windows
+        avdmanager_bat = avdmanager_dir / "avdmanager.bat"
+        avdmanager_bat.touch()
 
         mock_run.side_effect = subprocess.TimeoutExpired("avdmanager", 60)
 

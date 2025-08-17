@@ -159,9 +159,14 @@ class TestAndroidInstaller:
 
     def test_check_permissions_failure(self):
         """Test permission check failure."""
-        # Make directory read-only
         import os
-
+        import platform
+        
+        # Skip on Windows as permission model is different
+        if platform.system() == "Windows":
+            pytest.skip("Windows permission model differs")
+        
+        # Make directory read-only
         os.chmod(self.sdk_root, 0o444)
 
         try:

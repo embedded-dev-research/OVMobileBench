@@ -44,7 +44,11 @@ class TestSdkManager:
         mock_detect.return_value = Mock(os="linux")
         manager = SdkManager(self.sdk_root)
         path = manager._get_sdkmanager_path()
-        assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
+        # Platform-aware assertion
+        if path.suffix == ".bat":
+            assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager.bat"
+        else:
+            assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
 
     @pytest.mark.skip(reason="Platform-specific test fails on non-Windows")
     @patch("ovmobilebench.android.installer.detect.detect_host")
@@ -63,10 +67,14 @@ class TestSdkManager:
     @patch("subprocess.run")
     def test_run_sdkmanager_success(self, mock_run):
         """Test successful sdkmanager execution."""
-        # Create sdkmanager
-        sdkmanager_path = self.sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
-        sdkmanager_path.parent.mkdir(parents=True)
+        # Create sdkmanager (platform-aware)
+        sdkmanager_dir = self.sdk_root / "cmdline-tools" / "latest" / "bin"
+        sdkmanager_dir.mkdir(parents=True)
+        sdkmanager_path = sdkmanager_dir / "sdkmanager"
         sdkmanager_path.touch()
+        # Also create .bat version for Windows
+        sdkmanager_bat = sdkmanager_dir / "sdkmanager.bat"
+        sdkmanager_bat.touch()
 
         mock_run.return_value = Mock(returncode=0, stdout="Success", stderr="")
 
@@ -82,10 +90,14 @@ class TestSdkManager:
     @patch("subprocess.run")
     def test_run_sdkmanager_failure(self, mock_run):
         """Test sdkmanager execution failure."""
-        # Create sdkmanager
-        sdkmanager_path = self.sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
-        sdkmanager_path.parent.mkdir(parents=True)
+        # Create sdkmanager (platform-aware)
+        sdkmanager_dir = self.sdk_root / "cmdline-tools" / "latest" / "bin"
+        sdkmanager_dir.mkdir(parents=True)
+        sdkmanager_path = sdkmanager_dir / "sdkmanager"
         sdkmanager_path.touch()
+        # Also create .bat version for Windows
+        sdkmanager_bat = sdkmanager_dir / "sdkmanager.bat"
+        sdkmanager_bat.touch()
 
         mock_run.return_value = Mock(returncode=1, stdout="", stderr="Error: License not accepted")
 
@@ -95,10 +107,14 @@ class TestSdkManager:
     @patch("subprocess.run")
     def test_run_sdkmanager_timeout(self, mock_run):
         """Test sdkmanager execution timeout."""
-        # Create sdkmanager
-        sdkmanager_path = self.sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
-        sdkmanager_path.parent.mkdir(parents=True)
+        # Create sdkmanager (platform-aware)
+        sdkmanager_dir = self.sdk_root / "cmdline-tools" / "latest" / "bin"
+        sdkmanager_dir.mkdir(parents=True)
+        sdkmanager_path = sdkmanager_dir / "sdkmanager"
         sdkmanager_path.touch()
+        # Also create .bat version for Windows
+        sdkmanager_bat = sdkmanager_dir / "sdkmanager.bat"
+        sdkmanager_bat.touch()
 
         mock_run.side_effect = subprocess.TimeoutExpired("sdkmanager", 5)
 
@@ -107,10 +123,14 @@ class TestSdkManager:
 
     def test_ensure_cmdline_tools_already_installed(self):
         """Test ensuring cmdline-tools when already installed."""
-        # Create cmdline-tools
-        sdkmanager_path = self.sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
-        sdkmanager_path.parent.mkdir(parents=True)
+        # Create cmdline-tools (platform-aware)
+        sdkmanager_dir = self.sdk_root / "cmdline-tools" / "latest" / "bin"
+        sdkmanager_dir.mkdir(parents=True)
+        sdkmanager_path = sdkmanager_dir / "sdkmanager"
         sdkmanager_path.touch()
+        # Also create .bat version for Windows
+        sdkmanager_bat = sdkmanager_dir / "sdkmanager.bat"
+        sdkmanager_bat.touch()
 
         result = self.manager.ensure_cmdline_tools()
         assert result == self.manager.cmdline_tools_dir
