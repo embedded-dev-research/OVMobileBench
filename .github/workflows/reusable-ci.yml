@@ -42,7 +42,6 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install -e .
-          pip install build setuptools wheel
 
       - name: Package installed dependencies
         run: |
@@ -141,7 +140,7 @@ jobs:
       - name: Restore build dependencies
         run: |
           pip install --upgrade pip
-          pip install build setuptools wheel
+          pip install -r deps-artifact/requirements-frozen.txt
 
       - name: Build package
         run: python -m build
