@@ -8,8 +8,13 @@ on:
   workflow_dispatch:
     inputs:
       device_serial:
-        description: 'Mobile device serial'
+        description: 'Device serial'
         required: false
+
+# Cancel in-progress runs when a new commit is pushed to the same PR or branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ci-matrix:

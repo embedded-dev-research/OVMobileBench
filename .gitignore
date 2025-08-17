@@ -134,5 +134,4 @@ CLAUDE.md
 # Generated CI configs
 experiments/ssh_localhost_ci.yaml
 experiments/results/
-scripts/test_ssh_device_ci.py
 scripts/setup_ssh_ci.sh

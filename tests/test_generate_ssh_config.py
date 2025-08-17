@@ -82,7 +82,7 @@ class TestGenerateSSHConfig:
             content = output_file.read_text()
             assert "#!/usr/bin/env python3" in content
             assert "LinuxSSHDevice" in content
-            assert 'username="testuser"' in content
+            assert 'username = os.environ.get("USER"' in content  # Dynamic username
             assert "test_ssh_device()" in content
 
     def test_generate_ssh_setup_script(self):
