@@ -3,18 +3,11 @@
 
 import os
 import sys
-import platform
 from pathlib import Path
 
 
 def test_ssh_in_ci():
     """Test SSH connectivity in CI environment."""
-
-    # Check platform
-    system = platform.system().lower()
-    is_windows = system == "windows"
-    is_macos = system == "darwin"
-    is_ci = os.environ.get("CI")
 
     # Check if SSH is available
     ssh_dir = Path.home() / ".ssh"
