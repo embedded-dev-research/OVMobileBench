@@ -16,24 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Cache pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -e .
+      - name: Setup dependencies
+        uses: ./.github/actions/setup-dependencies
 
       - name: Run Black
         run: black --check ovmobilebench tests
@@ -63,15 +47,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup build dependencies
+        uses: ./.github/actions/setup-dependencies
         with:
-          python-version: '3.11'
-
-      - name: Install build dependencies
-        run: |
-          pip install --upgrade pip
-          pip install build setuptools wheel
+          cache-key-suffix: build-only
 
       - name: Build package
         run: python -m build
@@ -89,16 +68,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -e .
+      - name: Setup dependencies
+        uses: ./.github/actions/setup-dependencies
 
       - name: Validate example config
         run: |
@@ -119,16 +90,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -e .
+      - name: Setup dependencies
+        uses: ./.github/actions/setup-dependencies
 
       - name: Set up SSH server
         run: |
@@ -173,16 +136,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -e .
+      - name: Setup dependencies
+        uses: ./.github/actions/setup-dependencies
 
       - name: Check ADB devices
         run: adb devices

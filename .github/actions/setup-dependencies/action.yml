@@ -1,0 +1,53 @@
+name: 'Setup Dependencies'
+description: 'Install Python dependencies with caching'
+
+inputs:
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.11'
+  cache-key-suffix:
+    description: 'Additional cache key suffix for different dependency sets'
+    required: false
+    default: 'full'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Cache pip and installed packages
+      uses: actions/cache@v3
+      id: cache-deps
+      with:
+        path: |
+          ~/.cache/pip
+          ${{ runner.tool_cache }}/Python
+          /opt/hostedtoolcache/Python
+        key: ${{ runner.os }}-pip-${{ inputs.python-version }}-${{ hashFiles('pyproject.toml', 'requirements.txt') }}-${{ inputs.cache-key-suffix }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ inputs.python-version }}-${{ hashFiles('pyproject.toml', 'requirements.txt') }}-
+          ${{ runner.os }}-pip-${{ inputs.python-version }}-
+
+    - name: Install dependencies
+      if: steps.cache-deps.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        pip install --upgrade pip
+        if [ "${{ inputs.cache-key-suffix }}" == "build-only" ]; then
+          pip install build setuptools wheel
+        else
+          pip install -r requirements.txt
+          pip install -e .
+        fi
+
+    - name: Verify installation
+      shell: bash
+      run: |
+        pip list
+        if [ "${{ inputs.cache-key-suffix }}" != "build-only" ]; then
+          which ovmobilebench || echo "CLI not installed yet"
+        fi
