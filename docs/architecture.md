@@ -570,30 +570,6 @@ graph TB
 | Ninja | 1.11+ | Build execution |
 | Python | 3.11+ | Runtime requirement |
 
-## Future Enhancements
-
-### Roadmap
-
-```mermaid
-timeline
-    title OVMobileBench Development Roadmap
-
-    section Q1 2025
-        OpenVINO Modes     : Three distribution modes
-        Test Coverage      : 80%+ coverage
-        Documentation      : Complete docs
-
-    section Q2 2025
-        Web Dashboard      : Real-time monitoring
-        Cloud Integration  : AWS Device Farm
-        Auto-optimization  : Model tuning
-
-    section Q3 2025
-        Distributed Exec   : Multi-host support
-        ML Insights        : Performance prediction
-        Enterprise Features: LDAP, audit logs
-```
-
 ## License
 
 Apache License 2.0 - See [LICENSE](../LICENSE) for details.
