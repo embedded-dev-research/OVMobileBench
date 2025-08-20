@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from ovmobilebench.builders.openvino import OpenVINOBuilder
-from ovmobilebench.config.schema import BuildConfig, BuildOptions, Toolchain
+from ovmobilebench.config.schema import BuildOptions, OpenVINOConfig, Toolchain
 from ovmobilebench.core.errors import BuildError
 
 
@@ -16,10 +16,10 @@ class TestOpenVINOBuilder:
     @pytest.fixture
     def build_config(self):
         """Create a test build configuration."""
-        return BuildConfig(
-            enabled=True,
-            openvino_repo="/path/to/openvino",
-            openvino_commit="HEAD",
+        return OpenVINOConfig(
+            mode="build",
+            source_dir="/path/to/openvino",
+            commit="HEAD",
             build_type="Release",
             toolchain=Toolchain(
                 android_ndk="/path/to/ndk",
@@ -37,19 +37,21 @@ class TestOpenVINOBuilder:
         )
 
     @pytest.fixture
-    def build_config_disabled(self):
-        """Create a disabled build configuration."""
-        return BuildConfig(
-            enabled=False,
-            openvino_repo="/path/to/openvino",
+    def install_config(self):
+        """Create an install mode configuration."""
+        return OpenVINOConfig(
+            mode="install",
+            install_dir="/path/to/openvino/install",
         )
 
     @pytest.fixture
     def build_config_no_ndk(self):
         """Create build config without Android NDK."""
-        return BuildConfig(
-            enabled=True,
-            openvino_repo="/path/to/openvino",
+        return OpenVINOConfig(
+            mode="build",
+            source_dir="/path/to/openvino",
+            commit="HEAD",
+            build_type="Release",
             toolchain=Toolchain(android_ndk=None),
         )
 
@@ -75,17 +77,14 @@ class TestOpenVINOBuilder:
         assert builder.verbose is True
 
     @patch("ovmobilebench.builders.openvino.ensure_dir")
-    def test_build_disabled(self, mock_ensure_dir, build_config_disabled):
-        """Test build when building is disabled."""
+    def test_build_wrong_mode(self, mock_ensure_dir, install_config):
+        """Test build when using wrong mode."""
         mock_ensure_dir.return_value = Path("/build/dir")
 
-        builder = OpenVINOBuilder(build_config_disabled, Path("/build/dir"))
+        builder = OpenVINOBuilder(install_config, Path("/build/dir"))
 
-        with patch("ovmobilebench.builders.openvino.logger") as mock_logger:
-            result = builder.build()
-
-            assert result == Path("/path/to/openvino/bin")
-            mock_logger.info.assert_called_once_with("Build disabled, using prebuilt binaries")
+        with pytest.raises(ValueError, match="OpenVINOBuilder can only be used with mode='build'"):
+            builder.build()
 
     @patch("ovmobilebench.builders.openvino.ensure_dir")
     def test_build_enabled_success(self, mock_ensure_dir, build_config):
@@ -113,7 +112,7 @@ class TestOpenVINOBuilder:
     def test_checkout_commit_not_head(self, mock_run, mock_ensure_dir, build_config):
         """Test checking out specific commit."""
         mock_ensure_dir.return_value = Path("/build/dir")
-        build_config.openvino_commit = "abc123"
+        build_config.commit = "abc123"
 
         builder = OpenVINOBuilder(build_config, Path("/build/dir"))
 
@@ -133,7 +132,7 @@ class TestOpenVINOBuilder:
     def test_checkout_commit_head(self, mock_run, mock_ensure_dir, build_config):
         """Test not checking out when commit is HEAD."""
         mock_ensure_dir.return_value = Path("/build/dir")
-        # build_config.openvino_commit is "HEAD" by default
+        # build_config.commit is "HEAD" by default
 
         builder = OpenVINOBuilder(build_config, Path("/build/dir"))
         builder._checkout_commit()
@@ -329,7 +328,7 @@ class TestOpenVINOBuilder:
         """Test that verbose mode is passed to run commands."""
         mock_ensure_dir.return_value = Path("/build/dir")
         mock_run.return_value = MagicMock(returncode=0)
-        build_config.openvino_commit = "abc123"
+        build_config.commit = "abc123"
 
         builder = OpenVINOBuilder(build_config, Path("/build/dir"), verbose=True)
 
@@ -352,9 +351,9 @@ class TestOpenVINOBuilder:
     @patch("ovmobilebench.builders.openvino.ensure_dir")
     def test_custom_build_type(self, mock_ensure_dir):
         """Test build with custom build type."""
-        build_config = BuildConfig(
-            enabled=True,
-            openvino_repo="/path/to/openvino",
+        build_config = OpenVINOConfig(
+            mode="build",
+            source_dir="/path/to/openvino",
             build_type="Debug",
         )
         mock_ensure_dir.return_value = Path("/build/dir")
@@ -371,9 +370,9 @@ class TestOpenVINOBuilder:
     @patch("ovmobilebench.builders.openvino.ensure_dir")
     def test_custom_toolchain_settings(self, mock_ensure_dir):
         """Test build with custom toolchain settings."""
-        build_config = BuildConfig(
-            enabled=True,
-            openvino_repo="/path/to/openvino",
+        build_config = OpenVINOConfig(
+            mode="build",
+            source_dir="/path/to/openvino",
             toolchain=Toolchain(
                 android_ndk="/custom/ndk",
                 abi="x86_64",

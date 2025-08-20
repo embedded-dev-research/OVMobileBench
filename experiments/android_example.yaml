@@ -3,11 +3,27 @@ project:
   run_id: "android_benchmark_001"
   description: "OpenVINO benchmark on Android device"
 
-build:
-  enabled: true
-  openvino_repo: "/path/to/openvino"  # UPDATE THIS PATH
-  openvino_commit: "HEAD"
+# OpenVINO distribution configuration
+# Chooses one of three modes: build, install, or link
+openvino:
+  # Mode 1: Build from source
+  mode: "build"
+  source_dir: "/path/to/openvino"  # UPDATE THIS PATH
+  commit: "HEAD"
   build_type: "Release"
+
+  # Mode 2: Use existing install (uncomment to use)
+  # mode: "install"
+  # install_dir: "/path/to/openvino/install" # UPDATE THIS PATH
+
+  # Mode 3: Download from URL (uncomment to use)
+  # mode: "link"
+  # archive_url: "https://storage.openvinotoolkit.org/repositories/openvino/packages/nightly/\
+  #   2025.4.0-19820-4671c012da0/openvino_toolkit_ubuntu22_2025.4.0.dev20250820_arm64.tgz"
+  # Or use 'latest' for auto-detection:
+  # archive_url: "latest"
+
+  # Build configuration (for build mode)
   toolchain:
     android_ndk: "/path/to/android-ndk-r26d"  # UPDATE THIS PATH
     abi: "arm64-v8a"

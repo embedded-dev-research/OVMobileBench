@@ -34,16 +34,34 @@ device:
   # port: 22
   push_dir: /home/pi/ovmobilebench  # Remote directory for benchmark files
 
-# Build configuration for ARM cross-compilation
-build:
-  enabled: true
-  openvino_repo: /path/to/openvino  # UPDATE THIS PATH
-  # ARM-specific build settings
-  cmake_args:
-    - -DCMAKE_BUILD_TYPE=Release
-    - -DENABLE_SAMPLES=ON
-    - -DENABLE_TESTS=OFF
-    - -DTARGET_ARM=ON
+# OpenVINO distribution configuration for ARM
+openvino:
+  # Mode 1: Build from source for ARM
+  mode: "build"
+  source_dir: "/path/to/openvino"  # UPDATE THIS PATH
+  commit: "HEAD"
+  build_type: "Release"
+
+  # Mode 2: Use pre-built ARM install (uncomment to use)
+  # mode: "install"
+  # install_dir: "/path/to/openvino/arm64/install"  # UPDATE THIS PATH
+
+  # Mode 3: Download from URL (uncomment to use)
+  # mode: "link"
+  # archive_url: "https://storage.openvinotoolkit.org/repositories/openvino/packages/nightly/\
+  #   2025.4.0-19820-4671c012da0/openvino_toolkit_rhel8_2025.4.0.dev20250820_aarch64.tgz"
+  # Or use 'latest' for auto-detection:
+  # archive_url: "latest"
+
+  # ARM build options (for build mode)
+  toolchain:
+    cmake: "cmake"
+    ninja: "ninja"
+  options:
+    ENABLE_INTEL_GPU: "OFF"
+    ENABLE_ONEDNN_FOR_ARM: "ON"
+    ENABLE_PYTHON: "OFF"
+    BUILD_SHARED_LIBS: "ON"
 
 # Model configuration with directory scanning
 models:

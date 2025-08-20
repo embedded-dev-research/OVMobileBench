@@ -70,9 +70,9 @@ class TestExperiment:
                 "name": "test",
                 "run_id": "test_001",
             },
-            "build": {
-                "enabled": False,
-                "openvino_repo": "/path/to/ov",
+            "openvino": {
+                "mode": "install",
+                "install_dir": "/path/to/ov/install",
             },
             "device": {
                 "kind": "android",
@@ -401,9 +401,9 @@ class TestExperimentWithModelsConfig:
                     "name": "test",
                     "run_id": "test_001",
                 },
-                "build": {
-                    "enabled": False,
-                    "openvino_repo": "/path/to/ov",
+                "openvino": {
+                    "mode": "install",
+                    "install_dir": "/path/to/ov/install",
                 },
                 "device": {
                     "kind": "android",
@@ -440,7 +440,7 @@ class TestExperimentWithModelsConfig:
         """Test that old list format still works."""
         config = {
             "project": {"name": "test", "run_id": "test_001"},
-            "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+            "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
             "device": {"kind": "android", "serials": ["test_device"]},
             "models": [{"name": "old_model", "path": "old_model.xml"}],
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
@@ -459,7 +459,7 @@ class TestExperimentWithModelsConfig:
 
             config = {
                 "project": {"name": "test", "run_id": "test_001"},
-                "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+                "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
                 "device": {"kind": "android", "serials": ["test_device"]},
                 "models": {
                     "directories": [temp_dir],
@@ -493,7 +493,7 @@ class TestExperimentWithModelsConfig:
 
         config = {
             "project": {"name": "test", "run_id": "test_001"},
-            "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+            "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
             "device": {"kind": "android", "serials": ["test_device"]},
             "models": models_config,
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
@@ -510,7 +510,7 @@ class TestExperimentWithModelsConfig:
 
         config = {
             "project": {"name": "test", "run_id": "test_001"},
-            "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+            "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
             "device": {"kind": "android", "serials": ["test_device"]},
             "models": models_config,
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
@@ -525,7 +525,7 @@ class TestExperimentWithModelsConfig:
         # Create a minimal experiment and manually set models to invalid type
         config = {
             "project": {"name": "test", "run_id": "test_001"},
-            "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+            "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
             "device": {"kind": "android", "serials": ["test_device"]},
             "models": [{"name": "temp", "path": "temp.xml"}],  # Valid for creation
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
@@ -595,7 +595,7 @@ class TestEdgeCases:
         """Test Experiment creation with complex ModelsConfig dict."""
         config = {
             "project": {"name": "test", "run_id": "test_001"},
-            "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+            "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
             "device": {"kind": "android", "serials": ["test_device"]},
             "models": {
                 "directories": ["/path1", "/path2"],
@@ -647,7 +647,7 @@ class TestEdgeCases:
         """Test get_total_runs when device serials is empty."""
         config = {
             "project": {"name": "test", "run_id": "test_001"},
-            "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+            "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
             "device": {"kind": "android", "serials": []},  # Empty serials
             "models": [{"name": "model1", "path": "model1.xml"}],
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},

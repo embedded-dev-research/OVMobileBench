@@ -24,19 +24,49 @@ class BuildOptions(BaseModel):
     BUILD_SHARED_LIBS: Literal["ON", "OFF"] = "ON"
 
 
-class BuildConfig(BaseModel):
-    """Build configuration."""
+class OpenVINOConfig(BaseModel):
+    """OpenVINO distribution configuration."""
 
-    enabled: bool = Field(True, description="Whether to build from source")
-    openvino_repo: str = Field(..., description="Path to OpenVINO repository")
-    openvino_commit: str = Field("HEAD", description="Git commit/tag to build")
+    mode: Literal["build", "install", "link"] = Field(
+        "build",
+        description="How to obtain OpenVINO: build from source, use install dir, or download archive",
+    )
+
+    # For 'build' mode
+    source_dir: str | None = Field(
+        None, description="Path to OpenVINO source code (for build mode)"
+    )
+    commit: str = Field("HEAD", description="Git commit/tag to build (for build mode)")
     build_type: Literal["Release", "RelWithDebInfo", "Debug"] = "RelWithDebInfo"
+
+    # For 'install' mode
+    install_dir: str | None = Field(
+        None, description="Path to OpenVINO install directory (for install mode)"
+    )
+
+    # For 'link' mode
+    archive_url: str | None = Field(
+        None, description="URL to OpenVINO archive (for link mode). Use 'latest' for auto-detection"
+    )
+
+    # Common build options (for build mode)
     toolchain: Toolchain = Field(
         default_factory=lambda: Toolchain(
             android_ndk=None, abi="arm64-v8a", api_level=24, cmake="cmake", ninja="ninja"
         )
     )
     options: BuildOptions = Field(default_factory=lambda: BuildOptions())
+
+    @model_validator(mode="after")
+    def validate_mode_config(self):
+        """Validate that required fields are set based on mode."""
+        if self.mode == "build" and not self.source_dir:
+            raise ValueError("source_dir is required when mode is 'build'")
+        elif self.mode == "install" and not self.install_dir:
+            raise ValueError("install_dir is required when mode is 'install'")
+        elif self.mode == "link" and not self.archive_url:
+            raise ValueError("archive_url is required when mode is 'link'")
+        return self
 
 
 class PackageConfig(BaseModel):
@@ -187,7 +217,7 @@ class Experiment(BaseModel):
     """Complete experiment configuration."""
 
     project: ProjectConfig
-    build: BuildConfig
+    openvino: OpenVINOConfig
     package: PackageConfig = Field(default_factory=lambda: PackageConfig())
     device: DeviceConfig
     models: ModelsConfig | list[ModelItem]

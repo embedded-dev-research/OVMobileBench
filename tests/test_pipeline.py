@@ -19,8 +19,13 @@ class TestPipeline:
         config.project = Mock()
         config.project.name = "test"
         config.project.run_id = "test-123"
-        config.build = Mock()
-        config.build.enabled = True
+        config.openvino = Mock()
+        config.openvino.mode = "build"
+        config.openvino.source_dir = "/path/to/openvino"
+        config.openvino.commit = "HEAD"
+        config.openvino.build_type = "Release"
+        config.openvino.toolchain = Mock()
+        config.openvino.options = Mock()
         config.device = Mock()
         config.device.type = "android"
         config.device.serial = "test_device"
@@ -48,7 +53,7 @@ class TestPipeline:
     @patch("ovmobilebench.pipeline.OpenVINOBuilder")
     def test_build_enabled(self, mock_builder_class, mock_config):
         """Test build when enabled."""
-        mock_config.build.enabled = True
+        mock_config.openvino.mode = "build"
         mock_builder = Mock()
         mock_builder.build.return_value = Path("/build/output")
         mock_builder_class.return_value = mock_builder
@@ -64,19 +69,20 @@ class TestPipeline:
 
     def test_build_disabled(self, mock_config):
         """Test build when disabled."""
-        mock_config.build.enabled = False
+        mock_config.openvino.mode = "install"
+        mock_config.openvino.install_dir = "/path/to/install"
 
         with patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir:
             mock_ensure_dir.return_value = Path("/artifacts/test-123")
             pipeline = Pipeline(mock_config)
             result = pipeline.build()
 
-            assert result is None
+            assert result == Path("/path/to/install")
 
     @patch("ovmobilebench.pipeline.OpenVINOBuilder")
     def test_build_dry_run(self, mock_builder_class, mock_config):
         """Test build in dry run mode."""
-        mock_config.build.enabled = True
+        mock_config.openvino.mode = "build"
 
         with patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir:
             mock_ensure_dir.return_value = Path("/artifacts/test-123")
@@ -89,7 +95,7 @@ class TestPipeline:
     @patch("ovmobilebench.pipeline.OpenVINOBuilder")
     def test_build_error(self, mock_builder_class, mock_config):
         """Test build error handling."""
-        mock_config.build.enabled = True
+        mock_config.openvino.mode = "build"
         mock_builder = Mock()
         mock_builder.build.side_effect = BuildError("Build failed")
         mock_builder_class.return_value = mock_builder
