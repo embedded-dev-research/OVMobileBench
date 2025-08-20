@@ -1,0 +1,100 @@
+# Raspberry Pi example configuration
+# This configuration demonstrates benchmarking on ARM-based Raspberry Pi devices via SSH
+#
+# Prerequisites:
+# 1. Raspberry Pi with Raspberry Pi OS (64-bit recommended)
+# 2. SSH access enabled on the Pi
+# 3. OpenVINO ARM build or cross-compilation setup
+# 4. Model files in OpenVINO IR format (.xml + .bin)
+#
+# To use this configuration:
+# 1. Update IP address in device.host
+# 2. Update username and password (or use SSH key)
+# 3. Update model directories paths
+# 4. For better security, use SSH key authentication instead of password
+# 5. Run: ovmobilebench all -c experiments/raspberry_pi_example.yaml
+#
+# Security note: Avoid committing passwords to version control.
+# Consider using SSH keys or environment variables for production.
+
+project:
+  name: raspberry-pi-benchmark
+  run_id: rpi-perf-test
+  description: Performance benchmarking on Raspberry Pi with OpenVINO
+
+# Raspberry Pi SSH device configuration
+device:
+  kind: linux_ssh  # SSH connection to Linux ARM device
+  host: 192.168.1.100  # UPDATE THIS: Raspberry Pi IP address
+  username: pi  # UPDATE THIS: SSH username (default 'pi' for Raspberry Pi OS)
+  password: raspberry  # UPDATE THIS: SSH password (default 'raspberry' for older RPi OS)
+  # Optional: specify SSH key file instead of password
+  # key_filename: /home/user/.ssh/id_rsa
+  # Optional: specify SSH port (default 22)
+  # port: 22
+  push_dir: /home/pi/ovmobilebench  # Remote directory for benchmark files
+
+# Build configuration for ARM cross-compilation
+build:
+  enabled: true
+  openvino_repo: /path/to/openvino  # UPDATE THIS PATH
+  # ARM-specific build settings
+  cmake_args:
+    - -DCMAKE_BUILD_TYPE=Release
+    - -DENABLE_SAMPLES=ON
+    - -DENABLE_TESTS=OFF
+    - -DTARGET_ARM=ON
+
+# Model configuration with directory scanning
+models:
+  directories:
+    - "/path/to/models"  # UPDATE THIS PATH - directory containing model files
+    - "/path/to/optimized/models"  # UPDATE THIS PATH - ARM-optimized models
+  extensions:
+    - ".xml"      # OpenVINO IR format
+    - ".onnx"     # ONNX format
+  models:  # Optional: explicit models for specific testing
+    - name: "rpi_optimized_model"
+      path: "/path/to/rpi_specific/model.xml"  # UPDATE THIS PATH
+
+# Benchmark run configuration optimized for Raspberry Pi
+run:
+  repeats: 3  # Multiple runs for statistical accuracy
+  warmup: true  # Perform warmup run before benchmarking
+  timeout_sec: 300  # 5 minute timeout per benchmark
+  cooldown_sec: 2   # Brief cooldown between runs
+  matrix:
+    # Conservative iteration counts for ARM performance
+    niter: [50, 100]        # Number of iterations
+    api: ["sync"]           # Synchronous inference API
+    nireq: [1, 2]           # Number of inference requests
+    nstreams: ["1", "2"]    # Number of streams
+    device: ["CPU"]         # CPU inference only (most RPi don't have GPU support)
+    infer_precision: ["FP32", "FP16"]  # Test both precisions if supported
+    threads: [1, 2, 4]      # Thread counts suitable for RPi (1-4 cores)
+
+# Package configuration
+package:
+  extra_files:
+    # Include ARM-specific libraries if needed
+    - "/usr/lib/aarch64-linux-gnu/libopenvino*.so*"
+
+# Results reporting
+report:
+  sinks:
+    - type: json
+      path: experiments/results/raspberry_pi_results.json
+    - type: csv
+      path: experiments/results/raspberry_pi_results.csv
+  tags:
+    device_type: raspberry_pi
+    architecture: arm64
+    os: raspberry_pi_os
+    test_suite: performance_benchmark
+
+# Optional: Environment-specific settings
+# environment:
+#   - name: OMP_NUM_THREADS
+#     value: "4"
+#   - name: OPENVINO_LOG_LEVEL
+#     value: "2"
