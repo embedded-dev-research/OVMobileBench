@@ -24,9 +24,20 @@ ovmobilebench all -c experiments/android_example.yaml
 cat experiments/results/*.csv
 ```
 
+### OpenVINO Distribution Modes
+
+OVMobileBench supports three flexible ways to obtain OpenVINO:
+
+1. **Build Mode** - Build OpenVINO from source
+2. **Install Mode** - Use pre-built OpenVINO installation
+3. **Link Mode** - Download OpenVINO archive (supports "latest" for auto-detection)
+
+See [Configuration Reference](docs/configuration.md) for details.
+
 ## 📚 Documentation
 
 - **[Getting Started Guide](docs/getting-started.md)** - Installation and first benchmark
+- **[OpenVINO Modes Guide](docs/openvino-modes.md)** - Three ways to obtain OpenVINO runtime
 - **[User Guide](docs/user-guide.md)** - Complete usage documentation
 - **[Configuration Reference](docs/configuration.md)** - YAML configuration schema
 - **[Device Setup](docs/device-setup.md)** - Android/Linux device preparation
@@ -39,7 +50,7 @@ cat experiments/results/*.csv
 
 ## ✨ Key Features
 
-- 🔨 **Automated Build** - Cross-compile OpenVINO for Android/Linux ARM
+- 🔨 **Flexible OpenVINO Distribution** - Three modes: build from source, use existing install, or download archives
 - 📦 **Smart Packaging** - Bundle runtime, libraries, and models
 - 🚀 **Multi-Device** - Deploy via ADB (Android) or SSH (Linux using paramiko)
 - ⚡ **Matrix Testing** - Test multiple configurations automatically
@@ -48,6 +59,7 @@ cat experiments/results/*.csv
 - 🔄 **CI/CD Ready** - GitHub Actions integration included
 - 📈 **Reproducible** - Full provenance tracking of builds and runs
 - 🤖 **Android SDK/NDK Installer** - Automated setup of Android development tools
+- 🔗 **Auto-Download** - Fetch latest OpenVINO builds for your platform
 
 ## 🔧 Supported Platforms
 
