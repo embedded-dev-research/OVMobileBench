@@ -44,6 +44,7 @@ See [Configuration Reference](docs/configuration.md) for details.
 - **[Android Installer Module](docs/android_installer.md)** - Automated Android SDK/NDK setup
 - **[Build Guide](docs/build-guide.md)** - Building OpenVINO for mobile
 - **[Benchmarking Guide](docs/benchmarking.md)** - Running and interpreting benchmarks
+- **[Testing Guide](docs/testing.md)** - Running and writing tests
 - **[CI/CD Integration](docs/ci-cd.md)** - GitHub Actions and automation
 - **[API Reference](docs/api-reference.md)** - Python API documentation
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions

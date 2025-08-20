@@ -166,19 +166,19 @@ def test_ssh_in_ci():
 
         if success:
             print("[OK] SSH connection test successful!")
-            return True
         else:
             print("[FAIL] SSH test failed")
-            return False
+            assert False, "SSH test failed"
 
     except Exception as e:
         print(f"[ERROR] SSH test error: {e}")
-        return False
+        assert False, f"SSH test error: {e}"
 
 
 if __name__ == "__main__":
-    success = test_ssh_in_ci()
-    if not success:
+    try:
+        test_ssh_in_ci()
+        sys.exit(0)
+    except AssertionError:
         print("\nSSH test failed")
         sys.exit(1)
-    sys.exit(0)
