@@ -1,11 +1,11 @@
 """Configuration module for OVMobileBench."""
 
 from .loader import load_experiment
-from .schema import BuildConfig, DeviceConfig, Experiment, ReportConfig, RunConfig
+from .schema import DeviceConfig, Experiment, OpenVINOConfig, ReportConfig, RunConfig
 
 __all__ = [
     "Experiment",
-    "BuildConfig",
+    "OpenVINOConfig",
     "DeviceConfig",
     "RunConfig",
     "ReportConfig",

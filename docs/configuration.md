@@ -8,7 +8,7 @@ OVMobileBench uses YAML configuration files to define experiments. This document
 
 ```yaml
 project:      # Project metadata
-build:        # OpenVINO build settings
+openvino:     # OpenVINO distribution settings
 package:      # Bundle packaging options
 device:       # Target device configuration
 models:       # Model definitions
@@ -40,50 +40,50 @@ project:
   version: "1.0.0"
 ```
 
-### Build Section
+### OpenVINO Section
 
-Controls OpenVINO build process.
+Controls how OpenVINO runtime is obtained. Supports three modes:
 
 ```yaml
-build:
-  enabled: boolean                    # Whether to build (default: true)
-  openvino_repo: path                # Path to OpenVINO source (required)
-  openvino_commit: string            # Git commit/tag (default: "HEAD")
-  build_type: string                 # CMAKE_BUILD_TYPE (default: "Release")
-  build_dir: path                    # Build directory (optional)
-  clean_build: boolean               # Clean before build (default: false)
+openvino:
+  mode: build|install|link           # Distribution mode (required)
 
+  # Mode 1: Build from source
+  source_dir: path                   # Path to OpenVINO source (for build mode)
+  commit: string                     # Git commit/tag (default: "HEAD")
+  build_type: string                 # CMAKE_BUILD_TYPE (default: "RelWithDebInfo")
+
+  # Mode 2: Use existing installation
+  install_dir: path                  # Path to OpenVINO install (for install mode)
+
+  # Mode 3: Download archive
+  archive_url: string|"latest"       # URL or "latest" for auto-detection (for link mode)
+
+  # Build options (for build mode)
   toolchain:
     android_ndk: path                # Android NDK path (Android only)
     abi: string                      # Target ABI (default: "arm64-v8a")
     api_level: integer               # Android API level (default: 24)
     cmake: path                      # CMake executable (default: "cmake")
     ninja: path                      # Ninja executable (default: "ninja")
-    compiler: string                 # Compiler choice (optional)
 
-  options:                           # CMake options
-    ENABLE_INTEL_CPU: ON|OFF
+  options:                           # CMake options (for build mode)
     ENABLE_INTEL_GPU: ON|OFF
-    ENABLE_ARM_COMPUTE: ON|OFF
     ENABLE_ONEDNN_FOR_ARM: ON|OFF
     ENABLE_PYTHON: ON|OFF
-    ENABLE_SAMPLES: ON|OFF
-    ENABLE_TESTS: ON|OFF
-    ENABLE_LTO: ON|OFF
-    CMAKE_CXX_FLAGS: string
-    CMAKE_C_FLAGS: string
+    BUILD_SHARED_LIBS: ON|OFF
     # Any other CMake options...
 ```
 
 **Examples:**
 
-Android build:
+Mode 1 - Build from source (Android):
 
 ```yaml
-build:
-  enabled: true
-  openvino_repo: "/home/user/openvino"
-  openvino_commit: "releases/2024/3"
+openvino:
+  mode: "build"
+  source_dir: "/home/user/openvino"
+  commit: "releases/2024/3"
   build_type: "Release"
   toolchain:
     android_ndk: "/opt/android-ndk-r26d"
@@ -94,27 +94,28 @@ build:
     ENABLE_ONEDNN_FOR_ARM: "ON"
 ```
 
-Linux ARM build:
+Mode 2 - Use existing installation:
 
 ```yaml
-build:
-  enabled: true
-  openvino_repo: "/home/user/openvino"
-  build_type: "RelWithDebInfo"
-  toolchain:
-    cmake: "/usr/bin/cmake"
-    ninja: "/usr/bin/ninja"
-    compiler: "aarch64-linux-gnu-g++"
-  options:
-    CMAKE_CXX_FLAGS: "-march=armv8.2-a+fp16"
+openvino:
+  mode: "install"
+  install_dir: "/opt/intel/openvino_2024.3"
 ```
 
-Using prebuilt:
+Mode 3 - Download archive:
 
 ```yaml
-build:
-  enabled: false
-  openvino_repo: "/opt/intel/openvino_2024.3"
+openvino:
+  mode: "link"
+  archive_url: "https://storage.openvinotoolkit.org/repositories/openvino/packages/nightly/2025.4.0-19820-4671c012da0/openvino_toolkit_rhel8_2025.4.0.dev20250820_aarch64.tgz"
+```
+
+Mode 3 - Auto-detect latest:
+
+```yaml
+openvino:
+  mode: "link"
+  archive_url: "latest"  # Automatically selects the latest build for your platform
 ```
 
 ### Package Section
@@ -390,10 +391,10 @@ project:
   run_id: "2025-01-15-thread-scaling"
   description: "Analyze thread scaling on Snapdragon 888"
 
-build:
-  enabled: true
-  openvino_repo: "/home/user/openvino"
-  openvino_commit: "releases/2024/3"
+openvino:
+  mode: "build"
+  source_dir: "/home/user/openvino"
+  commit: "releases/2024/3"
   build_type: "Release"
   toolchain:
     android_ndk: "/opt/android-ndk-r26d"
@@ -402,7 +403,6 @@ build:
   options:
     ENABLE_INTEL_GPU: "OFF"
     ENABLE_ONEDNN_FOR_ARM: "ON"
-    ENABLE_LTO: "ON"
 
 package:
   include_symbols: false
@@ -467,8 +467,8 @@ report:
 Configuration values can reference environment variables:
 
 ```yaml
-build:
-  openvino_repo: "${OPENVINO_ROOT}"
+openvino:
+  source_dir: "${OPENVINO_ROOT}"
   toolchain:
     android_ndk: "${ANDROID_NDK_HOME}"
 

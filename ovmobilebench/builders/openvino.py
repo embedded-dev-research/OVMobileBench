@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from ovmobilebench.config.schema import BuildConfig
+from ovmobilebench.config.schema import OpenVINOConfig
 from ovmobilebench.core.errors import BuildError
 from ovmobilebench.core.fs import ensure_dir
 from ovmobilebench.core.shell import run
@@ -14,18 +14,22 @@ logger = logging.getLogger(__name__)
 class OpenVINOBuilder:
     """Build OpenVINO runtime and benchmark_app for target platform."""
 
-    def __init__(self, config: BuildConfig, build_dir: Path, verbose: bool = False):
+    def __init__(self, config: OpenVINOConfig, build_dir: Path, verbose: bool = False):
         self.config = config
         self.build_dir = ensure_dir(build_dir)
         self.verbose = verbose
 
     def build(self) -> Path:
         """Build OpenVINO and return path to build artifacts."""
-        if not self.config.enabled:
-            logger.info("Build disabled, using prebuilt binaries")
-            return Path(self.config.openvino_repo) / "bin"
+        if self.config.mode != "build":
+            raise ValueError(
+                f"OpenVINOBuilder can only be used with mode='build', got '{self.config.mode}'"
+            )
 
-        logger.info(f"Building OpenVINO from {self.config.openvino_repo}")
+        if not self.config.source_dir:
+            raise ValueError("source_dir must be specified for build mode")
+
+        logger.info(f"Building OpenVINO from {self.config.source_dir}")
 
         # Checkout specific commit
         self._checkout_commit()
@@ -40,21 +44,21 @@ class OpenVINOBuilder:
 
     def _checkout_commit(self):
         """Checkout specific commit if needed."""
-        if self.config.openvino_commit != "HEAD":
+        if self.config.commit != "HEAD":
             run(
-                f"git checkout {self.config.openvino_commit}",
-                cwd=Path(self.config.openvino_repo),
+                f"git checkout {self.config.commit}",
+                cwd=Path(self.config.source_dir),
                 check=True,
                 verbose=self.verbose,
             )
-            logger.info(f"Checked out commit: {self.config.openvino_commit}")
+            logger.info(f"Checked out commit: {self.config.commit}")
 
     def _configure_cmake(self):
         """Configure CMake for Android build."""
         cmake_args = [
             "cmake",
             "-S",
-            self.config.openvino_repo,
+            self.config.source_dir,
             "-B",
             str(self.build_dir),
             "-GNinja",

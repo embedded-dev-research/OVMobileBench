@@ -10,10 +10,10 @@ device:
   username: testuser
   push_dir: /tmp/ovmobilebench
 
-# Build configuration (disabled for CI)
-build:
-  enabled: false
-  openvino_repo: /tmp/openvino
+# OpenVINO configuration (using pre-installed for CI)
+openvino:
+  mode: "install"
+  install_dir: "/opt/openvino/install"  # Pre-installed OpenVINO in CI
 
 # Dummy models for testing
 models:

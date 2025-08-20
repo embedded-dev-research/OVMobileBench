@@ -34,19 +34,34 @@ class Pipeline:
         self.results: list[dict[str, Any]] = []
 
     def build(self) -> Path | None:
-        """Build OpenVINO runtime."""
-        if not self.config.build.enabled:
-            logger.info("Build disabled, skipping")
-            return None
+        """Build or prepare OpenVINO runtime based on mode."""
+        openvino_config = self.config.openvino
 
         if self.dry_run:
-            logger.info("[DRY RUN] Would build OpenVINO")
+            logger.info(f"[DRY RUN] Would prepare OpenVINO in '{openvino_config.mode}' mode")
             return None
 
-        build_dir = self.artifacts_dir / "build"
-        builder = OpenVINOBuilder(self.config.build, build_dir, self.verbose)
+        if openvino_config.mode == "build":
+            logger.info("Building OpenVINO from source")
+            build_dir = self.artifacts_dir / "build"
+            builder = OpenVINOBuilder(openvino_config, build_dir, self.verbose)
+            return builder.build()
 
-        return builder.build()
+        elif openvino_config.mode == "install":
+            logger.info(f"Using existing OpenVINO install from: {openvino_config.install_dir}")
+            # Just return the install directory
+            if openvino_config.install_dir is None:
+                raise ValueError("install_dir must be specified when mode is 'install'")
+            return Path(openvino_config.install_dir)
+
+        elif openvino_config.mode == "link":
+            logger.info(f"Downloading OpenVINO from: {openvino_config.archive_url}")
+            if openvino_config.archive_url is None:
+                raise ValueError("archive_url must be specified when mode is 'link'")
+            return self._download_and_extract_openvino(openvino_config.archive_url)
+
+        else:
+            raise ValueError(f"Unknown OpenVINO mode: {openvino_config.mode}")
 
     def package(self) -> Path | None:
         """Create deployment package."""
@@ -54,13 +69,24 @@ class Pipeline:
             logger.info("[DRY RUN] Would create package")
             return None
 
-        # Get build artifacts
-        build_dir = self.artifacts_dir / "build"
+        # Get OpenVINO artifacts based on mode
         artifacts = {}
+        openvino_config = self.config.openvino
 
-        if self.config.build.enabled:
-            builder = OpenVINOBuilder(self.config.build, build_dir, self.verbose)
+        if openvino_config.mode == "build":
+            build_dir = self.artifacts_dir / "build"
+            builder = OpenVINOBuilder(openvino_config, build_dir, self.verbose)
             artifacts = builder.get_artifacts()
+        elif openvino_config.mode == "install":
+            # Use existing install directory
+            if openvino_config.install_dir is None:
+                raise ValueError("install_dir must be specified when mode is 'install'")
+            install_dir = Path(openvino_config.install_dir)
+            artifacts = self._get_install_artifacts(install_dir)
+        elif openvino_config.mode == "link":
+            # Artifacts should be already downloaded in build() step
+            download_dir = self.artifacts_dir / "openvino_download"
+            artifacts = self._get_install_artifacts(download_dir)
 
         # Create package
         packager = Packager(
@@ -192,6 +218,152 @@ class Pipeline:
 
             sink.write(aggregated, path)
             logger.info(f"Report written to: {path}")
+
+    def _download_and_extract_openvino(self, archive_url: str) -> Path:
+        """Download and extract OpenVINO archive."""
+        import json
+        import platform
+        import tarfile
+        import urllib.request
+
+        download_dir = self.artifacts_dir / "openvino_download"
+        download_dir.mkdir(parents=True, exist_ok=True)
+
+        # Handle 'latest' URL
+        if archive_url == "latest":
+            # Fetch latest.json to get actual URL
+            latest_url = "https://storage.openvinotoolkit.org/repositories/openvino/packages/nightly/latest.json"
+            logger.info(f"Fetching latest OpenVINO URL from: {latest_url}")
+
+            with urllib.request.urlopen(latest_url) as response:
+                latest_data = json.loads(response.read())
+
+                # Auto-select based on platform and device config
+                system = platform.system().lower()
+                machine = platform.machine().lower()
+                device_kind = self.config.device.kind
+
+                # Determine the key to use
+                if device_kind == "android":
+                    # For Android, prefer ARM64 builds
+                    if "linux_aarch64" in latest_data:
+                        selected_key = "linux_aarch64"
+                    elif "ubuntu22_arm64" in latest_data:
+                        selected_key = "ubuntu22_arm64"
+                    else:
+                        logger.warning(
+                            f"No ARM64 build found for Android. Available: {list(latest_data.keys())}"
+                        )
+                        # Fallback to first available
+                        selected_key = list(latest_data.keys())[0]
+                elif device_kind == "linux_ssh":
+                    # For Linux SSH (e.g., Raspberry Pi), use ARM64
+                    if "linux_aarch64" in latest_data:
+                        selected_key = "linux_aarch64"
+                    elif "rhel8_aarch64" in latest_data:
+                        selected_key = "rhel8_aarch64"
+                    elif "ubuntu22_arm64" in latest_data:
+                        selected_key = "ubuntu22_arm64"
+                    else:
+                        logger.warning(
+                            f"No ARM64 build found. Available: {list(latest_data.keys())}"
+                        )
+                        selected_key = list(latest_data.keys())[0]
+                else:
+                    # For host system, match current platform
+                    selected_key = None
+                    if "darwin" in system and "macos" in str(latest_data.keys()).lower():
+                        selected_key = next(
+                            (k for k in latest_data.keys() if "macos" in k.lower()), None
+                        )
+                    elif "linux" in system:
+                        if "x86_64" in machine or "amd64" in machine:
+                            ubuntu_key = next(
+                                (
+                                    k
+                                    for k in latest_data.keys()
+                                    if "ubuntu" in k.lower() and "arm" not in k.lower()
+                                ),
+                                None,
+                            )
+                            if ubuntu_key:
+                                selected_key = ubuntu_key
+                        else:
+                            arm_key = next(
+                                (
+                                    k
+                                    for k in latest_data.keys()
+                                    if "arm" in k.lower() or "aarch" in k.lower()
+                                ),
+                                None,
+                            )
+                            if arm_key:
+                                selected_key = arm_key
+
+                    if not selected_key:
+                        selected_key = list(latest_data.keys())[0]
+
+                logger.info(f"Selected build: {selected_key}")
+                archive_url = latest_data[selected_key]["url"]
+                logger.info(f"Using archive URL: {archive_url}")
+
+        # Download archive
+        archive_path = download_dir / "openvino.tgz"
+        if not archive_path.exists():
+            logger.info(f"Downloading OpenVINO archive to: {archive_path}")
+            urllib.request.urlretrieve(archive_url, archive_path)
+        else:
+            logger.info(f"Using cached archive: {archive_path}")
+
+        # Extract archive
+        extract_dir = download_dir / "extracted"
+        if not extract_dir.exists():
+            logger.info(f"Extracting archive to: {extract_dir}")
+            with tarfile.open(archive_path, "r:gz") as tar:
+                tar.extractall(extract_dir)
+        else:
+            logger.info(f"Using already extracted archive: {extract_dir}")
+
+        # Find install directory in extracted archive
+        # Try different patterns
+        patterns = [
+            "*/runtime",
+            "*/install",
+            "*_package*/runtime",
+            "l_openvino_toolkit*/runtime",
+            "*",
+        ]
+
+        for pattern in patterns:
+            install_dirs = list(extract_dir.glob(pattern))
+            if install_dirs and install_dirs[0].is_dir():
+                logger.info(f"Found OpenVINO directory: {install_dirs[0]}")
+                return install_dirs[0]
+
+        raise ValueError(
+            f"Could not find OpenVINO install directory in archive. Contents: {list(extract_dir.iterdir())}"
+        )
+
+    def _get_install_artifacts(self, install_dir: Path) -> dict[str, Path]:
+        """Get artifacts from an install directory."""
+        artifacts = {}
+
+        # Look for benchmark_app
+        benchmark_apps = list(install_dir.glob("**/benchmark_app"))
+        if benchmark_apps:
+            artifacts["benchmark_app"] = benchmark_apps[0]
+
+        # Look for libraries
+        lib_dirs = list(install_dir.glob("**/lib"))
+        if lib_dirs:
+            artifacts["lib_dir"] = lib_dirs[0]
+
+        # Look for plugins
+        plugin_dirs = list(install_dir.glob("**/plugins.xml"))
+        if plugin_dirs:
+            artifacts["plugins_xml"] = plugin_dirs[0]
+
+        return artifacts
 
     def _get_device(self, serial: str):
         """Get device instance."""

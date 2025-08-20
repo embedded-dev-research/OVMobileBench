@@ -67,7 +67,7 @@ class TestLoadExperiment:
         """Test loading experiment with string path."""
         valid_config = {
             "project": {"name": "test", "run_id": "test_001"},
-            "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+            "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
             "device": {"kind": "android", "serials": ["test_device"]},
             "models": [{"name": "model1", "path": "model1.xml"}],
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
@@ -82,7 +82,7 @@ class TestLoadExperiment:
         """Test loading experiment with Path object."""
         valid_config = {
             "project": {"name": "test", "run_id": "test_001"},
-            "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+            "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
             "device": {"kind": "android", "serials": ["test_device"]},
             "models": [{"name": "model1", "path": "model1.xml"}],
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
@@ -168,7 +168,7 @@ class TestScanModelDirectoriesLoader:
 
             config_data = {
                 "project": {"name": "test", "run_id": "test_001"},
-                "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+                "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
                 "device": {"kind": "android", "serials": ["test_device"]},
                 "models": {
                     "directories": [temp_dir],
@@ -199,7 +199,7 @@ class TestScanModelDirectoriesLoader:
 
         config_data = {
             "project": {"name": "test", "run_id": "test_001"},
-            "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+            "openvino": {"mode": "install", "install_dir": "/path/to/ov/install"},
             "device": {"kind": "android", "serials": ["test_device"]},
             "models": [{"name": "legacy_model", "path": "legacy.xml"}],
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
