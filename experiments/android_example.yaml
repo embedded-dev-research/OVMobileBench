@@ -31,12 +31,21 @@ device:
   use_root: false
 
 models:
-  - name: "resnet50"
-    path: "models/resnet50_fp16.xml"  # UPDATE THIS PATH
-    precision: "FP16"
-    tags:
-      framework: "tensorflow"
-      task: "classification"
+  directories:
+    - "/path/to/models"  # UPDATE THIS PATH - directory containing model files
+    - "/path/to/additional/models"  # UPDATE THIS PATH - additional model directories
+  extensions:
+    - ".xml"      # OpenVINO IR format
+    - ".onnx"     # ONNX format
+    - ".pb"       # TensorFlow format
+    - ".tflite"   # TensorFlow Lite format
+  models:  # Optional: explicit models in addition to directory scanning
+    - name: "custom_model"
+      path: "/path/to/custom/model.xml"  # UPDATE THIS PATH
+      precision: "FP16"
+      tags:
+        framework: "custom"
+        task: "detection"
 
 run:
   repeats: 3

@@ -110,6 +110,23 @@ class ModelItem(BaseModel):
         return v
 
 
+class ModelsConfig(BaseModel):
+    """Models configuration - supports both individual models and directories."""
+
+    directories: list[str] | None = Field(None, description="Directories to scan for models")
+    extensions: list[str] = Field(
+        default=[".xml", ".onnx", ".pb", ".tflite", ".bin"],
+        description="Model file extensions to search for",
+    )
+    models: list[ModelItem] | None = Field(None, description="Individual model configurations")
+
+    @model_validator(mode="after")
+    def validate_models_config(self):
+        if not self.directories and not self.models:
+            raise ValueError("Either 'directories' or 'models' must be specified")
+        return self
+
+
 class RunMatrix(BaseModel):
     """Run matrix configuration."""
 
@@ -173,7 +190,7 @@ class Experiment(BaseModel):
     build: BuildConfig
     package: PackageConfig = Field(default_factory=lambda: PackageConfig())
     device: DeviceConfig
-    models: list[ModelItem]
+    models: ModelsConfig | list[ModelItem]
     run: RunConfig = Field(
         default_factory=lambda: RunConfig(
             repeats=3,
@@ -192,6 +209,20 @@ class Experiment(BaseModel):
         )
     )
     report: ReportConfig
+
+    def get_model_list(self) -> list[ModelItem]:
+        """Get list of models, handling both formats."""
+        if isinstance(self.models, list):
+            # Legacy format - list of ModelItem
+            return self.models
+        elif isinstance(self.models, ModelsConfig):
+            # New format - ModelsConfig
+            model_list = []
+            if self.models.models:
+                model_list.extend(self.models.models)
+            # Directory scanning will be handled by the loader
+            return model_list
+        return []
 
     def expand_matrix_for_model(self, model: ModelItem) -> list[dict[str, Any]]:
         """Expand run matrix for a specific model."""
@@ -223,6 +254,7 @@ class Experiment(BaseModel):
     def get_total_runs(self) -> int:
         """Calculate total number of benchmark runs."""
         total = 0
-        for model in self.models:
+        model_list = self.get_model_list()
+        for model in model_list:
             total += len(self.expand_matrix_for_model(model)) * self.run.repeats
         return total * len(self.device.serials or ["default"])

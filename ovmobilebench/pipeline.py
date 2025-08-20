@@ -65,7 +65,7 @@ class Pipeline:
         # Create package
         packager = Packager(
             self.config.package,
-            self.config.models,
+            self.config.get_model_list(),
             self.artifacts_dir / "packages",
         )
 
@@ -132,7 +132,7 @@ class Pipeline:
             )
 
             # Run for each model
-            for model in self.config.models:
+            for model in self.config.get_model_list():
                 logger.info(f"Running model: {model.name}")
 
                 # Warmup if enabled
