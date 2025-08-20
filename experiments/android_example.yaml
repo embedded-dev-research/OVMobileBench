@@ -42,10 +42,6 @@ models:
   models:  # Optional: explicit models in addition to directory scanning
     - name: "custom_model"
       path: "/path/to/custom/model.xml"  # UPDATE THIS PATH
-      precision: "FP16"
-      tags:
-        framework: "custom"
-        task: "detection"
 
 run:
   repeats: 3

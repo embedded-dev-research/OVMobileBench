@@ -602,7 +602,7 @@ class TestEdgeCases:
                 "extensions": [".xml", ".onnx", ".pb"],
                 "models": [
                     {"name": "explicit1", "path": "explicit1.xml"},
-                    {"name": "explicit2", "path": "explicit2.xml", "precision": "FP16"},
+                    {"name": "explicit2", "path": "explicit2.xml"},
                 ],
             },
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
