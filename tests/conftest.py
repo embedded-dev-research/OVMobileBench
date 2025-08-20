@@ -9,7 +9,7 @@ def pytest_collection_modifyitems(config, items):
     """Automatically skip tests listed in skip_list.txt."""
     skip_list_file = Path(__file__).parent / "skip_list.txt"
 
-    # Read skip list
+    # Read the skip list
     skip_list = set()
     if skip_list_file.exists():
         with open(skip_list_file) as f:
