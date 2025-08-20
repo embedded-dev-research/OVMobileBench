@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          python tests/test_ssh_device_ci.py
+          python tests/devices/test_ssh_device_ci.py
 
       - name: Run benchmark dry-run via SSH
         shell: bash
