@@ -153,3 +153,86 @@ class TestSaveExperiment:
         path = Path("/test/output.yaml")
         with pytest.raises(yaml.YAMLError):
             save_experiment(experiment, path)
+
+
+class TestScanModelDirectoriesLoader:
+    """Test scan_model_directories function from loader."""
+
+    def test_load_experiment_with_models_config_dict(self):
+        """Test load_experiment processing ModelsConfig from dict format."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            (temp_path / "test_model.xml").touch()
+
+            config_data = {
+                "project": {"name": "test", "run_id": "test_001"},
+                "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+                "device": {"kind": "android", "serials": ["test_device"]},
+                "models": {
+                    "directories": [temp_dir],
+                    "extensions": [".xml"],
+                },
+                "report": {"sinks": [{"type": "json", "path": "results.json"}]},
+            }
+
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+                yaml.dump(config_data, f)
+                temp_config_path = f.name
+
+            try:
+                exp = load_experiment(temp_config_path)
+                # Should have processed models dict into list format
+                assert isinstance(exp.models, list)
+                assert len(exp.models) == 1
+                # Check if it's ModelItem object or dict
+                model = exp.models[0]
+                model_name = model.name if hasattr(model, "name") else model["name"]
+                assert model_name == "test_model"
+            finally:
+                Path(temp_config_path).unlink()
+
+    def test_load_experiment_with_legacy_models_list(self):
+        """Test load_experiment with legacy models list format."""
+        import tempfile
+
+        config_data = {
+            "project": {"name": "test", "run_id": "test_001"},
+            "build": {"enabled": False, "openvino_repo": "/path/to/ov"},
+            "device": {"kind": "android", "serials": ["test_device"]},
+            "models": [{"name": "legacy_model", "path": "legacy.xml"}],
+            "report": {"sinks": [{"type": "json", "path": "results.json"}]},
+        }
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(config_data, f)
+            temp_config_path = f.name
+
+        try:
+            exp = load_experiment(temp_config_path)
+            # Should remain as list format
+            assert isinstance(exp.models, list)
+            assert len(exp.models) == 1
+            # Check if it's ModelItem object or dict
+            model = exp.models[0]
+            model_name = model.name if hasattr(model, "name") else model["name"]
+            assert model_name == "legacy_model"
+        finally:
+            Path(temp_config_path).unlink()
+
+    def test_scan_with_io_warning(self, capsys):
+        """Test that warning is printed for nonexistent directories."""
+        from ovmobilebench.config.loader import scan_model_directories
+        from ovmobilebench.config.schema import ModelsConfig
+
+        config = ModelsConfig(
+            directories=["/totally/nonexistent/path"],
+            extensions=[".xml"],
+        )
+
+        models = scan_model_directories(config)
+        captured = capsys.readouterr()
+
+        assert len(models) == 0
+        assert "Warning: Model directory '/totally/nonexistent/path' does not exist" in captured.out
