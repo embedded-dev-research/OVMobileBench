@@ -55,8 +55,11 @@ class OpenVINOBuilder:
 
     def _configure_cmake(self):
         """Configure CMake for Android build."""
+        # Use CMake from Android SDK if available, fallback to system cmake
+        cmake_executable = self._get_cmake_executable()
+
         cmake_args = [
-            "cmake",
+            cmake_executable,
             "-S",
             self.config.source_dir,
             "-B",
@@ -101,6 +104,29 @@ class OpenVINOBuilder:
             raise BuildError(f"CMake configuration failed: {result.stderr}")
 
         logger.info("CMake configuration completed")
+
+    def _get_cmake_executable(self) -> str:
+        """Get CMake executable path, preferring Android SDK CMake."""
+        # Check for CMake in Android SDK
+        if self.config.toolchain.android_ndk:
+            android_home = Path(self.config.toolchain.android_ndk).parent.parent
+            cmake_versions_dir = android_home / "cmake"
+
+            if cmake_versions_dir.exists():
+                # Find the latest CMake version
+                cmake_versions = [d for d in cmake_versions_dir.iterdir() if d.is_dir()]
+                if cmake_versions:
+                    # Sort versions and get the latest
+                    latest_version = sorted(cmake_versions, key=lambda x: x.name)[-1]
+                    cmake_executable = latest_version / "bin" / "cmake"
+
+                    if cmake_executable.exists():
+                        logger.info(f"Using CMake from Android SDK: {cmake_executable}")
+                        return str(cmake_executable)
+
+        # Fallback to system cmake
+        logger.info("Using system CMake")
+        return "cmake"
 
     def _build(self):
         """Build OpenVINO using Ninja."""

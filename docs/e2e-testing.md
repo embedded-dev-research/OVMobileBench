@@ -52,7 +52,23 @@ The CI runs on two platforms:
 
 ## GitHub Actions Workflow
 
-The E2E workflow (`.github/workflows/e2e-android-test.yml`) demonstrates the complete OVMobileBench pipeline:
+The E2E workflow (`.github/workflows/e2e-android-test.yml`) demonstrates the complete OVMobileBench pipeline with intelligent caching for optimal performance:
+
+### Caching Strategy
+
+The workflow uses multi-layer caching to reduce build times:
+
+- **Android SDK Cache**: Saves ~10-15 minutes by caching SDK, NDK, and system images
+- **Python Dependencies**: Caches pip packages to save ~1-2 minutes
+- **OpenVINO Build Cache**: Caches compiled libraries to save ~20-30 minutes
+- **Models Cache**: Caches downloaded models to save ~2-5 minutes
+
+#### Manual Cache Control
+
+When running the workflow manually:
+
+- Set `clear_cache: true` to rebuild everything from scratch
+- Useful for debugging cache-related issues or ensuring clean builds
 
 ### 1. Environment Setup
 

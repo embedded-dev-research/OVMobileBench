@@ -13,7 +13,7 @@ build:
       - "-DENABLE_INTEL_GPU=OFF"
   android:
     abi: "arm64-v8a"
-    api_level: 30
+    api_level: 34
     stl: "c++_shared"
 
 device:
