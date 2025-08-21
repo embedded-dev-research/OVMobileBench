@@ -52,6 +52,9 @@ lint:
 test:
 	pytest tests/ -v
 
+test-e2e:
+	pytest tests/e2e/ -v
+
 clean:
 	rm -rf artifacts/
 	rm -rf build/

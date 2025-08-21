@@ -214,5 +214,56 @@ def list_ssh_devices():
         console.print(f"  • {serial} [[{status_color}]{status}[/{status_color}]]")
 
 
+@app.command("setup-android")
+def setup_android(
+    api_level: int = typer.Option(30, "--api", help="Android API level"),
+    create_avd: bool = typer.Option(False, "--create-avd", help="Create AVD for emulator"),
+    sdk_root: Path = typer.Option(None, "--sdk-root", help="Android SDK root path"),
+    verbose: bool = typer.Option(False, "-v", "--verbose", help="Enable verbose output"),
+):
+    """Setup Android SDK/NDK for OVMobileBench."""
+    from ovmobilebench.android.installer.api import ensure_android_tools
+    from ovmobilebench.android.installer.types import NdkSpec
+
+    console.print("[bold blue]Setting up Android SDK/NDK...[/bold blue]")
+
+    if sdk_root is None:
+        sdk_root = Path(os.environ.get("ANDROID_HOME", "/opt/android-sdk"))
+
+    avd_name = f"ovmobilebench_avd_api{api_level}" if create_avd else None
+
+    try:
+        result = ensure_android_tools(
+            sdk_root=sdk_root,
+            api=api_level,
+            target="google_apis",
+            arch="arm64-v8a",
+            ndk=NdkSpec(alias="r26d"),
+            install_platform_tools=True,
+            install_emulator=True,
+            install_build_tools="34.0.0",
+            create_avd_name=avd_name,
+            accept_licenses=True,
+            verbose=verbose,
+        )
+
+        console.print("[bold green][OK] Android SDK/NDK setup completed[/bold green]")
+        console.print(f"SDK Root: {result['sdk_root']}")
+        console.print(f"NDK Path: {result['ndk_path']}")
+
+        if avd_name:
+            console.print(f"AVD Created: {avd_name}")
+
+        # Print export commands for user
+        console.print("\n[yellow]Export these environment variables:[/yellow]")
+        console.print(f"export ANDROID_HOME={result['sdk_root']}")
+        console.print(f"export ANDROID_SDK_ROOT={result['sdk_root']}")
+        console.print(f"export ANDROID_NDK_HOME={result['ndk_path']}")
+
+    except Exception as e:
+        console.print(f"[bold red][ERROR] Setup failed: {e}[/bold red]")
+        raise typer.Exit(1)
+
+
 if __name__ == "__main__":
     app()

@@ -1,0 +1,41 @@
+project:
+  name: "e2e-android-resnet50"
+  run_id: "test_001"
+
+build:
+  enabled: true
+  type: openvino
+  openvino:
+    source: "latest"
+    cmake_args:
+      - "-DCMAKE_BUILD_TYPE=Release"
+      - "-DENABLE_INTEL_CPU=ON"
+      - "-DENABLE_INTEL_GPU=OFF"
+  android:
+    abi: "arm64-v8a"
+    api_level: 30
+    stl: "c++_shared"
+
+device:
+  type: android
+  serial: "emulator-5554"
+
+models:
+  - name: "resnet-50"
+    path: "ovmb_cache/models/resnet-50-pytorch.xml"
+    framework: "openvino"
+
+run:
+  enabled: true
+  matrix:
+    niter: [100]
+    nireq: [1]
+    nstreams: [1]
+    threads: [4]
+    device: ["CPU"]
+    infer_precision: ["FP16"]
+
+report:
+  enabled: true
+  format: ["json", "csv"]
+  output_dir: "artifacts/reports"
