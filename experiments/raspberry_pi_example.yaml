@@ -21,6 +21,7 @@ project:
   name: raspberry-pi-benchmark
   run_id: rpi-perf-test
   description: Performance benchmarking on Raspberry Pi with OpenVINO
+  cache_dir: "ovmb_cache"
 
 # Raspberry Pi SSH device configuration
 device:

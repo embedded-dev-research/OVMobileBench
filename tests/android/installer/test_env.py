@@ -6,8 +6,6 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
-import pytest
-
 from ovmobilebench.android.installer.env import EnvExporter, export_android_env
 
 
@@ -52,7 +50,6 @@ class TestEnvExporter:
             assert "ANDROID_PLATFORM_TOOLS" in env_vars
             assert env_vars["ANDROID_PLATFORM_TOOLS"] == str(platform_tools.absolute())
 
-    @pytest.mark.skip(reason="Mock file write needs refinement")
     @patch("builtins.open", new_callable=mock_open)
     def test_export_to_github_env(self, mock_file):
         """Test exporting to GitHub environment file."""

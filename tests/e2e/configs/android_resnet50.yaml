@@ -1,41 +1,63 @@
 project:
   name: "e2e-android-resnet50"
   run_id: "test_001"
+  description: "E2E test for Android ResNet50 benchmarking"
+  cache_dir: "ovmb_cache"
 
-build:
-  enabled: true
-  type: openvino
-  openvino:
-    source: "latest"
-    cmake_args:
-      - "-DCMAKE_BUILD_TYPE=Release"
-      - "-DENABLE_INTEL_CPU=ON"
-      - "-DENABLE_INTEL_GPU=OFF"
-  android:
+environment:
+  # Java and SDK paths - auto-detected from environment or defaults
+  # java_home: will use JAVA_HOME environment variable if not specified
+  # sdk_root: will use cache_dir/android-sdk if not specified
+
+openvino:
+  mode: "build"
+  commit: "HEAD"
+  build_type: "Release"
+  toolchain:
     abi: "arm64-v8a"
-    api_level: 34
-    stl: "c++_shared"
+    api_level: 30
+    ninja: "ninja"
+  options:
+    ENABLE_INTEL_GPU: "OFF"
+    ENABLE_ONEDNN_FOR_ARM: "OFF"
+    ENABLE_PYTHON: "OFF"
+    BUILD_SHARED_LIBS: "ON"
+
+package:
+  include_symbols: false
+  extra_files: []
 
 device:
-  type: android
-  serial: "emulator-5554"
+  kind: "android"
+  serials: ["emulator-5554"]
+  push_dir: "/data/local/tmp/ovmobilebench"
+  use_root: false
 
 models:
   - name: "resnet-50"
     path: "ovmb_cache/models/resnet-50-pytorch.xml"
-    framework: "openvino"
 
 run:
-  enabled: true
+  repeats: 1
   matrix:
     niter: [100]
     nireq: [1]
-    nstreams: [1]
+    nstreams: ["1"]
     threads: [4]
     device: ["CPU"]
     infer_precision: ["FP16"]
+  cooldown_sec: 2
+  timeout_sec: 120
+  warmup: true
 
 report:
-  enabled: true
-  format: ["json", "csv"]
-  output_dir: "artifacts/reports"
+  sinks:
+    - type: "json"
+      path: "artifacts/reports/results.json"
+    - type: "csv"
+      path: "artifacts/reports/results.csv"
+  tags:
+    experiment: "e2e_test"
+    version: "v1.0"
+  aggregate: true
+  include_raw: false

@@ -68,6 +68,18 @@ class OpenVINOBuilder:
             f"-DCMAKE_BUILD_TYPE={self.config.build_type}",
         ]
 
+        # Enable ccache if available
+        import shutil
+
+        if shutil.which("ccache"):
+            cmake_args.extend(
+                [
+                    "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
+                    "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
+                ]
+            )
+            logger.info("Using ccache for compilation")
+
         # Android-specific configuration
         if self.config.toolchain.android_ndk:
             cmake_args.extend(

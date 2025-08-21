@@ -44,7 +44,6 @@ class TestAvdManager:
         else:
             assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager"
 
-    @pytest.mark.skip(reason="Platform-specific test fails on non-Windows")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_get_avdmanager_path_windows(self, mock_detect):
         """Test getting avdmanager path on Windows."""

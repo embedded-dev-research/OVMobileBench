@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
 #  schedule:
-#    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+#    - cron: '0 2 * * *' # Daily at 2 AM UTC
   workflow_dispatch:
     inputs:
       clear_cache:
@@ -40,26 +40,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt', 'pyproject.toml') }}${{
-            github.event.inputs.clear_cache == 'true' && '-nocache' || '' }}
-          restore-keys: |
-            pip-${{ runner.os }}-
+          cache-dependency-path: |
+            requirements.txt
+            setup.py
 
       - name: Install OVMobileBench
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install -e .
+
+      - name: Install build tools
+        run: |
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y ccache ninja-build
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            brew install ccache ninja
+          fi
 
       - name: Setup Java for Android
         uses: actions/setup-java@v4
@@ -69,64 +72,48 @@ jobs:
 
       - name: Enable KVM for Android emulator (Linux only)
         if: runner.os == 'Linux'
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' |
-            sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
+        run: bash tests/e2e/scripts/setup_kvm_linux.sh
 
       - name: Enable Hypervisor.framework for Android emulator (macOS only)
         if: runner.os == 'macOS'
-        run: |
-          # Hypervisor.framework is enabled by default on GitHub Actions macOS runners
-          # Just verify it's available
-          sysctl -n kern.hv_support || echo "Hypervisor.framework not available"
-          # Set environment variable for emulator to use HAXM/Hypervisor
-          echo "ANDROID_EMULATOR_USE_SYSTEM_LIBS=1" >> $GITHUB_ENV
+        run: bash tests/e2e/scripts/setup_hypervisor_macos.sh
 
-      - name: Cache Android SDK
+      - name: Cache OVMobileBench cache directory
         uses: actions/cache@v4
         id: android-cache
         with:
-          path: |
-            ~/android-sdk
-            ~/.android
-          key: android-sdk-${{ runner.os }}-${{ matrix.android-api }}-${{ matrix.arch }}-v2${{
+          path: ~/ovmb_cache
+          key: ovmb-cache-${{ runner.os }}-${{ matrix.android-api }}-${{ matrix.arch }}-v3${{
             github.event.inputs.clear_cache == 'true' && '-nocache' || '' }}
           restore-keys: |
-            android-sdk-${{ runner.os }}-${{ matrix.android-api }}-
-            android-sdk-${{ runner.os }}-
+            ovmb-cache-${{ runner.os }}-${{ matrix.android-api }}-
+            ovmb-cache-${{ runner.os }}-
 
       - name: Setup Android SDK/NDK via OVMobileBench
         run: |
-          # Set Android SDK location
-          export ANDROID_HOME=$HOME/android-sdk
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-
           # Check if cache was forced to be cleared
           if [ "${{ github.event.inputs.clear_cache }}" = "true" ]; then
             echo "🧹 Cache clearing was requested - installing from scratch"
-            rm -rf $ANDROID_HOME ~/.android 2>/dev/null || true
+            rm -rf $HOME/ovmb_cache ~/.android 2>/dev/null || true
           fi
 
-          # Always use OVMobileBench for setup - it handles existing installations smartly
+          # Setup Android SDK/NDK - OVMobileBench will use config to determine paths
           echo "🔧 Setting up Android SDK/NDK via OVMobileBench..."
-          if [ "${{ steps.android-cache.outputs.cache-hit }}" != 'true' ] || [ ! -d "$ANDROID_HOME" ]; then
+          # OVMobileBench will read the config and use cache_dir/android-sdk automatically
+          if [ "${{ steps.android-cache.outputs.cache-hit }}" != 'true' ] || \
+             [ ! -d "$HOME/ovmb_cache/android-sdk" ]; then
             echo "📦 Cache miss or incomplete - Installing from scratch..."
             echo "This will take 5-10 minutes to download and install all components"
-            # Full installation
+            # Full installation - config will determine SDK location
             python -m ovmobilebench.cli setup-android \
               --api ${{ matrix.android-api }} \
               --create-avd \
-              --sdk-root $ANDROID_HOME \
               --verbose
           else
             echo "⚡ Cache hit - Verifying existing installation via OVMobileBench..."
             # First try verification only
             if python -m ovmobilebench.cli setup-android \
               --api ${{ matrix.android-api }} \
-              --sdk-root $ANDROID_HOME \
               --verify-only \
               --verbose; then
               echo "✅ Verification passed - using cached installation"
@@ -135,20 +122,13 @@ jobs:
               python -m ovmobilebench.cli setup-android \
                 --api ${{ matrix.android-api }} \
                 --create-avd \
-                --sdk-root $ANDROID_HOME \
                 --verbose
             fi
           fi
 
-          # Set environment variables
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.3.11579264" >> $GITHUB_ENV
-          SDK_PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator"
-          SDK_PATH="$SDK_PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
-          echo "PATH=$SDK_PATH" >> $GITHUB_ENV
-
           # Display cache stats
           echo "📊 Android SDK setup complete:"
-          echo "  SDK size: $(du -sh $ANDROID_HOME 2>/dev/null || echo 'calculating...')"
+          echo "  Cache size: $(du -sh $HOME/ovmb_cache 2>/dev/null || echo 'calculating...')"
 
       # === PREPARE EMULATOR ===
       - name: Start Android Emulator
@@ -157,28 +137,26 @@ jobs:
           python tests/e2e/test_emulator_helper.py wait-for-boot
 
       # === CACHE SETUP ===
-      - name: Cache OpenVINO build artifacts
+      - name: Cache ccache
         uses: actions/cache@v4
         with:
-          path: |
-            artifacts/
-            ~/.cmake
-          key: openvino-build-${{ runner.os }}-${{ matrix.arch }}-${{
-            hashFiles('tests/e2e/configs/android_resnet50.yaml') }}-v1${{
-            github.event.inputs.clear_cache == 'true' && '-nocache' || '' }}
+          path: ~/.ccache
+          key: ccache-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('tests/e2e/configs/android_resnet50.yaml') }}
           restore-keys: |
-            openvino-build-${{ runner.os }}-${{ matrix.arch }}-
-            openvino-build-${{ runner.os }}-
+            ccache-${{ runner.os }}-${{ matrix.arch }}-
+            ccache-${{ runner.os }}-
 
-      - name: Cache models
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/ovmobilebench/models/
-          key: models-resnet50-v1${{
-            github.event.inputs.clear_cache == 'true' && '-nocache' || '' }}
-          restore-keys: |
-            models-resnet50-
+      - name: Configure ccache
+        run: |
+          echo "Configuring ccache for cross-compilation..."
+          ccache --max-size=2G
+          ccache --set-config=compiler_check=content
+          ccache --set-config=sloppiness=include_file_ctime,include_file_mtime,time_macros
+          ccache --set-config=hash_dir=false
+          ccache --zero-stats
+          ccache --show-config
+
+      # Models are already in ovmb_cache, no separate cache needed
 
       # === PREPARE MODEL ===
       - name: Download ResNet-50 model
@@ -193,6 +171,10 @@ jobs:
           python -m ovmobilebench.cli build \
             -c tests/e2e/configs/android_resnet50.yaml \
             --verbose
+
+          # Show ccache statistics
+          echo "📊 ccache statistics:"
+          ccache --show-stats
 
       - name: Package OpenVINO runtime and model
         run: |

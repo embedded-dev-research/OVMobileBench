@@ -213,7 +213,6 @@ class TestNdkResolver:
         version = self.resolver.get_version(ndk_path)
         assert version == "r26d"
 
-    @pytest.mark.skip(reason="Complex mocking of download and extraction flow")
     @patch("urllib.request.urlretrieve")
     @patch("zipfile.ZipFile")
     @patch("ovmobilebench.android.installer.detect.get_ndk_filename")

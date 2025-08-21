@@ -31,7 +31,6 @@ class TestAndroidInstallerIntegration:
         """Clean up test environment."""
         self.tmpdir.cleanup()
 
-    @pytest.mark.skip(reason="Permission issues with mock binaries")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     @patch("ovmobilebench.android.installer.detect.check_disk_space")
     def test_full_installation_flow(self, mock_check_disk, mock_detect_host):
@@ -69,7 +68,6 @@ class TestAndroidInstallerIntegration:
             assert result["sdk_root"] == self.sdk_root
             assert result["avd_created"] is True
 
-    @pytest.mark.skip(reason="Permission issues with mock binaries")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_ndk_only_installation(self, mock_detect_host):
         """Test NDK-only installation flow."""
@@ -137,7 +135,6 @@ class TestAndroidInstallerIntegration:
         assert not tar_file.exists()
         assert not temp_dir.exists()
 
-    @pytest.mark.skip(reason="Mock HostInfo missing required arguments")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_environment_export(self, mock_detect_host):
         """Test environment variable export."""
@@ -222,7 +219,6 @@ class TestAndroidInstallerIntegration:
             MockInstaller.assert_called_once()
             mock_instance.ensure.assert_called_once()
 
-    @pytest.mark.skip(reason="Mock HostInfo missing required arguments")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_api_function_export(self, mock_detect_host):
         """Test the public API export function."""
@@ -262,7 +258,6 @@ class TestAndroidInstallerIntegration:
             assert results["cmdline_tools"] is True
             assert results["platform_tools"] is False
 
-    @pytest.mark.skip(reason="Permission issues with mock binaries")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     @patch("ovmobilebench.android.installer.detect.check_disk_space")
     def test_concurrent_component_installation(self, mock_check_disk, mock_detect_host):
@@ -356,7 +351,6 @@ class TestEndToEndScenarios:
         """Clean up test environment."""
         self.tmpdir.cleanup()
 
-    @pytest.mark.skip(reason="API function parameter handling issues")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_ci_environment_setup(self, mock_detect_host):
         """Test setup in CI environment."""
@@ -376,7 +370,6 @@ class TestEndToEndScenarios:
 
             assert result is not None
 
-    @pytest.mark.skip(reason="API function parameter handling issues")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_development_environment_setup(self, mock_detect_host):
         """Test setup in development environment."""
@@ -395,7 +388,6 @@ class TestEndToEndScenarios:
 
         assert result is not None
 
-    @pytest.mark.skip(reason="API function parameter handling issues")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_windows_environment_setup(self, mock_detect_host):
         """Test setup on Windows."""

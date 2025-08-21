@@ -7,7 +7,13 @@ import pytest
 from pydantic import ValidationError
 
 from ovmobilebench.config.loader import load_experiment, scan_model_directories
-from ovmobilebench.config.schema import DeviceConfig, Experiment, ModelItem, ModelsConfig
+from ovmobilebench.config.schema import (
+    DeviceConfig,
+    Experiment,
+    ModelItem,
+    ModelsConfig,
+    ProjectConfig,
+)
 
 
 class TestModelItem:
@@ -657,3 +663,85 @@ class TestEdgeCases:
         total = exp.get_total_runs()
         # Should default to 1 device when serials is empty
         assert total >= 1
+
+
+class TestProjectConfig:
+    """Test ProjectConfig configuration."""
+
+    def test_valid_project_config(self):
+        """Test creating valid project configuration."""
+        project = ProjectConfig(
+            name="test-project",
+            run_id="test-001",
+            description="Test project description",
+            cache_dir="custom_cache",
+        )
+        assert project.name == "test-project"
+        assert project.run_id == "test-001"
+        assert project.description == "Test project description"
+        assert project.cache_dir == "custom_cache"
+
+    def test_project_config_default_cache_dir(self):
+        """Test project configuration with default cache_dir."""
+        project = ProjectConfig(name="test-project", run_id="test-001")
+        assert project.name == "test-project"
+        assert project.run_id == "test-001"
+        assert project.description is None
+        assert project.cache_dir == "ovmb_cache"  # Default value
+
+    def test_project_config_with_description_no_cache_dir(self):
+        """Test project configuration with description but default cache_dir."""
+        project = ProjectConfig(
+            name="test-project", run_id="test-001", description="Project with default cache"
+        )
+        assert project.name == "test-project"
+        assert project.run_id == "test-001"
+        assert project.description == "Project with default cache"
+        assert project.cache_dir == "ovmb_cache"
+
+    def test_project_config_missing_required_fields(self):
+        """Test project configuration with missing required fields."""
+        with pytest.raises(ValidationError):
+            ProjectConfig()  # Missing name and run_id
+
+        with pytest.raises(ValidationError):
+            ProjectConfig(name="test-project")  # Missing run_id
+
+        with pytest.raises(ValidationError):
+            ProjectConfig(run_id="test-001")  # Missing name
+
+    def test_project_config_custom_cache_path(self):
+        """Test project configuration with custom cache directory path."""
+        project = ProjectConfig(
+            name="android-bench",
+            run_id="bench-001",
+            description="Android benchmarking",
+            cache_dir="/path/to/custom/cache",
+        )
+        assert project.cache_dir == "/path/to/custom/cache"
+
+    def test_project_config_empty_cache_dir(self):
+        """Test project configuration with empty cache_dir."""
+        project = ProjectConfig(name="test-project", run_id="test-001", cache_dir="")
+        assert project.cache_dir == ""
+
+    def test_project_config_in_experiment(self):
+        """Test project configuration within experiment configuration."""
+        experiment_config = {
+            "project": {
+                "name": "android-experiment",
+                "run_id": "exp-001",
+                "description": "Android OpenVINO experiment",
+                "cache_dir": "experiments_cache",
+            },
+            "openvino": {"mode": "install", "install_dir": "/path/to/ov"},
+            "device": {"kind": "android", "serials": ["device1"]},
+            "models": [{"name": "model1", "path": "model1.xml"}],
+            "report": {"sinks": [{"type": "json", "path": "results.json"}]},
+        }
+
+        exp = Experiment(**experiment_config)
+        assert exp.project.name == "android-experiment"
+        assert exp.project.run_id == "exp-001"
+        assert exp.project.description == "Android OpenVINO experiment"
+        assert exp.project.cache_dir == "experiments_cache"

@@ -219,6 +219,9 @@ def setup_android(
     api_level: int = typer.Option(30, "--api", help="Android API level"),
     create_avd: bool = typer.Option(False, "--create-avd", help="Create AVD for emulator"),
     sdk_root: Path = typer.Option(None, "--sdk-root", help="Android SDK root path"),
+    ndk_version: str = typer.Option(
+        None, "--ndk-version", help="NDK version (e.g., r26d, 26.3.11579264). Default: latest"
+    ),
     verify_only: bool = typer.Option(
         False, "--verify-only", help="Only verify existing installation without installing"
     ),
@@ -227,9 +230,19 @@ def setup_android(
     """Setup Android SDK/NDK for OVMobileBench."""
     from ovmobilebench.android.installer.api import ensure_android_tools, verify_installation
     from ovmobilebench.android.installer.types import NdkSpec
+    from ovmobilebench.config.loader import get_project_root
 
     if sdk_root is None:
-        sdk_root = Path(os.environ.get("ANDROID_HOME", "/opt/android-sdk"))
+        # Try to get from environment first
+        sdk_root = os.environ.get("ANDROID_HOME")
+        if not sdk_root:
+            # Use default in cache directory
+            project_root = get_project_root()
+            cache_dir = project_root / "ovmb_cache"
+            sdk_root = cache_dir / "android-sdk"
+            console.print(f"[blue]Using default SDK location: {sdk_root}[/blue]")
+        else:
+            sdk_root = Path(sdk_root)
 
     if verify_only:
         console.print("[bold blue]Verifying Android SDK/NDK installation...[/bold blue]")
@@ -282,13 +295,22 @@ def setup_android(
     console.print("[bold blue]Setting up Android SDK/NDK...[/bold blue]")
     avd_name = f"ovmobilebench_avd_api{api_level}" if create_avd else None
 
+    # Use specified NDK version or let the installer determine the latest
+    if ndk_version:
+        ndk_alias = ndk_version
+        console.print(f"Using specified NDK version: {ndk_alias}")
+    else:
+        # Let the installer determine the latest available version
+        ndk_alias = "latest"
+        console.print("Using latest available NDK version")
+
     try:
         result = ensure_android_tools(
             sdk_root=sdk_root,
             api=api_level,
             target="google_apis",
             arch="arm64-v8a",
-            ndk=NdkSpec(alias="r26d"),
+            ndk=NdkSpec(alias=ndk_alias),
             install_platform_tools=True,
             install_emulator=True,
             install_build_tools="34.0.0",

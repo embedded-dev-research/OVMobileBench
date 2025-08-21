@@ -2,6 +2,7 @@ project:
   name: "ovmobilebench-android"
   run_id: "android_benchmark_001"
   description: "OpenVINO benchmark on Android device"
+  cache_dir: "ovmb_cache"
 
 # OpenVINO distribution configuration
 # Chooses one of three modes: build, install, or link
@@ -28,7 +29,6 @@ openvino:
     android_ndk: "/path/to/android-ndk-r26d"  # UPDATE THIS PATH
     abi: "arm64-v8a"
     api_level: 24
-    cmake: "cmake"
     ninja: "ninja"
   options:
     ENABLE_INTEL_GPU: "OFF"

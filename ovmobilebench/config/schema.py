@@ -60,9 +60,8 @@ class OpenVINOConfig(BaseModel):
     @model_validator(mode="after")
     def validate_mode_config(self):
         """Validate that required fields are set based on mode."""
-        if self.mode == "build" and not self.source_dir:
-            raise ValueError("source_dir is required when mode is 'build'")
-        elif self.mode == "install" and not self.install_dir:
+        # source_dir is now optional for build mode - will be auto-set if not provided
+        if self.mode == "install" and not self.install_dir:
             raise ValueError("install_dir is required when mode is 'install'")
         elif self.mode == "link" and not self.archive_url:
             raise ValueError("archive_url is required when mode is 'link'")
@@ -205,18 +204,33 @@ class ReportConfig(BaseModel):
     include_raw: bool = Field(default=False, description="Include raw output")
 
 
+class EnvironmentConfig(BaseModel):
+    """Environment configuration."""
+
+    java_home: str | None = Field(
+        None, description="Path to Java installation (required for Android)"
+    )
+    sdk_root: str | None = Field(
+        None, description="Android SDK root path (will use cache_dir/android-sdk if not set)"
+    )
+
+
 class ProjectConfig(BaseModel):
     """Project configuration."""
 
     name: str = Field(..., description="Project name")
     run_id: str = Field(..., description="Run identifier")
     description: str | None = Field(None, description="Run description")
+    cache_dir: str = Field(
+        "ovmb_cache", description="Cache directory for repositories, installations, and downloads"
+    )
 
 
 class Experiment(BaseModel):
     """Complete experiment configuration."""
 
     project: ProjectConfig
+    environment: EnvironmentConfig = Field(default_factory=lambda: EnvironmentConfig())
     openvino: OpenVINOConfig
     package: PackageConfig = Field(default_factory=lambda: PackageConfig())
     device: DeviceConfig

@@ -50,7 +50,6 @@ class TestSdkManager:
         else:
             assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
 
-    @pytest.mark.skip(reason="Platform-specific test fails on non-Windows")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_get_sdkmanager_path_windows(self, mock_detect):
         """Test getting sdkmanager path on Windows."""
@@ -135,7 +134,6 @@ class TestSdkManager:
         result = self.manager.ensure_cmdline_tools()
         assert result == self.manager.cmdline_tools_dir
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     @patch("urllib.request.urlretrieve")
     @patch("zipfile.ZipFile")
     @patch("ovmobilebench.android.installer.detect.get_sdk_tools_filename")
@@ -325,7 +323,6 @@ class TestSdkManager:
             with pytest.raises(ComponentNotFoundError, match="platform-tools"):
                 self.manager.ensure_platform_tools()
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     def test_ensure_cmdline_tools_download_failure(self):
         """Test cmdline-tools download failure."""
         with patch("urllib.request.urlretrieve") as mock_urlretrieve:

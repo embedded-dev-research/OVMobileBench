@@ -1,325 +1,206 @@
-# End-to-End Testing
+# E2E Tests for OVMobileBench
 
-This document describes the E2E testing infrastructure for OVMobileBench, which demonstrates the complete pipeline from building OpenVINO to running benchmarks on Android devices.
+This directory contains end-to-end tests for OVMobileBench Android pipeline.
 
-## Overview
+## Scripts
 
-The E2E test suite provides a comprehensive example of using OVMobileBench to:
+### `run_local.sh`
 
-- Build OpenVINO for Android ARM64
-- Package runtime and models
-- Deploy to Android devices/emulators
-- Run benchmarks with various configurations
-- Generate and validate reports
+Full e2e test script that downloads and installs all required components from scratch:
 
-## Test Structure
+- Installs Android SDK system images
+- Creates AVD
+- Downloads models
+- Runs complete OVMobileBench pipeline
 
-```
-tests/e2e/
-├── configs/
-│   └── android_resnet50.yaml    # OVMobileBench configuration
-├── emulator_helper.py            # Android emulator management
-├── model_helper.py               # Model download utilities
-├── validate_results.py          # Result validation
-├── display_results.py           # Result formatting
-└── pr_comment.py                # GitHub PR integration
-```
-
-## Running E2E Tests
-
-### Local Development
+**Usage:**
 
 ```bash
-# Run E2E tests separately (excluded from regular tests)
-make test-e2e
-
-# Or directly with pytest
-pytest tests/e2e/ -v
+./tests/e2e/run_local.sh
 ```
 
-### CI/CD Pipeline
+**Environment variables:**
 
-E2E tests run automatically on:
+- `API_LEVEL`: Android API level to use (default: 34)
 
-- Push to `main` or `develop` branches
-- Pull requests to `main`
-- Manual workflow dispatch
+### `run_quick.sh`
 
-The CI runs on two platforms:
+Quick setup script for existing Android SDK installations:
 
-- **Ubuntu Latest**: x64 with ARM64 emulation
-- **macOS Latest**: Apple Silicon (M1/M2) with native ARM64
+- Uses pre-installed Android SDK components
+- Creates minimal AVD setup
+- Prepares mock models for testing
+- Shows next steps for manual pipeline execution
 
-## GitHub Actions Workflow
+**Usage:**
 
-The E2E workflow (`.github/workflows/e2e-android-test.yml`) demonstrates the complete OVMobileBench pipeline with intelligent caching for optimal performance:
-
-### Caching Strategy
-
-The workflow uses multi-layer caching to reduce build times:
-
-- **Android SDK Cache**: Saves ~10-15 minutes by caching SDK, NDK, and system images
-- **Python Dependencies**: Caches pip packages to save ~1-2 minutes
-- **OpenVINO Build Cache**: Caches compiled libraries to save ~20-30 minutes
-- **Models Cache**: Caches downloaded models to save ~2-5 minutes
-
-#### Manual Cache Control
-
-When running the workflow manually:
-
-- Set `clear_cache: true` to rebuild everything from scratch
-- Useful for debugging cache-related issues or ensuring clean builds
-
-### 1. Environment Setup
-
-```yaml
-- name: Setup Python
-  uses: actions/setup-python@v5
-  with:
-    python-version: '3.11'
-    cache: 'pip'
-
-- name: Install OVMobileBench
-  run: |
-    pip install --upgrade pip
-    pip install -r requirements.txt
-    pip install -e .
-```
-
-### 2. Android SDK/NDK Setup
-
-OVMobileBench handles the complete Android toolchain installation:
-
-```yaml
-- name: Setup Android SDK/NDK using OVMobileBench
-  run: |
-    python -m ovmobilebench.cli setup-android \
-      --api 30 \
-      --create-avd \
-      --sdk-root $HOME/android-sdk \
-      --verbose
-```
-
-This command:
-
-- Downloads Android command-line tools
-- Installs platform-tools, emulator, and system images
-- Installs NDK r26d
-- Creates an AVD for testing
-
-### 3. Hardware Acceleration
-
-Platform-specific acceleration is configured:
-
-**Linux (KVM)**:
-
-```yaml
-- name: Enable KVM for Android emulator (Linux only)
-  if: runner.os == 'Linux'
-  run: |
-    echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-    sudo udevadm control --reload-rules
-    sudo udevadm trigger --name-match=kvm
-```
-
-**macOS (Hypervisor.framework)**:
-
-```yaml
-- name: Enable Hypervisor.framework for Android emulator (macOS only)
-  if: runner.os == 'macOS'
-  run: |
-    sysctl -n kern.hv_support || echo "Hypervisor.framework not available"
-    echo "ANDROID_EMULATOR_USE_SYSTEM_LIBS=1" >> $GITHUB_ENV
-```
-
-### 4. OVMobileBench Pipeline
-
-The workflow demonstrates both individual stages and the all-in-one approach:
-
-#### Individual Stages
-
-```yaml
-# Build OpenVINO
-- name: Build OpenVINO for Android
-  run: |
-    python -m ovmobilebench.cli build \
-      -c tests/e2e/configs/android_resnet50.yaml \
-      --verbose
-
-# Package runtime and models
-- name: Package OpenVINO runtime and model
-  run: |
-    python -m ovmobilebench.cli package \
-      -c tests/e2e/configs/android_resnet50.yaml \
-      --verbose
-
-# Deploy to device
-- name: Deploy to Android device
-  run: |
-    python -m ovmobilebench.cli deploy \
-      -c tests/e2e/configs/android_resnet50.yaml \
-      --verbose
-
-# Run benchmark
-- name: Run benchmark on device
-  run: |
-    python -m ovmobilebench.cli run \
-      -c tests/e2e/configs/android_resnet50.yaml \
-      --verbose
-
-# Generate report
-- name: Generate benchmark report
-  run: |
-    python -m ovmobilebench.cli report \
-      -c tests/e2e/configs/android_resnet50.yaml \
-      --verbose
-```
-
-#### All-in-One
-
-```yaml
-# Alternative: run complete pipeline
-- name: Run complete pipeline
-  run: |
-    python -m ovmobilebench.cli all \
-      -c tests/e2e/configs/android_resnet50.yaml \
-      --verbose
-```
-
-## Configuration
-
-The E2E test uses a sample configuration (`tests/e2e/configs/android_resnet50.yaml`):
-
-```yaml
-project:
-  name: "e2e-android-resnet50"
-  run_id: "test_001"
-
-build:
-  enabled: true
-  type: openvino
-  openvino:
-    source: "latest"
-    cmake_args:
-      - "-DCMAKE_BUILD_TYPE=Release"
-      - "-DENABLE_INTEL_CPU=ON"
-  android:
-    abi: "arm64-v8a"
-    api_level: 30
-    stl: "c++_shared"
-
-device:
-  type: android
-  serial: "emulator-5554"
-
-models:
-  - name: "resnet-50"
-    path: "ovmb_cache/models/resnet-50-pytorch.xml"
-    framework: "openvino"
-
-run:
-  enabled: true
-  matrix:
-    niter: [100]
-    threads: [4]
-    device: ["CPU"]
-    infer_precision: ["FP16"]
-
-report:
-  enabled: true
-  format: ["json", "csv"]
-  output_dir: "artifacts/reports"
+```bash
+./tests/e2e/run_quick.sh
 ```
 
 ## Helper Scripts
 
-### Emulator Management (`emulator_helper.py`)
+All helper scripts follow the `test_*.py` naming convention to satisfy pre-commit hooks:
+
+### `test_emulator_helper.py`
+
+Android emulator management:
+
+- `create-avd`: Create Android Virtual Device
+- `start-emulator`: Start emulator in headless mode
+- `wait-for-boot`: Wait for emulator to complete boot
+- `stop-emulator`: Stop running emulator
+- `delete-avd`: Delete AVD
+
+**Usage examples:**
 
 ```bash
-# Create AVD
-python tests/e2e/emulator_helper.py create-avd --api 30
-
-# Start emulator
-python tests/e2e/emulator_helper.py start-emulator
-
-# Wait for boot
-python tests/e2e/emulator_helper.py wait-for-boot
-
-# Stop emulator
-python tests/e2e/emulator_helper.py stop-emulator
+python tests/e2e/test_emulator_helper.py create-avd --api 34
+python tests/e2e/test_emulator_helper.py start-emulator
+python tests/e2e/test_emulator_helper.py wait-for-boot
+python tests/e2e/test_emulator_helper.py stop-emulator
 ```
 
-### Model Management (`model_helper.py`)
+### `test_model_helper.py`
+
+Model management for testing:
+
+- Downloads and prepares models for benchmarking
+
+### `test_validate_results.py`
+
+Results validation:
+
+- Validates benchmark output format
+- Checks performance metrics
+
+### `test_display_results.py`
+
+Results display:
+
+- Formats and displays benchmark results
+
+### `test_pr_comment.py`
+
+GitHub integration:
+
+- Posts benchmark results to PR comments
+
+## Configuration
+
+### `configs/android_resnet50.yaml`
+
+E2E test configuration for ResNet-50 on Android:
+
+- Build settings for arm64-v8a
+- Model configuration
+- Benchmark matrix parameters
+- Report output settings
+
+## Prerequisites
+
+### macOS
 
 ```bash
-# Download ResNet-50
-python tests/e2e/model_helper.py download-resnet50
+# Install Java
+brew install openjdk@17
 
-# List cached models
-python tests/e2e/model_helper.py list
+# Set Java environment
+export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
+export PATH="$JAVA_HOME/bin:$PATH"
 ```
 
-### Result Validation (`validate_results.py`)
+### Android SDK
 
-Automatically validates benchmark results:
+- Android SDK should be installed (typically at `/Users/$USER/Library/Android/sdk`)
+- Required components:
+  - Platform tools (adb)
+  - Emulator
+  - System images for target API level
+  - NDK (for building)
 
-- Checks for required fields
-- Validates throughput and latency values
-- Ensures data consistency
+## Manual E2E Pipeline
 
-### PR Integration (`pr_comment.py`)
+If you prefer to run the pipeline steps manually:
 
-Generates markdown-formatted comments for pull requests with benchmark results:
+1. **Setup environment:**
 
-```bash
-python tests/e2e/pr_comment.py --api 30 --pr 123
-```
+   ```bash
+   export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
+   export PATH="$JAVA_HOME/bin:$PATH"
+   export ANDROID_HOME="/Users/$USER/Library/Android/sdk"
+   export ANDROID_SDK_ROOT=$ANDROID_HOME
+   export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH
+   ```
 
-## Artifacts
+2. **Start emulator:**
 
-All test artifacts are stored in:
+   ```bash
+   python tests/e2e/test_emulator_helper.py create-avd --api 34
+   python tests/e2e/test_emulator_helper.py start-emulator &
+   python tests/e2e/test_emulator_helper.py wait-for-boot
+   ```
 
-- `artifacts/` - Build outputs, packages, results
-- `ovmb_cache/` - Downloaded models and SDKs
+3. **Prepare model:**
 
-Artifacts are automatically uploaded in CI and retained for 7 days.
+   ```bash
+   python tests/e2e/test_model_helper.py download-resnet50
+   ```
 
-## Extending E2E Tests
+4. **Run OVMobileBench pipeline:**
 
-To add new test scenarios:
+   ```bash
+   python -m ovmobilebench.cli list-devices
+   python -m ovmobilebench.cli build -c tests/e2e/configs/android_resnet50.yaml --verbose
+   python -m ovmobilebench.cli package -c tests/e2e/configs/android_resnet50.yaml --verbose
+   python -m ovmobilebench.cli deploy -c tests/e2e/configs/android_resnet50.yaml --verbose
+   python -m ovmobilebench.cli run -c tests/e2e/configs/android_resnet50.yaml --verbose
+   python -m ovmobilebench.cli report -c tests/e2e/configs/android_resnet50.yaml --verbose
+   ```
 
-1. Create a new configuration in `tests/e2e/configs/`
-2. Add model download logic to `model_helper.py` if needed
-3. Update the CI matrix in `.github/workflows/e2e-android-test.yml`
-4. Add validation logic to `validate_results.py`
+5. **Validate results:**
+
+   ```bash
+   python tests/e2e/test_validate_results.py
+   python tests/e2e/test_display_results.py
+   ```
+
+6. **Cleanup:**
+
+   ```bash
+   python tests/e2e/test_emulator_helper.py stop-emulator
+   ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Emulator won't start**: Check KVM (Linux) or Hypervisor.framework (macOS) is enabled
-2. **Model download fails**: Check network connectivity and cache permissions
-3. **Build fails**: Ensure NDK r26d is installed and ANDROID_NDK_HOME is set
-4. **Deployment fails**: Verify device/emulator is connected with `adb devices`
+1. **Java not found**: Install OpenJDK 17 via Homebrew
+2. **Android SDK not found**: Install Android Studio or standalone SDK
+3. **Emulator fails to start**: Check virtualization support and system resources
+4. **Device not found**: Wait for emulator to fully boot (can take 2-3 minutes)
+5. **Build failures**: Ensure NDK is installed and environment variables are set
 
-### Debug Commands
+### Environment Check
 
 ```bash
-# Check Android SDK setup
-python -m ovmobilebench.cli setup-android --verbose
+# Check Java
+java -version
 
-# List available devices
-python -m ovmobilebench.cli list-devices
+# Check Android SDK
+ls $ANDROID_HOME
+adb devices
 
-# Run with dry-run to preview actions
-python -m ovmobilebench.cli all -c config.yaml --dry-run
+# Check emulator
+emulator -list-avds
 ```
 
-## Integration with Regular Testing
+## GitHub Actions Integration
 
-E2E tests are excluded from regular test runs:
+The `.github/workflows/e2e-android-test.yml` workflow runs these tests automatically on:
 
-- `make test` - Runs unit and integration tests only
-- `make test-e2e` - Runs E2E tests only
-- `pytest tests/ --ignore=tests/e2e` - Skip E2E tests (default)
-- `pytest tests/e2e/` - Run only E2E tests
+- Push to main/develop branches
+- Pull requests to main
+- Manual dispatch
+
+The workflow supports both Ubuntu and macOS runners with proper hardware acceleration setup.

@@ -2,6 +2,8 @@
 project:
   name: ssh-test-ci
   run_id: ci-test
+  description: "CI test configuration for SSH connections"
+  cache_dir: "ovmb_cache"
 
 # SSH device configuration for mock testing
 device:

@@ -4,8 +4,6 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import pytest
-
 from ovmobilebench.android.installer.ndk import NdkResolver
 
 
@@ -23,42 +21,34 @@ class TestNdkResolverCoverage:
         """Clean up test environment."""
         self.tmpdir.cleanup()
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     def test_install_via_download_zip_success(self):
         """Test successful NDK installation via download (ZIP)."""
         pass
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     def test_install_via_download_network_error(self):
         """Test NDK download with network error."""
         pass
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     def test_install_via_download_http_error(self):
         """Test NDK download with HTTP error."""
         pass
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     def test_install_via_download_tar_success(self):
         """Test successful NDK installation via download (TAR)."""
         pass
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     def test_install_via_download_dmg_success(self):
         """Test successful NDK installation via download (DMG for macOS)."""
         pass
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     def test_install_via_download_unpack_error(self):
         """Test NDK download with unpack error."""
         pass
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     def test_install_via_download_no_valid_ndk(self):
         """Test NDK download when no valid NDK found after extraction."""
         pass
 
-    @pytest.mark.skip(reason="Method is private and not exposed")
     def test_get_download_url(self):
         """Test getting NDK download URL."""
         pass
@@ -88,7 +78,6 @@ class TestNdkResolverCoverage:
         version = self.resolver.get_version(ndk_path)
         assert version == "unknown"
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     def test_install_ndk_with_sdkmanager_success(self):
         """Test NDK installation via sdkmanager."""
         pass
