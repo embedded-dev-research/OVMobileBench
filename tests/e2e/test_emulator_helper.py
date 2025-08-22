@@ -58,8 +58,31 @@ def get_sdk_path_from_config(config_file=None):
     return str(Path.cwd() / "ovmb_cache" / "android-sdk")
 
 
-# Global variable that will be initialized in main()
+def get_arch_from_config(config_file=None):
+    """Get architecture from OVMobileBench config."""
+    # Use provided config file or default
+    if config_file:
+        config_path = Path(config_file)
+    else:
+        config_path = Path.cwd() / "experiments" / "android_example.yaml"
+
+    if config_path.exists():
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+
+        # Get architecture from openvino.toolchain.abi
+        arch = config.get("openvino", {}).get("toolchain", {}).get("abi", "arm64-v8a")
+        logger.info(f"Using architecture from config: {arch}")
+        return arch
+
+    # Fallback to default
+    logger.warning(f"Config not found at {config_path}, using default architecture")
+    return "arm64-v8a"
+
+
+# Global variables that will be initialized in main()
 ANDROID_HOME = None
+ARCHITECTURE = None
 
 
 def create_avd(api_level: int, avd_name: str = None):
@@ -67,7 +90,9 @@ def create_avd(api_level: int, avd_name: str = None):
     if not avd_name:
         avd_name = f"ovmobilebench_avd_api{api_level}"
 
-    logger.info(f"Creating AVD '{avd_name}' for API {api_level}...")
+    logger.info(
+        f"Creating AVD '{avd_name}' for API {api_level} with architecture {ARCHITECTURE}..."
+    )
 
     avdmanager_path = Path(ANDROID_HOME) / "cmdline-tools" / "latest" / "bin" / "avdmanager"
     cmd = [
@@ -77,7 +102,7 @@ def create_avd(api_level: int, avd_name: str = None):
         "-n",
         avd_name,
         "-k",
-        f"system-images;android-{api_level};google_apis;arm64-v8a",
+        f"system-images;android-{api_level};google_apis;{ARCHITECTURE}",
         "-d",
         "pixel_5",
         "--force",
@@ -215,12 +240,14 @@ def main():
 
     args = parser.parse_args()
 
-    # Initialize ANDROID_HOME from config
-    global ANDROID_HOME
+    # Initialize ANDROID_HOME and ARCHITECTURE from config
+    global ANDROID_HOME, ARCHITECTURE
     ANDROID_HOME = get_sdk_path_from_config(args.config)
+    ARCHITECTURE = get_arch_from_config(args.config)
     os.environ["ANDROID_HOME"] = ANDROID_HOME
     os.environ["ANDROID_SDK_ROOT"] = ANDROID_HOME
     logger.info(f"Using Android SDK: {ANDROID_HOME}")
+    logger.info(f"Using architecture: {ARCHITECTURE}")
 
     if args.command == "create-avd":
         create_avd(args.api, args.name)
