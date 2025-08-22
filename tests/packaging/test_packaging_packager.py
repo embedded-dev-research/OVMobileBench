@@ -476,16 +476,22 @@ class TestPackager:
         # Mock library files
         mock_lib = MagicMock()
         mock_lib.is_file.return_value = True
-        mock_lib.name = "libtest.so"
+        mock_lib.relative_to.return_value = Path("libtest.so")
 
         libs_dir = MagicMock()
-        libs_dir.glob.side_effect = [[mock_lib], []]  # First pattern finds file, second finds none
+        libs_dir.exists.return_value = True
+        libs_dir.rglob.return_value = [mock_lib]  # Return mock library from rglob
+
+        dest_dir = MagicMock()
+        dest_dir.rglob.return_value = [mock_lib]  # For counting total libs
 
         with patch("ovmobilebench.packaging.packager.shutil.copy2"):
-            with patch("ovmobilebench.packaging.packager.logger") as mock_logger:
-                packager._copy_libs(libs_dir, Path("/dest"))
+            with patch.object(packager, "_copy_ndk_stl_lib"):  # Mock NDK lib copy
+                with patch("ovmobilebench.packaging.packager.logger") as mock_logger:
+                    packager._copy_libs(libs_dir, dest_dir)
 
-                mock_logger.debug.assert_called_with("Copied library: libtest.so")
+                    mock_logger.debug.assert_called_with("Copied library: libtest.so")
+                    mock_logger.info.assert_called_with(f"Copied 1 libraries from {libs_dir}")
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
     def test_empty_models_list(self, mock_ensure_dir):

@@ -27,10 +27,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest  # Ubuntu x64 with ARM64 emulation
+          - os: ubuntu-24.04-arm  # Ubuntu ARM64 native
             android-api: 30
             arch: arm64
-          - os: macos-latest  # macOS on Apple Silicon (M1/M2)
+          - os: macOS-latest  # macOS on Apple Silicon (M1/M2)
             android-api: 30
             arch: arm64
     runs-on: ${{ matrix.os }}
