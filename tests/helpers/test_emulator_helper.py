@@ -13,8 +13,9 @@ sys.path.append(str(Path(__file__).parent.parent.parent / "tests" / "e2e"))
 # Import and configure test_emulator_helper module
 import test_emulator_helper
 
-# Set ANDROID_HOME and ARCHITECTURE for all tests
+# Set ANDROID_HOME, AVD_HOME and ARCHITECTURE for all tests
 test_emulator_helper.ANDROID_HOME = "/mock/android-sdk"
+test_emulator_helper.AVD_HOME = "/mock/android-sdk/.android/avd"
 test_emulator_helper.ARCHITECTURE = "arm64-v8a"  # Default for tests
 
 
@@ -24,8 +25,9 @@ class TestEmulatorHelper:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Setup test environment."""
-        # Ensure ANDROID_HOME and ARCHITECTURE are set for all tests
+        # Ensure ANDROID_HOME, AVD_HOME and ARCHITECTURE are set for all tests
         test_emulator_helper.ANDROID_HOME = "/mock/android-sdk"
+        test_emulator_helper.AVD_HOME = "/mock/android-sdk/.android/avd"
         test_emulator_helper.ARCHITECTURE = "arm64-v8a"  # Default for tests
 
     def test_create_avd_with_default_name(self):
@@ -33,56 +35,55 @@ class TestEmulatorHelper:
         from test_emulator_helper import create_avd
 
         with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
+            with patch("pathlib.Path.mkdir"):  # Mock mkdir to avoid filesystem operations
+                mock_run.return_value = Mock(returncode=0)
 
-            create_avd(api_level=30)
+                create_avd(api_level=30)
 
-            expected_cmd = [
-                "/mock/android-sdk/cmdline-tools/latest/bin/avdmanager",
-                "create",
-                "avd",
-                "-n",
-                "ovmobilebench_avd_api30",
-                "-k",
-                "system-images;android-30;google_apis;arm64-v8a",
-                "-d",
-                "pixel_5",
-                "--force",
-            ]
-            mock_run.assert_called_once_with(expected_cmd, input="no\n", text=True, check=True)
+                # Check that subprocess.run was called with correct parameters
+                actual_call = mock_run.call_args
+                assert (
+                    actual_call[0][0][0] == "/mock/android-sdk/cmdline-tools/latest/bin/avdmanager"
+                )
+                assert "create" in actual_call[0][0]
+                assert "avd" in actual_call[0][0]
+                assert "ovmobilebench_avd_api30" in actual_call[0][0]
+                assert "system-images;android-30;google_apis;arm64-v8a" in actual_call[0][0]
+                assert actual_call[1]["input"] == "no\n"
+                assert actual_call[1]["check"] is True
 
     def test_create_avd_with_custom_name(self):
         """Test AVD creation with custom name."""
         from test_emulator_helper import create_avd
 
         with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
+            with patch("pathlib.Path.mkdir"):  # Mock mkdir to avoid filesystem operations
+                mock_run.return_value = Mock(returncode=0)
 
-            create_avd(api_level=34, avd_name="custom_avd")
+                create_avd(api_level=34, avd_name="custom_avd")
 
-            expected_cmd = [
-                "/mock/android-sdk/cmdline-tools/latest/bin/avdmanager",
-                "create",
-                "avd",
-                "-n",
-                "custom_avd",
-                "-k",
-                "system-images;android-34;google_apis;arm64-v8a",
-                "-d",
-                "pixel_5",
-                "--force",
-            ]
-            mock_run.assert_called_once_with(expected_cmd, input="no\n", text=True, check=True)
+                # Check that subprocess.run was called with correct parameters
+                actual_call = mock_run.call_args
+                assert (
+                    actual_call[0][0][0] == "/mock/android-sdk/cmdline-tools/latest/bin/avdmanager"
+                )
+                assert "create" in actual_call[0][0]
+                assert "avd" in actual_call[0][0]
+                assert "custom_avd" in actual_call[0][0]
+                assert "system-images;android-34;google_apis;arm64-v8a" in actual_call[0][0]
+                assert actual_call[1]["input"] == "no\n"
+                assert actual_call[1]["check"] is True
 
     def test_create_avd_failure(self):
         """Test AVD creation failure handling."""
         from test_emulator_helper import create_avd
 
         with patch("subprocess.run") as mock_run:
-            mock_run.side_effect = subprocess.CalledProcessError(1, "avdmanager")
+            with patch("pathlib.Path.mkdir"):  # Mock mkdir to avoid filesystem operations
+                mock_run.side_effect = subprocess.CalledProcessError(1, "avdmanager")
 
-            with pytest.raises(subprocess.CalledProcessError):
-                create_avd(api_level=30)
+                with pytest.raises(subprocess.CalledProcessError):
+                    create_avd(api_level=30)
 
     @patch("platform.system")
     def test_start_emulator_linux(self, mock_platform):

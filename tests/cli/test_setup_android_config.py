@@ -54,7 +54,9 @@ class TestSetupAndroidWithConfig:
                 )
 
                 assert result.exit_code == 0
-                assert "test_cache/android-sdk" in result.stdout
+                # Remove newlines from output for path checking (Rich formatting can split paths)
+                stdout_oneline = result.stdout.replace("\n", " ")
+                assert "test_cache/android-sdk" in stdout_oneline
                 assert "All required Android components are already installed" in result.stdout
 
                 # Should not call ensure_android_tools since everything is installed

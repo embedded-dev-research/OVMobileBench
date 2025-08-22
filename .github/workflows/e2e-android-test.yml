@@ -118,6 +118,18 @@ jobs:
           echo "  Architecture: ${{ matrix.arch }}"
           echo "  OS: ${{ matrix.os }}"
 
+          # Set Android environment variables for AVD location
+          export ANDROID_HOME=$HOME/ovmb_cache/android-sdk
+          export ANDROID_SDK_ROOT=$HOME/ovmb_cache/android-sdk
+          export ANDROID_SDK_HOME=$HOME/ovmb_cache/android-sdk
+          export ANDROID_AVD_HOME=$HOME/ovmb_cache/android-sdk/.android/avd
+
+          echo "📍 Environment variables set:"
+          echo "  ANDROID_HOME=$ANDROID_HOME"
+          echo "  ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "  ANDROID_SDK_HOME=$ANDROID_SDK_HOME"
+          echo "  ANDROID_AVD_HOME=$ANDROID_AVD_HOME"
+
           python -m ovmobilebench.cli setup-android \
             -c ${{ matrix.config_file }} \
             --api ${{ matrix.android-api }} \
@@ -129,9 +141,24 @@ jobs:
           echo "📊 Android SDK setup complete:"
           echo "  Cache size: $(du -sh $HOME/ovmb_cache 2>/dev/null || echo 'calculating...')"
 
+          # List created AVDs
+          echo "📱 Created AVDs:"
+          ls -la $ANDROID_AVD_HOME 2>/dev/null || echo "AVD directory not found"
+
       # === PREPARE EMULATOR ===
       - name: Start Android Emulator
         run: |
+          # Set Android environment variables for AVD location
+          export ANDROID_HOME=$HOME/ovmb_cache/android-sdk
+          export ANDROID_SDK_ROOT=$HOME/ovmb_cache/android-sdk
+          export ANDROID_SDK_HOME=$HOME/ovmb_cache/android-sdk
+          export ANDROID_AVD_HOME=$HOME/ovmb_cache/android-sdk/.android/avd
+
+          echo "📍 Starting emulator with environment:"
+          echo "  ANDROID_AVD_HOME=$ANDROID_AVD_HOME"
+          echo "📱 Available AVDs:"
+          ls -la $ANDROID_AVD_HOME 2>/dev/null || echo "No AVDs found"
+
           python tests/e2e/test_emulator_helper.py -c ${{ matrix.config_file }} start-emulator &
           # Give emulator a moment to start before checking
           sleep 10
@@ -207,7 +234,14 @@ jobs:
       # === CLEANUP ===
       - name: Stop emulator
         if: always()
-        run: python tests/e2e/test_emulator_helper.py -c ${{ matrix.config_file }} stop-emulator
+        run: |
+          # Set Android environment variables
+          export ANDROID_HOME=$HOME/ovmb_cache/android-sdk
+          export ANDROID_SDK_ROOT=$HOME/ovmb_cache/android-sdk
+          export ANDROID_SDK_HOME=$HOME/ovmb_cache/android-sdk
+          export ANDROID_AVD_HOME=$HOME/ovmb_cache/android-sdk/.android/avd
+
+          python tests/e2e/test_emulator_helper.py -c ${{ matrix.config_file }} stop-emulator
 
       - name: Upload artifacts
         if: always()

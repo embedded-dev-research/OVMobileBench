@@ -58,6 +58,15 @@ def get_sdk_path_from_config(config_file=None):
     return str(Path.cwd() / "ovmb_cache" / "android-sdk")
 
 
+def get_avd_home_from_config(config_file=None):
+    """Get AVD home directory - use .android/avd in SDK location."""
+    sdk_path = get_sdk_path_from_config(config_file)
+    # AVD home is in SDK_PATH/.android/avd
+    avd_home = str(Path(sdk_path) / ".android" / "avd")
+    logger.info(f"Using AVD home: {avd_home}")
+    return avd_home
+
+
 def get_arch_from_config(config_file=None):
     """Get architecture from OVMobileBench config."""
     # Use provided config file or default
@@ -82,6 +91,7 @@ def get_arch_from_config(config_file=None):
 
 # Global variables that will be initialized in main()
 ANDROID_HOME = None
+AVD_HOME = None
 ARCHITECTURE = None
 
 
@@ -95,6 +105,16 @@ def create_avd(api_level: int, avd_name: str = None):
     )
 
     avdmanager_path = Path(ANDROID_HOME) / "cmdline-tools" / "latest" / "bin" / "avdmanager"
+
+    # Set environment variables for AVD creation
+    env = os.environ.copy()
+    env["ANDROID_SDK_ROOT"] = ANDROID_HOME
+    env["ANDROID_HOME"] = ANDROID_HOME
+    env["ANDROID_AVD_HOME"] = AVD_HOME
+
+    # Create AVD directory if it doesn't exist
+    Path(AVD_HOME).mkdir(parents=True, exist_ok=True)
+
     cmd = [
         str(avdmanager_path),
         "create",
@@ -108,8 +128,8 @@ def create_avd(api_level: int, avd_name: str = None):
         "--force",
     ]
 
-    subprocess.run(cmd, input="no\n", text=True, check=True)
-    logger.info(f"AVD '{avd_name}' created successfully")
+    subprocess.run(cmd, input="no\n", text=True, check=True, env=env)
+    logger.info(f"AVD '{avd_name}' created successfully in {AVD_HOME}")
 
 
 def start_emulator(avd_name: str = None, api_level: int = 30):
@@ -155,7 +175,7 @@ def start_emulator(avd_name: str = None, api_level: int = 30):
     env = os.environ.copy()
     env["ANDROID_SDK_ROOT"] = ANDROID_HOME
     env["ANDROID_HOME"] = ANDROID_HOME
-    env["ANDROID_AVD_HOME"] = str(Path(ANDROID_HOME) / "avd")
+    env["ANDROID_AVD_HOME"] = AVD_HOME
 
     subprocess.Popen(cmd, env=env)
     logger.info("Emulator started in background")
@@ -242,7 +262,14 @@ def delete_avd(avd_name: str = None, api_level: int = 30):
 
     logger.info(f"Deleting AVD '{avd_name}'...")
     avdmanager_path = Path(ANDROID_HOME) / "cmdline-tools" / "latest" / "bin" / "avdmanager"
-    subprocess.run([str(avdmanager_path), "delete", "avd", "-n", avd_name], check=False)
+
+    # Set environment variables for AVD deletion
+    env = os.environ.copy()
+    env["ANDROID_SDK_ROOT"] = ANDROID_HOME
+    env["ANDROID_HOME"] = ANDROID_HOME
+    env["ANDROID_AVD_HOME"] = AVD_HOME
+
+    subprocess.run([str(avdmanager_path), "delete", "avd", "-n", avd_name], check=False, env=env)
 
 
 def main():
@@ -280,13 +307,16 @@ def main():
 
     args = parser.parse_args()
 
-    # Initialize ANDROID_HOME and ARCHITECTURE from config
-    global ANDROID_HOME, ARCHITECTURE
+    # Initialize ANDROID_HOME, AVD_HOME and ARCHITECTURE from config
+    global ANDROID_HOME, AVD_HOME, ARCHITECTURE
     ANDROID_HOME = get_sdk_path_from_config(args.config)
+    AVD_HOME = get_avd_home_from_config(args.config)
     ARCHITECTURE = get_arch_from_config(args.config)
     os.environ["ANDROID_HOME"] = ANDROID_HOME
     os.environ["ANDROID_SDK_ROOT"] = ANDROID_HOME
+    os.environ["ANDROID_AVD_HOME"] = AVD_HOME
     logger.info(f"Using Android SDK: {ANDROID_HOME}")
+    logger.info(f"Using AVD home: {AVD_HOME}")
     logger.info(f"Using architecture: {ARCHITECTURE}")
 
     if args.command == "create-avd":
