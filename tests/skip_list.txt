@@ -140,3 +140,4 @@ tests/android/installer/test_avd.py::TestAvdManager::test_get_avdmanager_path_wi
 # Android Installer Environment Tests - GitHub Actions Only
 # ============================================
 tests/android/installer/test_env.py::TestEnvExporter::test_export_to_github_env
+tests/helpers/test_emulator_helper.py::TestEmulatorHelper::test_wait_for_boot_adb_failure
