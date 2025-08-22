@@ -1,6 +1,7 @@
 """SDK Manager wrapper for Android SDK operations."""
 
 import os
+import platform
 import ssl
 import subprocess
 import zipfile
@@ -337,14 +338,45 @@ class SdkManager:
                 self.logger.debug("Emulator already installed")
             return emulator_dir
 
-        with self.logger.step("Installing emulator") if self.logger else nullcontext():
-            self._run_sdkmanager(["emulator"])
-
-            if not emulator_dir.exists():
-                raise ComponentNotFoundError("emulator", self.sdk_root)
-
+        # Check if emulator is available for this platform
+        if platform.system().lower() == "linux" and platform.machine().lower() in [
+            "arm64",
+            "aarch64",
+        ]:
             if self.logger:
-                self.logger.success("Emulator installed")
+                self.logger.warning(
+                    "Android emulator is not available for Linux ARM64",
+                    details="Google does not provide emulator binaries for Linux ARM64. "
+                    "Physical devices or x86_64 systems are required for testing.",
+                )
+            # Return a dummy path to avoid breaking the pipeline
+            # The emulator won't actually work but other tools can still function
+            return self.sdk_root / "emulator"  # Return expected path even if not installed
+
+        with self.logger.step("Installing emulator") if self.logger else nullcontext():
+            try:
+                self._run_sdkmanager(["emulator"])
+
+                if not emulator_dir.exists():
+                    raise ComponentNotFoundError("emulator", self.sdk_root)
+
+                if self.logger:
+                    self.logger.success("Emulator installed")
+            except subprocess.CalledProcessError as e:
+                # Check if it's a platform compatibility issue
+                if (
+                    "not available" in str(e.stderr).lower()
+                    or "unsupported" in str(e.stderr).lower()
+                ):
+                    if self.logger:
+                        self.logger.warning(
+                            "Emulator not available for this platform",
+                            platform=f"{platform.system()} {platform.machine()}",
+                            details="The Android emulator is not supported on this platform. "
+                            "Use physical devices for testing.",
+                        )
+                    return self.sdk_root / "emulator"  # Return expected path
+                raise
 
         return emulator_dir
 

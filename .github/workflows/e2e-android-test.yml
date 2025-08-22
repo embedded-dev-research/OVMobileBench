@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-24.04-arm  # Ubuntu ARM64 native
+          - os: ubuntu-latest  # Ubuntu
             android-api: 30
             arch: arm64
           - os: macOS-latest  # macOS on Apple Silicon (M1/M2)
@@ -111,10 +111,17 @@ jobs:
             rm -rf $HOME/ovmb_cache/models 2>/dev/null || true
           fi
 
+          # Determine if we should create AVD (not on Linux ARM64)
+          CREATE_AVD="--create-avd"
+          if [ "${{ runner.os }}" = "Linux" ] && [ "$(uname -m)" = "aarch64" ]; then
+            echo "⚠️  Linux ARM64 detected - skipping emulator/AVD setup (not supported)"
+            CREATE_AVD=""
+          fi
+
           python -m ovmobilebench.cli setup-android \
             -c experiments/android_example.yaml \
             --api ${{ matrix.android-api }} \
-            --create-avd \
+            $CREATE_AVD \
             --verbose
 
           # Display cache stats
@@ -123,9 +130,17 @@ jobs:
 
       # === PREPARE EMULATOR ===
       - name: Start Android Emulator
+        if: runner.os != 'Linux' || !contains('aarch64 arm64', runner.arch)
         run: |
           python tests/e2e/test_emulator_helper.py -c experiments/android_example.yaml start-emulator &
           python tests/e2e/test_emulator_helper.py -c experiments/android_example.yaml wait-for-boot
+
+      - name: Skip emulator on Linux ARM64
+        if: runner.os == 'Linux' && contains('aarch64 arm64', runner.arch)
+        run: |
+          echo "⚠️  Skipping emulator startup on Linux ARM64 (not supported)"
+          echo "  Tests requiring an emulator will be skipped"
+          echo "  Physical devices should be used for testing on this platform"
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -162,16 +177,29 @@ jobs:
             --verbose
 
       - name: Deploy to Android device
+        if: runner.os != 'Linux' || !contains('aarch64 arm64', runner.arch)
         run: |
           python -m ovmobilebench.cli deploy \
             -c experiments/android_example.yaml \
             --verbose
 
+      - name: Skip deployment on Linux ARM64
+        if: runner.os == 'Linux' && contains('aarch64 arm64', runner.arch)
+        run: |
+          echo "⚠️  Skipping deployment - no emulator available on Linux ARM64"
+          echo "  To test on this platform, connect a physical Android device"
+
       - name: Run benchmark on device
+        if: runner.os != 'Linux' || !contains('aarch64 arm64', runner.arch)
         run: |
           python -m ovmobilebench.cli run \
             -c experiments/android_example.yaml \
             --verbose
+
+      - name: Skip benchmark on Linux ARM64
+        if: runner.os == 'Linux' && contains('aarch64 arm64', runner.arch)
+        run: |
+          echo "⚠️  Skipping benchmark - no emulator available on Linux ARM64"
 
       - name: Generate benchmark report
         run: |
@@ -189,14 +217,16 @@ jobs:
 
       # === VALIDATION ===
       - name: Validate results
+        if: runner.os != 'Linux' || !contains('aarch64 arm64', runner.arch)
         run: python tests/e2e/test_validate_results.py
 
       - name: Display benchmark results
+        if: runner.os != 'Linux' || !contains('aarch64 arm64', runner.arch)
         run: python tests/e2e/test_display_results.py
 
       # === CLEANUP ===
       - name: Stop emulator
-        if: always()
+        if: always() && (runner.os != 'Linux' || !contains('aarch64 arm64', runner.arch))
         run: python tests/e2e/test_emulator_helper.py -c experiments/android_example.yaml stop-emulator
 
       - name: Upload artifacts
