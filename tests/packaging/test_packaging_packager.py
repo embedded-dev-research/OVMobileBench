@@ -466,9 +466,10 @@ class TestPackager:
                         with patch("ovmobilebench.packaging.packager.logger") as mock_logger:
                             packager.create_bundle(artifacts)
 
-                            mock_logger.info.assert_called_with(
-                                "Bundle created: /output/ovbundle.tar.gz"
-                            )
+                            # Check that logger was called with the bundle path
+                            # Use str() to handle platform-specific path separators
+                            expected_path = Path("/output/ovbundle.tar.gz")
+                            mock_logger.info.assert_called_with(f"Bundle created: {expected_path}")
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
     def test_copy_models_logs_progress(self, mock_ensure_dir, package_config, models):
