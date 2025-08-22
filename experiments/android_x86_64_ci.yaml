@@ -1,0 +1,141 @@
+# Android x86_64 Benchmark Configuration for CI
+# This configuration is optimized for x86_64 Android emulators in CI environments
+# Uses x86_64 architecture for better emulator performance on standard CI runners
+
+project:
+  name: "android-x86-benchmark"       # Project identifier for tracking
+  run_id: "android_x86_001"          # Unique identifier for this benchmark run
+  description: "OpenVINO benchmark on Android x86_64 emulator for CI"
+  cache_dir: "ovmb_cache"             # Directory for all cached files (NDK, SDK, OpenVINO source, models)
+                                      # Relative paths are resolved from the project root
+
+environment:
+  # Environment configuration for Java and Android SDK
+  # These paths are auto-detected from environment variables if not specified
+  # java_home: "/path/to/java" # Optional: Path to Java installation (auto-detected from JAVA_HOME)
+  # sdk_root: "/path/to/android-sdk" # Optional: Android SDK root (defaults to cache_dir/android-sdk)
+
+# OpenVINO distribution configuration
+# Supports three modes: build (from source), install (pre-built), or link (download archive)
+openvino:
+  mode: "build"                       # Build OpenVINO from source for Android
+  # source_dir: "/path/to/openvino"  # Optional: Path to OpenVINO source (defaults to cache_dir/openvino_source)
+                                      # If not exists, will prompt to clone from GitHub
+  commit: "HEAD"                      # Git commit/tag to build (HEAD for latest)
+
+  # Android toolchain configuration for x86_64
+  toolchain:
+    # android_ndk: "/path/to/ndk" # Optional: Path to Android NDK (auto-detected from cache_dir/android-sdk/ndk)
+                                      # If not found, will prompt to install using setup-android command
+    abi: "x86_64"                     # Target Android ABI for x86_64 emulators
+    api_level: 30                     # Android API level (minimum 24 for OpenVINO)
+
+  # CMake build options - all CMake flags go here
+  options:
+    CMAKE_BUILD_TYPE: "Release"       # Build type: Release, Debug, RelWithDebInfo
+    CMAKE_GENERATOR: "Ninja"          # Build system generator (Ninja recommended for speed)
+    # CMAKE_C_COMPILER_LAUNCHER and CMAKE_CXX_COMPILER_LAUNCHER auto-detected if ccache is available
+    # Android toolchain options (CMAKE_TOOLCHAIN_FILE, ANDROID_ABI, etc.) autoconfigured from toolchain settings
+
+    # OpenVINO component options
+    ENABLE_INTEL_CPU: "ON"            # Intel CPU plugin (required for CPU inference)
+    ENABLE_INTEL_GPU: "OFF"           # Intel GPU plugin (not needed for Android)
+    ENABLE_ONEDNN_FOR_ARM: "OFF"      # oneDNN optimizations for ARM (not needed for x86_64)
+    ENABLE_PYTHON: "OFF"              # Python bindings (not needed for mobile)
+    BUILD_SHARED_LIBS: "ON"           # Build as shared libraries (.so files)
+    ENABLE_TESTS: "OFF"               # Unit tests (not needed for benchmarking)
+    ENABLE_FUNCTIONAL_TESTS: "OFF"    # Functional tests (not needed for benchmarking)
+    ENABLE_SAMPLES: "ON"              # Build samples including benchmark_app
+    ENABLE_OPENCV: "OFF"              # OpenCV support (not needed for benchmark_app)
+
+  # Alternative mode 2: Use pre-built OpenVINO installation
+  # mode: "install"
+  # install_dir: "/path/to/openvino/install"
+
+  # Alternative mode 3: Download OpenVINO archive from URL
+  # mode: "link"
+  # archive_url: "https://storage.openvinotoolkit.org/repositories/openvino/packages/..."
+  # archive_url: "latest" # Auto-detect the latest nightly build
+
+# Package configuration - controls what gets deployed to a device
+package:
+  include_symbols: false              # Include debug symbols in the package (increases size)
+  extra_files: []                     # Additional files to include in the package
+
+# Target device configuration
+device:
+  kind: "android"                     # Device type (android or linux_ssh)
+  serials: ["emulator-5554"]         # Use emulator for CI testing
+                                      # Empty list [] for auto-detect
+  push_dir: "/data/local/tmp/ovmobilebench"  # Directory on a device for benchmark files
+  use_root: false                     # Whether to use root access (not required)
+
+# Model configuration - scan directory for all models
+models:
+  directories:
+    - "ovmb_cache/models"
+  extensions: [".xml"]              # File extensions to look for
+
+# Alternative: Specify models explicitly
+# models:
+#   - name: "resnet-50"              # Model identifier for reports
+#     path: "ovmb_cache/models/resnet-50-pytorch.xml"  # Path to model XML file
+#     # precision: "FP16"            # Optional: Model precision override
+#     # tags: {}                     # Optional: Additional metadata tags
+
+# Benchmark execution configuration
+run:
+  repeats: 3                          # Number of times to repeat each configuration
+  warmup: true                        # Perform warmup run before measurements
+  cooldown_sec: 2                     # Seconds to wait between runs
+  timeout_sec: 120                    # Maximum seconds per benchmark run
+
+  # Matrix of parameters to test - creates all combinations
+  matrix:
+    niter: [100, 200]                 # Number of inference iterations
+    hint: ["latency", "throughput"]  # Performance hint (latency for responsiveness, throughput for maximum FPS)
+    device: ["CPU"]                   # Target device (CPU only for x86_64 emulator)
+    infer_precision: ["FP32"]         # Use FP32 for x86_64 (FP16 is mainly for ARM)
+
+# Report generation configuration
+report:
+  sinks:                              # Output destinations for results
+    - type: "json"                    # JSON format for programmatic processing
+      path: "artifacts/reports/results.json"
+    - type: "csv"                     # CSV format for spreadsheet analysis
+      path: "artifacts/reports/results.csv"
+
+  tags:                               # Metadata tags for tracking
+    experiment: "android_x86_benchmark"
+    platform: "android_x86_64"
+    ci: "true"
+    version: "v1.0"
+
+  aggregate: true                     # Aggregate results across repeats
+  include_raw: true                  # Include raw benchmark output in reports
+
+# Usage for CI:
+# 1. Install dependencies:
+#    pip install -e .
+#
+# 2. Setup Android SDK/NDK with x86_64 system image:
+#    python -m ovmobilebench.cli setup-android --api 30 --arch x86_64 --create-avd
+#
+# 3. Clone OpenVINO (if source_dir doesn't exist):
+#    git clone https://github.com/openvinotoolkit/openvino.git ovmb_cache/openvino_source
+#
+# 4. Download model (if not already present):
+#    # Download from OpenVINO Model Zoo or convert from PyTorch/TensorFlow
+#
+# 5. Start emulator (x86_64 for better performance on CI):
+#    # The emulator will be automatically started if using the setup-android command
+#
+# 6. Run complete pipeline:
+#    python -m ovmobilebench.cli all -c experiments/android_x86_64_ci.yaml --verbose
+#
+# Or run individual stages:
+#    python -m ovmobilebench.cli build -c experiments/android_x86_64_ci.yaml
+#    python -m ovmobilebench.cli package -c experiments/android_x86_64_ci.yaml
+#    python -m ovmobilebench.cli deploy -c experiments/android_x86_64_ci.yaml
+#    python -m ovmobilebench.cli run -c experiments/android_x86_64_ci.yaml
+#    python -m ovmobilebench.cli report -c experiments/android_x86_64_ci.yaml
