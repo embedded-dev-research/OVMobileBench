@@ -124,6 +124,12 @@ jobs:
           export ANDROID_SDK_HOME=$PWD/ovmb_cache/android-sdk
           export ANDROID_AVD_HOME=$PWD/ovmb_cache/android-sdk/.android/avd
 
+          # Export to GitHub Environment for subsequent steps
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_HOME=$ANDROID_SDK_HOME" >> $GITHUB_ENV
+          echo "ANDROID_AVD_HOME=$ANDROID_AVD_HOME" >> $GITHUB_ENV
+
           echo "📍 Environment variables set:"
           echo "  ANDROID_HOME=$ANDROID_HOME"
           echo "  ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
@@ -148,12 +154,7 @@ jobs:
       # === PREPARE EMULATOR ===
       - name: Start Android Emulator
         run: |
-          # Set Android environment variables for AVD location
-          export ANDROID_HOME=$PWD/ovmb_cache/android-sdk
-          export ANDROID_SDK_ROOT=$PWD/ovmb_cache/android-sdk
-          export ANDROID_SDK_HOME=$PWD/ovmb_cache/android-sdk
-          export ANDROID_AVD_HOME=$PWD/ovmb_cache/android-sdk/.android/avd
-
+          # Environment variables should already be set from previous step
           echo "📍 Starting emulator with environment:"
           echo "  ANDROID_AVD_HOME=$ANDROID_AVD_HOME"
           echo "📱 Available AVDs:"
@@ -186,6 +187,7 @@ jobs:
           python -m ovmobilebench.cli build \
             -c ${{ matrix.config_file }} \
             --verbose
+          ls -l ovmb_cache/openvino_build/bin
 
       - name: Show ccache statistics
         run: |
@@ -235,12 +237,7 @@ jobs:
       - name: Stop emulator
         if: always()
         run: |
-          # Set Android environment variables
-          export ANDROID_HOME=$PWD/ovmb_cache/android-sdk
-          export ANDROID_SDK_ROOT=$PWD/ovmb_cache/android-sdk
-          export ANDROID_SDK_HOME=$PWD/ovmb_cache/android-sdk
-          export ANDROID_AVD_HOME=$PWD/ovmb_cache/android-sdk/.android/avd
-
+          # Environment variables should already be set from setup step
           python tests/e2e/test_emulator_helper.py -c ${{ matrix.config_file }} stop-emulator
 
       - name: Upload artifacts
