@@ -35,7 +35,8 @@ openvino:
   options:
     CMAKE_BUILD_TYPE: "Release"       # Build type: Release, Debug, RelWithDebInfo
     CMAKE_GENERATOR: "Ninja"          # Build system generator (Ninja recommended for speed)
-    # CMAKE_C_COMPILER_LAUNCHER and CMAKE_CXX_COMPILER_LAUNCHER auto-detected if ccache is available
+    CMAKE_C_COMPILER_LAUNCHER: "ccache"  # Use ccache for C compilation
+    CMAKE_CXX_COMPILER_LAUNCHER: "ccache"  # Use ccache for C++ compilation
     # Android toolchain options (CMAKE_TOOLCHAIN_FILE, ANDROID_ABI, etc.) autoconfigured from toolchain settings
 
     # OpenVINO component options
