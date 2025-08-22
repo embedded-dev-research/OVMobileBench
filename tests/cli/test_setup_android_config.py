@@ -54,9 +54,10 @@ class TestSetupAndroidWithConfig:
                 )
 
                 assert result.exit_code == 0
-                # Remove newlines from output for path checking (Rich formatting can split paths)
-                stdout_oneline = result.stdout.replace("\n", " ")
-                assert "test_cache/android-sdk" in stdout_oneline
+                # Rich console can wrap text mid-word, so we need to remove all whitespace
+                # when checking for paths to handle cases like "test_cache/androi d-sdk"
+                stdout_no_spaces = result.stdout.replace(" ", "").replace("\n", "")
+                assert "test_cache/android-sdk" in stdout_no_spaces
                 assert "All required Android components are already installed" in result.stdout
 
                 # Should not call ensure_android_tools since everything is installed
