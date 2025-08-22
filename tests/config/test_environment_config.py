@@ -37,7 +37,15 @@ class TestEnvironmentConfig:
             assert os.environ.get("JAVA_HOME") == "/opt/java/jdk-17"
             # Check that Java bin was added to PATH
             java_bin = str(Path("/opt/java/jdk-17") / "bin")
-            assert java_bin in os.environ.get("PATH", "")
+            current_path = os.environ.get("PATH", "")
+            # Normalize path separators for comparison
+            if (
+                java_bin.replace("/", "\\") in current_path
+                or java_bin.replace("\\", "/") in current_path
+            ):
+                assert True  # Path found with either separator
+            else:
+                assert java_bin in current_path
             # No print expected when java_home is explicitly set in config
 
         finally:
@@ -105,7 +113,15 @@ class TestEnvironmentConfig:
             assert os.environ.get("ANDROID_HOME") == "/opt/android-sdk"
             assert os.environ.get("ANDROID_SDK_ROOT") == "/opt/android-sdk"
             java_bin = str(Path("/usr/lib/jvm/java-17") / "bin")
-            assert java_bin in os.environ.get("PATH", "")
+            current_path = os.environ.get("PATH", "")
+            # Normalize path separators for comparison
+            if (
+                java_bin.replace("/", "\\") in current_path
+                or java_bin.replace("\\", "/") in current_path
+            ):
+                assert True  # Path found with either separator
+            else:
+                assert java_bin in current_path
 
         finally:
             # Restore original environment
@@ -209,17 +225,17 @@ class TestEnvironmentInExperiment:
         (project_dir / "pyproject.toml").touch()
 
         # Create CI-style config
-        home_dir = str(Path.home())
+        home_dir = Path.home()
         config_data = {
             "project": {
                 "name": "e2e-android-resnet50",
                 "run_id": "ci_123",
                 "description": "CI E2E test",
-                "cache_dir": f"{home_dir}/ovmb_cache",
+                "cache_dir": str(home_dir / "ovmb_cache"),
             },
             "environment": {
                 "java_home": "/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.8/x64",
-                "sdk_root": f"{home_dir}/ovmb_cache/android-sdk",
+                "sdk_root": str(home_dir / "ovmb_cache" / "android-sdk"),
             },
             "openvino": {
                 "mode": "build",
@@ -240,7 +256,10 @@ class TestEnvironmentInExperiment:
                 "use_root": False,
             },
             "models": [
-                {"name": "resnet-50", "path": f"{home_dir}/ovmb_cache/models/resnet-50-pytorch.xml"}
+                {
+                    "name": "resnet-50",
+                    "path": str(home_dir / "ovmb_cache" / "models" / "resnet-50-pytorch.xml"),
+                }
             ],
             "report": {"sinks": [{"type": "json", "path": "artifacts/reports/results.json"}]},
         }
