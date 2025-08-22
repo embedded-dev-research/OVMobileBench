@@ -285,6 +285,9 @@ def setup_android(
     # First, check what's already installed
     console.print("[bold blue]Checking existing Android SDK/NDK installation...[/bold blue]")
 
+    # Set avd_name first so it's available in all code paths
+    avd_name = f"ovmobilebench_avd_api{api_level}" if create_avd else None
+
     try:
         verification_result = verify_installation(sdk_root, verbose=verbose)
 
@@ -309,7 +312,6 @@ def setup_android(
             needs_installation.append("NDK")
 
         # Check if AVD needs to be created
-        avd_name = f"ovmobilebench_avd_api{api_level}" if create_avd else None
         needs_avd_creation = False
         if create_avd and avd_name:
             # Check if AVD already exists
@@ -357,9 +359,14 @@ def setup_android(
         console.print("[blue]Proceeding with full installation...[/blue]")
 
     console.print("[bold blue]Setting up Android SDK/NDK...[/bold blue]")
-    # Set avd_name for cases where verification failed and we skipped the try block
-    if "avd_name" not in locals():
-        avd_name = f"ovmobilebench_avd_api{api_level}" if create_avd else None
+
+    # Debug output for AVD creation
+    if create_avd and avd_name:
+        console.print(f"[blue]AVD creation requested: {avd_name}[/blue]")
+    else:
+        console.print(
+            f"[blue]AVD creation not requested (create_avd={create_avd}, avd_name={avd_name})[/blue]"
+        )
 
     # Use specified NDK version or let the installer determine the latest
     if ndk_version:
@@ -390,6 +397,15 @@ def setup_android(
         console.print("[bold green][OK] Android SDK/NDK setup completed[/bold green]")
         console.print(f"SDK Root: {result['sdk_root']}")
         console.print(f"NDK Path: {result['ndk_path']}")
+
+        # Check if AVD was created
+        if create_avd and avd_name:
+            avd_created = result.get("avd_created", False)
+            console.print(f"AVD creation result: {avd_created}")
+            if avd_created:
+                console.print(f"[green]✓ AVD '{avd_name}' created successfully[/green]")
+            else:
+                console.print(f"[yellow]⚠ AVD '{avd_name}' was not created[/yellow]")
 
         if avd_name:
             console.print(f"AVD Created: {avd_name}")
