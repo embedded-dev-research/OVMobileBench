@@ -213,7 +213,7 @@ class OpenVINOBuilder:
         # Map Android ABI to CMake output directory name
         if self.config.toolchain and self.config.toolchain.abi:
             abi = self.config.toolchain.abi
-            # OpenVINO CMake uses 'aarch64' for ARM64 builds
+            # OpenVINO CMake uses specific directory names for each architecture
             if abi == "arm64-v8a":
                 return "aarch64"
             elif abi == "armeabi-v7a":
@@ -221,7 +221,7 @@ class OpenVINOBuilder:
             elif abi == "x86":
                 return "i386"
             elif abi == "x86_64":
-                return "x86_64"
+                return "intel64"  # OpenVINO uses 'intel64' for x86_64 builds
             else:
                 return abi
         return "aarch64"  # Default to aarch64

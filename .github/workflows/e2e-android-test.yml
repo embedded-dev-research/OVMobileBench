@@ -187,7 +187,6 @@ jobs:
           python -m ovmobilebench.cli build \
             -c ${{ matrix.config_file }} \
             --verbose
-          ls -l ovmb_cache/openvino_build/bin
 
       - name: Show ccache statistics
         run: |
