@@ -27,14 +27,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest  # Ubuntu
-            android-api: 30
-            arch: x86_64
-            config_file: experiments/android_x86_64_ci.yaml
-#          - os: macOS-latest  # macOS on Apple Silicon (M1/M2)
+#          - os: ubuntu-latest  # Ubuntu
 #            android-api: 30
-#            arch: arm64
-#            config_file: experiments/android_example.yaml
+#            arch: x86_64
+#            config_file: experiments/android_x86_64_ci.yaml
+          - os: macOS-latest  # macOS on Apple Silicon (M1/M2)
+            android-api: 30
+            arch: arm64
+            config_file: experiments/android_example.yaml
     runs-on: ${{ matrix.os }}
 
     steps:

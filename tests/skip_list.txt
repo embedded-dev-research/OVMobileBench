@@ -141,3 +141,4 @@ tests/android/installer/test_avd.py::TestAvdManager::test_get_avdmanager_path_wi
 # ============================================
 tests/android/installer/test_env.py::TestEnvExporter::test_export_to_github_env
 tests/helpers/test_emulator_helper.py::TestEmulatorHelper::test_wait_for_boot_adb_failure
+tests/cli/test_setup_android_config.py::TestSetupAndroidWithConfig::test_setup_android_reads_config
