@@ -121,6 +121,7 @@ jobs:
           python -m ovmobilebench.cli setup-android \
             -c ${{ matrix.config_file }} \
             --api ${{ matrix.android-api }} \
+            --arch ${{ matrix.arch }} \
             --create-avd \
             --verbose
 
