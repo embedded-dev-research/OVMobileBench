@@ -231,10 +231,26 @@ def setup_environment(data: dict[str, Any], project_root: Path) -> dict[str, Any
             env["sdk_root"] = str(cache_path / "android-sdk")
             print(f"INFO: Using default Android SDK location: {env['sdk_root']}")
 
+    # Auto-detect or default AVD home if not specified
+    if not env.get("avd_home") and env.get("sdk_root"):
+        # Check if ANDROID_AVD_HOME is set
+        android_avd_home = os.environ.get("ANDROID_AVD_HOME")
+        if android_avd_home:
+            env["avd_home"] = android_avd_home
+            print(f"INFO: Auto-detected Android AVD home from ANDROID_AVD_HOME: {android_avd_home}")
+        else:
+            # Use default in SDK directory
+            env["avd_home"] = os.path.join(env["sdk_root"], ".android", "avd")
+            print(f"INFO: Using default Android AVD home: {env['avd_home']}")
+
     # Set Android SDK environment variables
     if env.get("sdk_root"):
         os.environ["ANDROID_HOME"] = env["sdk_root"]
         os.environ["ANDROID_SDK_ROOT"] = env["sdk_root"]
+
+    # Set Android AVD home environment variable
+    if env.get("avd_home"):
+        os.environ["ANDROID_AVD_HOME"] = env["avd_home"]
 
     return data
 

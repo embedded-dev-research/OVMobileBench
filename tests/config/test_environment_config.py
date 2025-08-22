@@ -306,3 +306,62 @@ class TestEnvironmentInExperiment:
                     os.environ[key] = value
                 else:
                     os.environ.pop(key, None)
+
+    def test_avd_home_setup(self, tmp_path):
+        """Test that AVD home is set from config."""
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+
+        config = {"environment": {"sdk_root": "/opt/android-sdk", "avd_home": "/custom/avd"}}
+
+        # Save original environment
+        original_avd_home = os.environ.get("ANDROID_AVD_HOME")
+
+        try:
+            with patch("builtins.print"):
+                setup_environment(config, project_dir)
+
+            # Check that AVD home was set
+            assert os.environ.get("ANDROID_AVD_HOME") == "/custom/avd"
+
+        finally:
+            # Restore original environment
+            if original_avd_home:
+                os.environ["ANDROID_AVD_HOME"] = original_avd_home
+            else:
+                os.environ.pop("ANDROID_AVD_HOME", None)
+
+    def test_avd_home_auto_setup(self, tmp_path):
+        """Test that AVD home is auto-set based on SDK root."""
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+
+        config = {"environment": {"sdk_root": "/opt/android-sdk"}}
+
+        # Save original environment
+        original_env = {
+            "ANDROID_AVD_HOME": os.environ.get("ANDROID_AVD_HOME"),
+            "ANDROID_HOME": os.environ.get("ANDROID_HOME"),
+            "ANDROID_SDK_ROOT": os.environ.get("ANDROID_SDK_ROOT"),
+        }
+
+        try:
+            # Clear environment to ensure clean test
+            for key in original_env.keys():
+                os.environ.pop(key, None)
+
+            with patch("builtins.print"):
+                result = setup_environment(config, project_dir)
+
+            # Check that AVD home was auto-set based on SDK root
+            expected_avd_home = "/opt/android-sdk/.android/avd"
+            assert result["environment"]["avd_home"] == expected_avd_home
+            assert os.environ.get("ANDROID_AVD_HOME") == expected_avd_home
+
+        finally:
+            # Restore original environment
+            for key, value in original_env.items():
+                if value is not None:
+                    os.environ[key] = value
+                else:
+                    os.environ.pop(key, None)

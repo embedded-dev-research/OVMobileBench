@@ -14,6 +14,7 @@ environment:
   # These paths are auto-detected from environment variables if not specified
   # java_home: "/path/to/java" # Optional: Path to Java installation (auto-detected from JAVA_HOME)
   # sdk_root: "/path/to/android-sdk" # Optional: Android SDK root (defaults to cache_dir/android-sdk)
+  # avd_home: "/path/to/avd" # Optional: Android AVD home (defaults to sdk_root/.android/avd)
 
 # OpenVINO distribution configuration
 # Supports three modes: build (from source), install (pre-built), or link (download archive)

@@ -239,7 +239,7 @@ def setup_android(
 
     from ovmobilebench.android.installer.api import ensure_android_tools, verify_installation
     from ovmobilebench.android.installer.types import Arch, NdkSpec
-    from ovmobilebench.config.loader import get_project_root
+    from ovmobilebench.config.loader import get_project_root, load_yaml
 
     # For setup-android, we need to load config without full validation
     # since we're installing the SDK/NDK that the config validation checks for
@@ -308,7 +308,38 @@ def setup_android(
         if not ndk_versions:
             needs_installation.append("NDK")
 
-        if not needs_installation:
+        # Check if AVD needs to be created
+        avd_name = f"ovmobilebench_avd_api{api_level}" if create_avd else None
+        needs_avd_creation = False
+        if create_avd and avd_name:
+            # Check if AVD already exists
+            # Get AVD home from config or use default
+            config_data = {}
+            if config_file:
+                try:
+                    config_data = load_yaml(config_file)
+                except Exception:
+                    pass  # Use defaults if config loading fails
+
+            # Setup environment to get AVD home
+            from ovmobilebench.config.loader import get_project_root, setup_environment
+
+            project_root = get_project_root()
+            setup_config = setup_environment(config_data, project_root)
+            avd_home_str = setup_config.get("environment", {}).get("avd_home")
+
+            if avd_home_str:
+                avd_home = Path(avd_home_str)
+            else:
+                # Fallback to SDK/.android/avd
+                avd_home = sdk_root / ".android" / "avd"
+
+            avd_ini_file = avd_home / f"{avd_name}.ini"
+            if not avd_ini_file.exists():
+                needs_avd_creation = True
+                needs_installation.append(f"AVD '{avd_name}'")
+
+        if not needs_installation and not needs_avd_creation:
             console.print(
                 "[bold green]✓ All required Android components are already installed[/bold green]"
             )
@@ -326,7 +357,9 @@ def setup_android(
         console.print("[blue]Proceeding with full installation...[/blue]")
 
     console.print("[bold blue]Setting up Android SDK/NDK...[/bold blue]")
-    avd_name = f"ovmobilebench_avd_api{api_level}" if create_avd else None
+    # Set avd_name for cases where verification failed and we skipped the try block
+    if "avd_name" not in locals():
+        avd_name = f"ovmobilebench_avd_api{api_level}" if create_avd else None
 
     # Use specified NDK version or let the installer determine the latest
     if ndk_version:

@@ -231,6 +231,9 @@ class EnvironmentConfig(BaseModel):
     sdk_root: str | None = Field(
         None, description="Android SDK root path (will use cache_dir/android-sdk if not set)"
     )
+    avd_home: str | None = Field(
+        None, description="Android AVD home path (will use sdk_root/.android/avd if not set)"
+    )
 
 
 class ProjectConfig(BaseModel):
