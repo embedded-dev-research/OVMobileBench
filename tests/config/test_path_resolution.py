@@ -23,7 +23,8 @@ class TestPathResolution:
         absolute_path = "/opt/android-sdk"
 
         result = resolve_path(absolute_path, project_root)
-        assert result == absolute_path
+        # Use Path to normalize for platform
+        assert Path(result) == Path(absolute_path)
 
     def test_resolve_relative_path(self):
         """Test that relative paths are resolved from project root."""
@@ -31,7 +32,8 @@ class TestPathResolution:
         relative_path = "ovmb_cache/android-sdk"
 
         result = resolve_path(relative_path, project_root)
-        assert result == "/home/user/project/ovmb_cache/android-sdk"
+        expected = str(project_root / "ovmb_cache" / "android-sdk")
+        assert result == expected
 
     def test_resolve_empty_path(self):
         """Test that empty paths are returned unchanged."""
@@ -45,10 +47,12 @@ class TestPathResolution:
         project_root = Path("/home/user/project")
 
         result = resolve_path("./ovmb_cache/sdk", project_root)
-        assert result == "/home/user/project/ovmb_cache/sdk"
+        expected = str(project_root / "ovmb_cache" / "sdk")
+        assert result == expected
 
         result = resolve_path("../external/sdk", project_root)
-        assert result == "/home/user/external/sdk"
+        expected = str(project_root.parent / "external" / "sdk")
+        assert result == expected
 
 
 class TestConfigPathResolution:
@@ -60,7 +64,8 @@ class TestConfigPathResolution:
         config = {"openvino": {"mode": "build", "source_dir": "ovmb_cache/openvino_source"}}
 
         result = resolve_paths_in_config(config, project_root)
-        assert result["openvino"]["source_dir"] == "/home/user/project/ovmb_cache/openvino_source"
+        expected = str(project_root / "ovmb_cache" / "openvino_source")
+        assert result["openvino"]["source_dir"] == expected
 
     def test_resolve_openvino_install_dir(self):
         """Test resolution of OpenVINO install_dir."""
@@ -68,7 +73,8 @@ class TestConfigPathResolution:
         config = {"openvino": {"mode": "install", "install_dir": "ovmb_cache/openvino_install"}}
 
         result = resolve_paths_in_config(config, project_root)
-        assert result["openvino"]["install_dir"] == "/home/user/project/ovmb_cache/openvino_install"
+        expected = str(project_root / "ovmb_cache" / "openvino_install")
+        assert result["openvino"]["install_dir"] == expected
 
     def test_resolve_android_ndk(self):
         """Test resolution of Android NDK path."""
@@ -78,7 +84,7 @@ class TestConfigPathResolution:
         }
 
         result = resolve_paths_in_config(config, project_root)
-        expected = "/home/user/project/ovmb_cache/android-sdk/ndk/26.3.11579264"
+        expected = str(project_root / "ovmb_cache" / "android-sdk" / "ndk" / "26.3.11579264")
         assert result["openvino"]["toolchain"]["android_ndk"] == expected
 
     def test_resolve_model_paths_list(self):
@@ -92,8 +98,10 @@ class TestConfigPathResolution:
         }
 
         result = resolve_paths_in_config(config, project_root)
-        assert result["models"][0]["path"] == "/home/user/project/ovmb_cache/models/model1.xml"
-        assert result["models"][1]["path"] == "/absolute/path/model2.xml"
+        expected1 = str(project_root / "ovmb_cache" / "models" / "model1.xml")
+        assert result["models"][0]["path"] == expected1
+        # Absolute paths should remain as-is but normalized
+        assert Path(result["models"][1]["path"]) == Path("/absolute/path/model2.xml")
 
     def test_resolve_model_directories(self):
         """Test resolution of model directories."""
@@ -106,12 +114,11 @@ class TestConfigPathResolution:
         }
 
         result = resolve_paths_in_config(config, project_root)
-        assert result["models"]["directories"][0] == "/home/user/project/ovmb_cache/models"
-        assert result["models"]["directories"][1] == "/absolute/models"
-        assert (
-            result["models"]["models"][0]["path"]
-            == "/home/user/project/ovmb_cache/models/model1.xml"
-        )
+        expected_dir = str(project_root / "ovmb_cache" / "models")
+        assert result["models"]["directories"][0] == expected_dir
+        assert Path(result["models"]["directories"][1]) == Path("/absolute/models")
+        expected_model = str(project_root / "ovmb_cache" / "models" / "model1.xml")
+        assert result["models"]["models"][0]["path"] == expected_model
 
     def test_resolve_cache_dir(self):
         """Test resolution of project cache_dir."""
@@ -119,7 +126,8 @@ class TestConfigPathResolution:
         config = {"project": {"name": "test", "cache_dir": "ovmb_cache"}}
 
         result = resolve_paths_in_config(config, project_root)
-        assert result["project"]["cache_dir"] == "/home/user/project/ovmb_cache"
+        expected = str(project_root / "ovmb_cache")
+        assert result["project"]["cache_dir"] == expected
 
     def test_resolve_report_paths(self):
         """Test resolution of report sink paths."""
@@ -134,8 +142,9 @@ class TestConfigPathResolution:
         }
 
         result = resolve_paths_in_config(config, project_root)
-        assert result["report"]["sinks"][0]["path"] == "/home/user/project/artifacts/results.json"
-        assert result["report"]["sinks"][1]["path"] == "/absolute/results.csv"
+        expected_json = str(project_root / "artifacts" / "results.json")
+        assert result["report"]["sinks"][0]["path"] == expected_json
+        assert Path(result["report"]["sinks"][1]["path"]) == Path("/absolute/results.csv")
 
     def test_preserve_none_values(self):
         """Test that None values are preserved."""
@@ -164,7 +173,8 @@ class TestConfigPathResolution:
         # Original should be unchanged
         assert config["openvino"]["source_dir"] == original_source_dir
         # Result should be resolved
-        assert result["openvino"]["source_dir"] == "/home/user/project/ovmb_cache/openvino"
+        expected = str(project_root / "ovmb_cache" / "openvino")
+        assert result["openvino"]["source_dir"] == expected
 
 
 class TestProjectRootDetection:
@@ -393,11 +403,19 @@ class TestIntegrationWithRealConfig:
         # They should be set to paths within cache_dir
         if experiment.openvino.source_dir:
             assert Path(experiment.openvino.source_dir).is_absolute()
-            assert "ovmb_cache/openvino_source" in experiment.openvino.source_dir
+            # Use Path parts to check in a platform-independent way
+            source_path = Path(experiment.openvino.source_dir)
+            assert "ovmb_cache" in source_path.parts
+            assert "openvino_source" in source_path.parts
 
         if experiment.openvino.toolchain.android_ndk:
             assert Path(experiment.openvino.toolchain.android_ndk).is_absolute()
-            assert "ovmb_cache/android-sdk/ndk" in experiment.openvino.toolchain.android_ndk
+            # Use Path parts to check in a platform-independent way
+            ndk_path = Path(experiment.openvino.toolchain.android_ndk)
+            assert "ovmb_cache" in ndk_path.parts
+            assert "android-sdk" in ndk_path.parts
+            assert "ndk" in ndk_path.parts
 
         # Check cache_dir is always set
-        assert "ovmb_cache" in experiment.project.cache_dir
+        cache_path = Path(experiment.project.cache_dir)
+        assert "ovmb_cache" in cache_path.parts

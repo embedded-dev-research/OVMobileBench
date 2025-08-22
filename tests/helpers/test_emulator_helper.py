@@ -42,9 +42,10 @@ class TestEmulatorHelper:
 
                 # Check that subprocess.run was called with correct parameters
                 actual_call = mock_run.call_args
-                assert (
-                    actual_call[0][0][0] == "/mock/android-sdk/cmdline-tools/latest/bin/avdmanager"
+                expected_path = str(
+                    Path("/mock/android-sdk") / "cmdline-tools" / "latest" / "bin" / "avdmanager"
                 )
+                assert actual_call[0][0][0] == expected_path
                 assert "create" in actual_call[0][0]
                 assert "avd" in actual_call[0][0]
                 assert "ovmobilebench_avd_api30" in actual_call[0][0]
@@ -64,9 +65,10 @@ class TestEmulatorHelper:
 
                 # Check that subprocess.run was called with correct parameters
                 actual_call = mock_run.call_args
-                assert (
-                    actual_call[0][0][0] == "/mock/android-sdk/cmdline-tools/latest/bin/avdmanager"
+                expected_path = str(
+                    Path("/mock/android-sdk") / "cmdline-tools" / "latest" / "bin" / "avdmanager"
                 )
+                assert actual_call[0][0][0] == expected_path
                 assert "create" in actual_call[0][0]
                 assert "avd" in actual_call[0][0]
                 assert "custom_avd" in actual_call[0][0]
@@ -101,7 +103,8 @@ class TestEmulatorHelper:
                 actual_call = mock_popen.call_args[0][0]
 
                 # Check key components
-                assert "/mock/android-sdk/emulator/emulator" in actual_call[0]
+                expected_emulator = str(Path("/mock/android-sdk") / "emulator" / "emulator")
+                assert expected_emulator in actual_call[0]
                 assert "-avd" in actual_call
                 assert "test_avd" in actual_call
                 assert "-no-window" in actual_call
@@ -121,7 +124,8 @@ class TestEmulatorHelper:
                 actual_call = mock_popen.call_args[0][0]
 
                 # Check key components
-                assert "/mock/android-sdk/emulator/emulator" in actual_call[0]
+                expected_emulator = str(Path("/mock/android-sdk") / "emulator" / "emulator")
+                assert expected_emulator in actual_call[0]
                 assert "-avd" in actual_call
                 assert "test_avd" in actual_call
 
@@ -140,7 +144,8 @@ class TestEmulatorHelper:
                 actual_call = mock_popen.call_args[0][0]
 
                 # Check key components
-                assert "/mock/android-sdk/emulator/emulator" in actual_call[0]
+                expected_emulator = str(Path("/mock/android-sdk") / "emulator" / "emulator")
+                assert expected_emulator in actual_call[0]
                 assert "-avd" in actual_call
                 assert "test_avd" in actual_call
 
@@ -225,7 +230,10 @@ class TestEmulatorHelper:
             delete_avd(api_level=30)
 
             actual_call = mock_run.call_args[0][0]
-            assert "/mock/android-sdk/cmdline-tools/latest/bin/avdmanager" in actual_call[0]
+            expected_path = str(
+                Path("/mock/android-sdk") / "cmdline-tools" / "latest" / "bin" / "avdmanager"
+            )
+            assert expected_path in actual_call[0]
             assert "delete" in actual_call
             assert "avd" in actual_call
             assert "-n" in actual_call
@@ -241,7 +249,10 @@ class TestEmulatorHelper:
             delete_avd(avd_name="custom_avd")
 
             actual_call = mock_run.call_args[0][0]
-            assert "/mock/android-sdk/cmdline-tools/latest/bin/avdmanager" in actual_call[0]
+            expected_path = str(
+                Path("/mock/android-sdk") / "cmdline-tools" / "latest" / "bin" / "avdmanager"
+            )
+            assert expected_path in actual_call[0]
             assert "delete" in actual_call
             assert "avd" in actual_call
             assert "-n" in actual_call

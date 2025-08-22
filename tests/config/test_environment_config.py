@@ -36,7 +36,8 @@ class TestEnvironmentConfig:
             # Check that JAVA_HOME was set
             assert os.environ.get("JAVA_HOME") == "/opt/java/jdk-17"
             # Check that Java bin was added to PATH
-            assert "/opt/java/jdk-17/bin" in os.environ.get("PATH", "")
+            java_bin = str(Path("/opt/java/jdk-17") / "bin")
+            assert java_bin in os.environ.get("PATH", "")
             # No print expected when java_home is explicitly set in config
 
         finally:
@@ -103,7 +104,8 @@ class TestEnvironmentConfig:
             assert os.environ.get("JAVA_HOME") == "/usr/lib/jvm/java-17"
             assert os.environ.get("ANDROID_HOME") == "/opt/android-sdk"
             assert os.environ.get("ANDROID_SDK_ROOT") == "/opt/android-sdk"
-            assert "/usr/lib/jvm/java-17/bin" in os.environ.get("PATH", "")
+            java_bin = str(Path("/usr/lib/jvm/java-17") / "bin")
+            assert java_bin in os.environ.get("PATH", "")
 
         finally:
             # Restore original environment
@@ -265,8 +267,11 @@ class TestEnvironmentInExperiment:
                 experiment.environment.java_home
                 == "/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.8/x64"
             )
-            assert experiment.environment.sdk_root == f"{home_dir}/ovmb_cache/android-sdk"
-            assert experiment.project.cache_dir == f"{home_dir}/ovmb_cache"
+            # Use Path to normalize for platform
+            expected_sdk = str(Path(home_dir) / "ovmb_cache" / "android-sdk")
+            assert experiment.environment.sdk_root == expected_sdk
+            expected_cache = str(Path(home_dir) / "ovmb_cache")
+            assert experiment.project.cache_dir == expected_cache
 
             # Check that environment variables were set
             assert (

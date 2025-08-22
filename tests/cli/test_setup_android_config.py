@@ -56,7 +56,10 @@ class TestSetupAndroidWithConfig:
                 assert result.exit_code == 0
                 # Rich console can wrap text mid-word, so we need to remove all whitespace
                 # when checking for paths to handle cases like "test_cache/androi d-sdk"
-                stdout_no_spaces = result.stdout.replace(" ", "").replace("\n", "")
+                # Also normalize path separators for cross-platform compatibility
+                stdout_no_spaces = (
+                    result.stdout.replace(" ", "").replace("\n", "").replace("\\", "/")
+                )
                 assert "test_cache/android-sdk" in stdout_no_spaces
                 assert "All required Android components are already installed" in result.stdout
 

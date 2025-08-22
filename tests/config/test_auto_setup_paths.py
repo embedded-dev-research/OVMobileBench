@@ -24,7 +24,8 @@ class TestSetupDefaultPaths:
         result = setup_default_paths(config, project_root)
 
         # Should set source_dir to cache/openvino_source
-        assert result["openvino"]["source_dir"] == "/home/user/project/ovmb_cache/openvino_source"
+        expected = str(project_root / "ovmb_cache" / "openvino_source")
+        assert result["openvino"]["source_dir"] == expected
 
     def test_setup_android_ndk_when_missing(self):
         """Test that android_ndk is set to default when not specified."""
@@ -39,7 +40,8 @@ class TestSetupDefaultPaths:
         # Should set android_ndk to cache/android-sdk/ndk/version
         # When no NDK exists, should set to "latest" placeholder
         ndk_path = result["openvino"]["toolchain"]["android_ndk"]
-        assert ndk_path == "/home/user/project/ovmb_cache/android-sdk/ndk/latest"
+        expected = str(project_root / "ovmb_cache" / "android-sdk" / "ndk" / "latest")
+        assert ndk_path == expected
 
     def test_setup_both_paths_when_missing(self):
         """Test that both source_dir and android_ndk are set when missing."""
@@ -49,10 +51,10 @@ class TestSetupDefaultPaths:
         result = setup_default_paths(config, project_root)
 
         # Should set both paths
-        assert result["openvino"]["source_dir"] == "/home/user/project/my_cache/openvino_source"
-        assert result["openvino"]["toolchain"]["android_ndk"].startswith(
-            "/home/user/project/my_cache/android-sdk/ndk/"
-        )
+        expected_source = str(project_root / "my_cache" / "openvino_source")
+        assert result["openvino"]["source_dir"] == expected_source
+        expected_ndk_prefix = str(project_root / "my_cache" / "android-sdk" / "ndk")
+        assert result["openvino"]["toolchain"]["android_ndk"].startswith(expected_ndk_prefix)
 
     def test_preserve_existing_source_dir(self):
         """Test that existing source_dir is preserved."""
@@ -120,10 +122,11 @@ class TestSetupDefaultPaths:
         result = setup_default_paths(config, project_root)
 
         # Should use absolute cache path
-        assert result["openvino"]["source_dir"] == "/absolute/cache/openvino_source"
-        assert result["openvino"]["toolchain"]["android_ndk"].startswith(
-            "/absolute/cache/android-sdk/ndk/"
-        )
+        cache_path = Path("/absolute/cache")
+        expected = str(cache_path / "openvino_source")
+        assert result["openvino"]["source_dir"] == expected
+        expected_ndk = str(cache_path / "android-sdk" / "ndk")
+        assert result["openvino"]["toolchain"]["android_ndk"].startswith(expected_ndk)
 
     def test_default_cache_dir_when_not_specified(self):
         """Test that default cache_dir is used when not specified."""
@@ -133,10 +136,10 @@ class TestSetupDefaultPaths:
         result = setup_default_paths(config, project_root)
 
         # Should use default ovmb_cache
-        assert result["openvino"]["source_dir"] == "/home/user/project/ovmb_cache/openvino_source"
-        assert result["openvino"]["toolchain"]["android_ndk"].startswith(
-            "/home/user/project/ovmb_cache/android-sdk/ndk/"
-        )
+        expected = str(project_root / "ovmb_cache" / "openvino_source")
+        assert result["openvino"]["source_dir"] == expected
+        expected_ndk = str(project_root / "ovmb_cache" / "android-sdk" / "ndk")
+        assert result["openvino"]["toolchain"]["android_ndk"].startswith(expected_ndk)
 
     def test_config_not_modified(self):
         """Test that original config is not modified."""
@@ -328,9 +331,12 @@ class TestIntegrationWithRealE2EConfig:
         # source_dir and android_ndk should be auto-set
         # They might not match exactly due to path resolution
         if experiment.openvino.source_dir:
-            assert "openvino_source" in experiment.openvino.source_dir
+            source_path = Path(experiment.openvino.source_dir)
+            assert "openvino_source" in source_path.parts
         if experiment.openvino.toolchain.android_ndk:
-            assert "android-sdk/ndk" in experiment.openvino.toolchain.android_ndk
+            ndk_path = Path(experiment.openvino.toolchain.android_ndk)
+            assert "android-sdk" in ndk_path.parts
+            assert "ndk" in ndk_path.parts
 
         # Verify other settings are preserved
         assert experiment.project.name == "android-benchmark"
