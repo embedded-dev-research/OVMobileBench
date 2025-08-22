@@ -235,34 +235,36 @@ def setup_android(
     verbose: bool = typer.Option(False, "-v", "--verbose", help="Enable verbose output"),
 ):
     """Setup Android SDK/NDK for OVMobileBench."""
+    import yaml
+
     from ovmobilebench.android.installer.api import ensure_android_tools, verify_installation
     from ovmobilebench.android.installer.types import Arch, NdkSpec
-    from ovmobilebench.config.loader import load_experiment
+    from ovmobilebench.config.loader import get_project_root
 
-    # Load config
+    # For setup-android, we need to load config without full validation
+    # since we're installing the SDK/NDK that the config validation checks for
     try:
-        experiment = load_experiment(config_file)
-        # Get values from config
+        with open(config_file) as f:
+            config_data = yaml.safe_load(f)
+
+        # Get values from raw config data
         if api_level is None:
-            api_level = (
-                experiment.device.api_level if hasattr(experiment.device, "api_level") else 30
-            )
+            api_level = config_data.get("device", {}).get("api_level", 30)
         if arch is None:
             # Get architecture from openvino.toolchain.abi in config
-            if hasattr(experiment, "openvino") and hasattr(experiment.openvino, "toolchain"):
-                arch = experiment.openvino.toolchain.abi
-            else:
-                arch = "x86_64"  # Default for CI
+            arch = config_data.get("openvino", {}).get("toolchain", {}).get("abi", "x86_64")
         if create_avd is None:
             # Default: create AVD only if no physical devices specified in config
-            create_avd = (
-                not experiment.device.serials
-                if hasattr(experiment.device, "serials") and experiment.device.serials
-                else True
-            )
+            serials = config_data.get("device", {}).get("serials", [])
+            create_avd = not serials if serials else True
         if sdk_root is None:
             # Get cache_dir from config
-            cache_dir = Path(experiment.project.cache_dir)
+            cache_dir = config_data.get("project", {}).get("cache_dir", "ovmb_cache")
+            project_root = get_project_root()
+            if not Path(cache_dir).is_absolute():
+                cache_dir = project_root / cache_dir
+            else:
+                cache_dir = Path(cache_dir)
             sdk_root = cache_dir / "android-sdk"
             console.print(f"[blue]Using SDK location from config: {sdk_root}[/blue]")
     except Exception as e:
@@ -275,8 +277,6 @@ def setup_android(
         if create_avd is None:
             create_avd = False
         if sdk_root is None:
-            from ovmobilebench.config.loader import get_project_root
-
             project_root = get_project_root()
             cache_dir = project_root / "ovmb_cache"
             sdk_root = cache_dir / "android-sdk"

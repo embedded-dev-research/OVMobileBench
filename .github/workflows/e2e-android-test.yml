@@ -133,6 +133,8 @@ jobs:
       - name: Start Android Emulator
         run: |
           python tests/e2e/test_emulator_helper.py -c ${{ matrix.config_file }} start-emulator &
+          # Give emulator a moment to start before checking
+          sleep 10
           python tests/e2e/test_emulator_helper.py -c ${{ matrix.config_file }} wait-for-boot
 
       - name: Setup ccache

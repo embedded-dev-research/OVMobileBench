@@ -134,13 +134,20 @@ def start_emulator(avd_name: str = None, api_level: int = 30):
         "-no-boot-anim",
         "-gpu",
         "swiftshader_indirect",
+        "-no-snapshot-save",  # Don't save snapshots
     ]
 
     # Add platform-specific acceleration
     import platform
 
     if platform.system() == "Linux":
-        cmd.extend(["-accel", "on", "-qemu", "-enable-kvm"])
+        # Check if KVM is available
+        if Path("/dev/kvm").exists():
+            logger.info("KVM acceleration available, enabling...")
+            cmd.extend(["-accel", "on", "-qemu", "-enable-kvm"])
+        else:
+            logger.warning("KVM not available, using software acceleration")
+            cmd.extend(["-accel", "off"])
     elif platform.system() == "Darwin":  # macOS
         cmd.extend(["-accel", "on"])
 
@@ -164,25 +171,58 @@ def wait_for_boot(timeout: int = 300):
         logger.error(f"ADB not found at {adb_path}")
         sys.exit(1)
 
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        result = subprocess.run([str(adb_path), "wait-for-device"], capture_output=True, timeout=30)
+    # First, check if any device is available
+    logger.info("Checking for available devices...")
+    devices_result = subprocess.run(
+        [str(adb_path), "devices"], capture_output=True, text=True, timeout=10
+    )
+    logger.info(f"ADB devices output: {devices_result.stdout}")
 
-        if result.returncode == 0:
-            # Check if boot completed
-            boot_result = subprocess.run(
-                [str(adb_path), "shell", "getprop", "sys.boot_completed"],
-                capture_output=True,
-                text=True,
+    start_time = time.time()
+    device_found = False
+
+    while time.time() - start_time < timeout:
+        try:
+            # Use a shorter timeout for wait-for-device and retry
+            result = subprocess.run(
+                [str(adb_path), "wait-for-device"], capture_output=True, timeout=10
             )
 
-            if boot_result.returncode == 0 and "1" in boot_result.stdout:
-                logger.info("Emulator booted successfully!")
-                return True
+            if result.returncode == 0:
+                device_found = True
+                # Check if boot completed
+                boot_result = subprocess.run(
+                    [str(adb_path), "shell", "getprop", "sys.boot_completed"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+
+                if boot_result.returncode == 0 and "1" in boot_result.stdout.strip():
+                    logger.info("Emulator booted successfully!")
+                    return True
+                else:
+                    logger.info(
+                        f"Device found but not fully booted yet (boot_completed={boot_result.stdout.strip()})"
+                    )
+        except subprocess.TimeoutExpired:
+            logger.info("wait-for-device timed out, retrying...")
+            # Check devices again
+            devices_result = subprocess.run(
+                [str(adb_path), "devices"], capture_output=True, text=True, timeout=5
+            )
+            if "emulator" in devices_result.stdout or "device" in devices_result.stdout:
+                logger.info(f"Devices found: {devices_result.stdout.strip()}")
+            else:
+                logger.warning("No devices found yet, emulator may still be starting...")
 
         time.sleep(5)
 
-    logger.error("Emulator failed to boot within timeout")
+    if not device_found:
+        logger.error("No emulator device was detected. The emulator may have failed to start.")
+    else:
+        logger.error("Emulator was detected but failed to complete boot within timeout")
+
     return False
 
 
