@@ -13,8 +13,9 @@ sys.path.append(str(Path(__file__).parent.parent.parent / "tests" / "e2e"))
 # Import and configure test_emulator_helper module
 import test_emulator_helper
 
-# Set ANDROID_HOME for all tests
+# Set ANDROID_HOME and ARCHITECTURE for all tests
 test_emulator_helper.ANDROID_HOME = "/mock/android-sdk"
+test_emulator_helper.ARCHITECTURE = "arm64-v8a"  # Default for tests
 
 
 class TestEmulatorHelper:
@@ -23,8 +24,9 @@ class TestEmulatorHelper:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Setup test environment."""
-        # Ensure ANDROID_HOME is set for all tests
+        # Ensure ANDROID_HOME and ARCHITECTURE are set for all tests
         test_emulator_helper.ANDROID_HOME = "/mock/android-sdk"
+        test_emulator_helper.ARCHITECTURE = "arm64-v8a"  # Default for tests
 
     def test_create_avd_with_default_name(self):
         """Test AVD creation with default naming."""
