@@ -30,15 +30,14 @@ class TestEnvironmentConfig:
             if "JAVA_HOME" in os.environ:
                 del os.environ["JAVA_HOME"]
 
-            with patch("builtins.print") as mock_print:
+            with patch("builtins.print"):
                 setup_environment(config, project_dir)
 
             # Check that JAVA_HOME was set
             assert os.environ.get("JAVA_HOME") == "/opt/java/jdk-17"
             # Check that Java bin was added to PATH
             assert "/opt/java/jdk-17/bin" in os.environ.get("PATH", "")
-            # Check that it was logged
-            mock_print.assert_any_call("INFO: Using Java from: /opt/java/jdk-17")
+            # No print expected when java_home is explicitly set in config
 
         finally:
             # Restore original environment
@@ -60,14 +59,13 @@ class TestEnvironmentConfig:
         original_android_sdk_root = os.environ.get("ANDROID_SDK_ROOT")
 
         try:
-            with patch("builtins.print") as mock_print:
+            with patch("builtins.print"):
                 setup_environment(config, project_dir)
 
             # Check that Android environment was set
             assert os.environ.get("ANDROID_HOME") == "/home/user/android-sdk"
             assert os.environ.get("ANDROID_SDK_ROOT") == "/home/user/android-sdk"
-            # Check that it was logged
-            mock_print.assert_any_call("INFO: Using Android SDK from: /home/user/android-sdk")
+            # No print expected when sdk_root is explicitly set in config
 
         finally:
             # Restore original environment
@@ -126,7 +124,9 @@ class TestEnvironmentConfig:
         with patch("builtins.print"):
             result = setup_environment(config, project_dir)
 
-        assert result == config
+        # Environment section should be created with auto-detected values
+        assert "environment" in result
+        assert result["project"] == {"name": "test"}
 
     def test_empty_environment_section(self, tmp_path):
         """Test that empty environment section is handled correctly."""
@@ -139,7 +139,10 @@ class TestEnvironmentConfig:
         with patch("builtins.print"):
             result = setup_environment(config, project_dir)
 
-        assert result == config
+        # Environment section should have auto-detected values
+        assert "environment" in result
+        # SDK root should be auto-detected to cache_dir/android-sdk
+        assert "sdk_root" in result["environment"]
 
 
 class TestEnvironmentInExperiment:

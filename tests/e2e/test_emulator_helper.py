@@ -5,23 +5,73 @@ Helper functions for Android emulator management.
 
 import argparse
 import logging
+import os
 import subprocess
 import sys
 import time
+from pathlib import Path
+
+import yaml
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def get_sdk_path_from_config(config_file=None):
+    """Get Android SDK path from OVMobileBench config."""
+    # Use provided config file or default
+    if config_file:
+        config_path = Path(config_file)
+    else:
+        config_path = Path.cwd() / "experiments" / "android_example.yaml"
+
+    if config_path.exists():
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+
+        # Get cache_dir from config
+        cache_dir = config.get("project", {}).get("cache_dir", "ovmb_cache")
+
+        # Resolve cache_dir path
+        if not Path(cache_dir).is_absolute():
+            cache_dir = Path.cwd() / cache_dir
+        else:
+            cache_dir = Path(cache_dir)
+
+        # SDK is in cache_dir/android-sdk
+        sdk_path = cache_dir / "android-sdk"
+
+        # Also check environment section for sdk_root
+        env_section = config.get("environment")
+        if env_section and isinstance(env_section, dict):
+            env_sdk = env_section.get("sdk_root")
+        else:
+            env_sdk = None
+        if env_sdk:
+            sdk_path = Path(env_sdk)
+
+        logger.info(f"Using config: {config_path}")
+        return str(sdk_path)
+
+    # Fallback to default
+    logger.warning(f"Config not found at {config_path}, using default path")
+    return str(Path.cwd() / "ovmb_cache" / "android-sdk")
+
+
+# Global variable that will be initialized in main()
+ANDROID_HOME = None
+
+
 def create_avd(api_level: int, avd_name: str = None):
     """Create Android Virtual Device."""
     if not avd_name:
-        avd_name = f"test_avd_api{api_level}"
+        avd_name = f"ovmobilebench_avd_api{api_level}"
 
     logger.info(f"Creating AVD '{avd_name}' for API {api_level}...")
 
+    avdmanager_path = Path(ANDROID_HOME) / "cmdline-tools" / "latest" / "bin" / "avdmanager"
     cmd = [
-        "avdmanager",
+        str(avdmanager_path),
         "create",
         "avd",
         "-n",
@@ -40,12 +90,18 @@ def create_avd(api_level: int, avd_name: str = None):
 def start_emulator(avd_name: str = None, api_level: int = 30):
     """Start Android emulator in background."""
     if not avd_name:
-        avd_name = f"test_avd_api{api_level}"
+        avd_name = f"ovmobilebench_avd_api{api_level}"  # Use OVMobileBench AVD name
 
     logger.info(f"Starting emulator '{avd_name}'...")
 
+    # Use full path to emulator
+    emulator_path = Path(ANDROID_HOME) / "emulator" / "emulator"
+    if not emulator_path.exists():
+        logger.error(f"Emulator not found at {emulator_path}")
+        sys.exit(1)
+
     cmd = [
-        "emulator",
+        str(emulator_path),
         "-avd",
         avd_name,
         "-no-window",
@@ -71,14 +127,22 @@ def wait_for_boot(timeout: int = 300):
     """Wait for emulator to finish booting."""
     logger.info("Waiting for emulator to boot...")
 
+    # Use full path to adb
+    adb_path = Path(ANDROID_HOME) / "platform-tools" / "adb"
+    if not adb_path.exists():
+        logger.error(f"ADB not found at {adb_path}")
+        sys.exit(1)
+
     start_time = time.time()
     while time.time() - start_time < timeout:
-        result = subprocess.run(["adb", "wait-for-device"], capture_output=True, timeout=30)
+        result = subprocess.run([str(adb_path), "wait-for-device"], capture_output=True, timeout=30)
 
         if result.returncode == 0:
             # Check if boot completed
             boot_result = subprocess.run(
-                ["adb", "shell", "getprop", "sys.boot_completed"], capture_output=True, text=True
+                [str(adb_path), "shell", "getprop", "sys.boot_completed"],
+                capture_output=True,
+                text=True,
             )
 
             if boot_result.returncode == 0 and "1" in boot_result.stdout:
@@ -94,7 +158,8 @@ def wait_for_boot(timeout: int = 300):
 def stop_emulator():
     """Stop running emulator."""
     logger.info("Stopping emulator...")
-    subprocess.run(["adb", "emu", "kill"], check=False)
+    adb_path = Path(ANDROID_HOME) / "platform-tools" / "adb"
+    subprocess.run([str(adb_path), "emu", "kill"], check=False)
     time.sleep(2)
     logger.info("Emulator stopped")
 
@@ -102,14 +167,23 @@ def stop_emulator():
 def delete_avd(avd_name: str = None, api_level: int = 30):
     """Delete Android Virtual Device."""
     if not avd_name:
-        avd_name = f"test_avd_api{api_level}"
+        avd_name = f"ovmobilebench_avd_api{api_level}"
 
     logger.info(f"Deleting AVD '{avd_name}'...")
-    subprocess.run(["avdmanager", "delete", "avd", "-n", avd_name], check=False)
+    avdmanager_path = Path(ANDROID_HOME) / "cmdline-tools" / "latest" / "bin" / "avdmanager"
+    subprocess.run([str(avdmanager_path), "delete", "avd", "-n", avd_name], check=False)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Android emulator helper")
+    # Add global config argument
+    parser.add_argument(
+        "-c",
+        "--config",
+        help="Path to OVMobileBench config file",
+        default="experiments/android_example.yaml",
+    )
+
     subparsers = parser.add_subparsers(dest="command")
 
     # Create AVD
@@ -134,6 +208,13 @@ def main():
     delete_parser.add_argument("--api", type=int, default=30)
 
     args = parser.parse_args()
+
+    # Initialize ANDROID_HOME from config
+    global ANDROID_HOME
+    ANDROID_HOME = get_sdk_path_from_config(args.config)
+    os.environ["ANDROID_HOME"] = ANDROID_HOME
+    os.environ["ANDROID_SDK_ROOT"] = ANDROID_HOME
+    logger.info(f"Using Android SDK: {ANDROID_HOME}")
 
     if args.command == "create-avd":
         create_avd(args.api, args.name)

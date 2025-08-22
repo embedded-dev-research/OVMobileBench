@@ -194,8 +194,8 @@ def setup_environment(data: dict[str, Any], project_root: Path) -> dict[str, Any
 
     data = copy.deepcopy(data)
 
-    # Ensure environment section exists
-    if "environment" not in data:
+    # Ensure environment section exists and is a dict
+    if "environment" not in data or data["environment"] is None:
         data["environment"] = {}
 
     env = data["environment"]

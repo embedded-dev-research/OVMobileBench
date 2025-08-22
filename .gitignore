@@ -138,3 +138,4 @@ artifacts
 junit.xml
 
 *.DS_Store*
+valid_cache_dir

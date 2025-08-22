@@ -12,17 +12,22 @@ class TestOpenVINOConfig:
     def test_build_mode_valid(self):
         """Test valid build mode configuration."""
         config = OpenVINOConfig(
-            mode="build", source_dir="/path/to/openvino", commit="HEAD", build_type="Release"
+            mode="build",
+            source_dir="/path/to/openvino",
+            commit="HEAD",
+            options=BuildOptions(CMAKE_BUILD_TYPE="Release"),
         )
         assert config.mode == "build"
         assert config.source_dir == "/path/to/openvino"
         assert config.commit == "HEAD"
-        assert config.build_type == "Release"
+        assert config.options.CMAKE_BUILD_TYPE == "Release"
 
     def test_build_mode_missing_source_dir(self):
-        """Test build mode without source_dir."""
-        with pytest.raises(ValidationError, match="source_dir is required when mode is 'build'"):
-            OpenVINOConfig(mode="build")
+        """Test build mode without source_dir - now allowed for auto-setup."""
+        # This is now allowed - source_dir will be auto-configured
+        config = OpenVINOConfig(mode="build")
+        assert config.mode == "build"
+        assert config.source_dir is None  # Will be auto-configured later
 
     def test_install_mode_valid(self):
         """Test valid install mode configuration."""
@@ -66,15 +71,11 @@ class TestOpenVINOConfig:
                 android_ndk="/path/to/ndk",
                 abi="arm64-v8a",
                 api_level=30,
-                cmake="cmake3",
-                ninja="ninja-build",
             ),
         )
         assert config.toolchain.android_ndk == "/path/to/ndk"
         assert config.toolchain.abi == "arm64-v8a"
         assert config.toolchain.api_level == 30
-        assert config.toolchain.cmake == "cmake3"
-        assert config.toolchain.ninja == "ninja-build"
 
     def test_build_mode_with_options(self):
         """Test build mode with custom build options."""
@@ -97,9 +98,7 @@ class TestOpenVINOConfig:
         """Test default values for build mode."""
         config = OpenVINOConfig(mode="build", source_dir="/path/to/openvino")
         assert config.commit == "HEAD"
-        assert config.build_type == "RelWithDebInfo"
-        assert config.toolchain.cmake == "cmake"
-        assert config.toolchain.ninja == "ninja"
+        assert config.options.CMAKE_BUILD_TYPE == "Release"  # Default from BuildOptions
         assert config.toolchain.abi == "arm64-v8a"
         assert config.toolchain.api_level == 24
         assert config.options.ENABLE_INTEL_GPU == "OFF"
@@ -111,14 +110,20 @@ class TestOpenVINOConfig:
         """Test different build types."""
         for build_type in ["Release", "RelWithDebInfo", "Debug"]:
             config = OpenVINOConfig(
-                mode="build", source_dir="/path/to/openvino", build_type=build_type
+                mode="build",
+                source_dir="/path/to/openvino",
+                options=BuildOptions(CMAKE_BUILD_TYPE=build_type),
             )
-            assert config.build_type == build_type
+            assert config.options.CMAKE_BUILD_TYPE == build_type
 
     def test_invalid_build_type(self):
         """Test invalid build type."""
         with pytest.raises(ValidationError):
-            OpenVINOConfig(mode="build", source_dir="/path/to/openvino", build_type="InvalidType")
+            OpenVINOConfig(
+                mode="build",
+                source_dir="/path/to/openvino",
+                options=BuildOptions(CMAKE_BUILD_TYPE="InvalidType"),
+            )
 
     def test_mode_switching(self):
         """Test that different modes don't require other mode's fields."""

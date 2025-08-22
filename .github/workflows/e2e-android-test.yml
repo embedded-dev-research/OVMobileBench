@@ -61,7 +61,9 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y ccache ninja-build
           elif [ "${{ runner.os }}" = "macOS" ]; then
-            brew install ccache ninja
+            # Check if already installed to save time
+            brew list ccache &>/dev/null || brew install ccache
+            brew list ninja &>/dev/null || brew install ninja
           fi
 
       - name: Setup Java for Android
@@ -78,53 +80,42 @@ jobs:
         if: runner.os == 'macOS'
         run: bash tests/e2e/scripts/setup_hypervisor_macos.sh
 
-      - name: Cache OVMobileBench cache directory
+      - name: Cache Android SDK
         uses: actions/cache@v4
-        id: android-cache
+        id: android-sdk-cache
         with:
-          path: ~/ovmb_cache
-          key: ovmb-cache-${{ runner.os }}-${{ matrix.android-api }}-${{ matrix.arch }}-v3${{
+          path: ~/ovmb_cache/android-sdk
+          key: android-sdk-${{ runner.os }}-${{ matrix.android-api }}-${{ matrix.arch }}-v1${{
             github.event.inputs.clear_cache == 'true' && '-nocache' || '' }}
           restore-keys: |
-            ovmb-cache-${{ runner.os }}-${{ matrix.android-api }}-
-            ovmb-cache-${{ runner.os }}-
+            android-sdk-${{ runner.os }}-${{ matrix.android-api }}-${{ matrix.arch }}-
+            android-sdk-${{ runner.os }}-${{ matrix.android-api }}-
+            android-sdk-${{ runner.os }}-
+
+      - name: Cache Models
+        uses: actions/cache@v4
+        id: models-cache
+        with:
+          path: ~/ovmb_cache/models
+          key: models-${{ runner.os }}-${{ hashFiles('tests/e2e/test_model_helper.py') }}-v1
+          restore-keys: |
+            models-${{ runner.os }}-
+            models-
 
       - name: Setup Android SDK/NDK via OVMobileBench
         run: |
           # Check if cache was forced to be cleared
           if [ "${{ github.event.inputs.clear_cache }}" = "true" ]; then
             echo "🧹 Cache clearing was requested - installing from scratch"
-            rm -rf $HOME/ovmb_cache ~/.android 2>/dev/null || true
+            rm -rf $HOME/ovmb_cache/android-sdk 2>/dev/null || true
+            rm -rf $HOME/ovmb_cache/models 2>/dev/null || true
           fi
 
-          # Setup Android SDK/NDK - OVMobileBench will use config to determine paths
-          echo "🔧 Setting up Android SDK/NDK via OVMobileBench..."
-          # OVMobileBench will read the config and use cache_dir/android-sdk automatically
-          if [ "${{ steps.android-cache.outputs.cache-hit }}" != 'true' ] || \
-             [ ! -d "$HOME/ovmb_cache/android-sdk" ]; then
-            echo "📦 Cache miss or incomplete - Installing from scratch..."
-            echo "This will take 5-10 minutes to download and install all components"
-            # Full installation - config will determine SDK location
-            python -m ovmobilebench.cli setup-android \
-              --api ${{ matrix.android-api }} \
-              --create-avd \
-              --verbose
-          else
-            echo "⚡ Cache hit - Verifying existing installation via OVMobileBench..."
-            # First try verification only
-            if python -m ovmobilebench.cli setup-android \
-              --api ${{ matrix.android-api }} \
-              --verify-only \
-              --verbose; then
-              echo "✅ Verification passed - using cached installation"
-            else
-              echo "⚠️ Verification failed - reinstalling missing components..."
-              python -m ovmobilebench.cli setup-android \
-                --api ${{ matrix.android-api }} \
-                --create-avd \
-                --verbose
-            fi
-          fi
+          python -m ovmobilebench.cli setup-android \
+            -c experiments/android_example.yaml \
+            --api ${{ matrix.android-api }} \
+            --create-avd \
+            --verbose
 
           # Display cache stats
           echo "📊 Android SDK setup complete:"
@@ -133,34 +124,21 @@ jobs:
       # === PREPARE EMULATOR ===
       - name: Start Android Emulator
         run: |
-          python tests/e2e/test_emulator_helper.py start-emulator &
-          python tests/e2e/test_emulator_helper.py wait-for-boot
+          python tests/e2e/test_emulator_helper.py -c experiments/android_example.yaml start-emulator &
+          python tests/e2e/test_emulator_helper.py -c experiments/android_example.yaml wait-for-boot
 
-      # === CACHE SETUP ===
-      - name: Cache ccache
-        uses: actions/cache@v4
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          path: ~/.ccache
-          key: ccache-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('tests/e2e/configs/android_resnet50.yaml') }}
-          restore-keys: |
-            ccache-${{ runner.os }}-${{ matrix.arch }}-
-            ccache-${{ runner.os }}-
-
-      - name: Configure ccache
-        run: |
-          echo "Configuring ccache for cross-compilation..."
-          ccache --max-size=2G
-          ccache --set-config=compiler_check=content
-          ccache --set-config=sloppiness=include_file_ctime,include_file_mtime,time_macros
-          ccache --set-config=hash_dir=false
-          ccache --zero-stats
-          ccache --show-config
+          key: ${{ runner.os }}-${{ matrix.arch }}-android
+          create-symlink: true
+          max-size: 2G
 
       # Models are already in ovmb_cache, no separate cache needed
 
       # === PREPARE MODEL ===
       - name: Download ResNet-50 model
-        run: python tests/e2e/test_model_helper.py download-resnet50
+        run: python tests/e2e/test_model_helper.py -c experiments/android_example.yaml download-resnet50
 
       # === OVMOBILEBENCH PIPELINE ===
       - name: List available devices
@@ -169,35 +147,36 @@ jobs:
       - name: Build OpenVINO for Android
         run: |
           python -m ovmobilebench.cli build \
-            -c tests/e2e/configs/android_resnet50.yaml \
+            -c experiments/android_example.yaml \
             --verbose
 
-          # Show ccache statistics
+      - name: Show ccache statistics
+        run: |
           echo "📊 ccache statistics:"
           ccache --show-stats
 
       - name: Package OpenVINO runtime and model
         run: |
           python -m ovmobilebench.cli package \
-            -c tests/e2e/configs/android_resnet50.yaml \
+            -c experiments/android_example.yaml \
             --verbose
 
       - name: Deploy to Android device
         run: |
           python -m ovmobilebench.cli deploy \
-            -c tests/e2e/configs/android_resnet50.yaml \
+            -c experiments/android_example.yaml \
             --verbose
 
       - name: Run benchmark on device
         run: |
           python -m ovmobilebench.cli run \
-            -c tests/e2e/configs/android_resnet50.yaml \
+            -c experiments/android_example.yaml \
             --verbose
 
       - name: Generate benchmark report
         run: |
           python -m ovmobilebench.cli report \
-            -c tests/e2e/configs/android_resnet50.yaml \
+            -c experiments/android_example.yaml \
             --verbose
 
       # === ALTERNATIVE: Run all stages at once ===
@@ -205,7 +184,7 @@ jobs:
         if: false  # Set to true to use this instead of individual stages
         run: |
           python -m ovmobilebench.cli all \
-            -c tests/e2e/configs/android_resnet50.yaml \
+            -c experiments/android_example.yaml \
             --verbose
 
       # === VALIDATION ===
@@ -218,7 +197,7 @@ jobs:
       # === CLEANUP ===
       - name: Stop emulator
         if: always()
-        run: python tests/e2e/test_emulator_helper.py stop-emulator
+        run: python tests/e2e/test_emulator_helper.py -c experiments/android_example.yaml stop-emulator
 
       - name: Upload artifacts
         if: always()

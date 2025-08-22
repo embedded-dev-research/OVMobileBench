@@ -19,6 +19,7 @@ class TestPipeline:
         config.project = Mock()
         config.project.name = "test"
         config.project.run_id = "test-123"
+        config.project.cache_dir = "/cache/dir"
         config.openvino = Mock()
         config.openvino.mode = "build"
         config.openvino.source_dir = "/path/to/openvino"

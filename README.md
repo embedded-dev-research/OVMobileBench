@@ -61,7 +61,8 @@ See [Configuration Reference](docs/configuration.md) for details.
 - 🔄 **CI/CD Ready** - GitHub Actions integration included
 - 📈 **Reproducible** - Full provenance tracking of builds and runs
 - 🤖 **Android SDK/NDK Installer** - Automated setup of Android development tools
-- 🔗 **Auto-Download** - Fetch latest OpenVINO builds for your platform
+- 🔗 **Auto-Clone & Build** - Automatically clones OpenVINO with submodules if not present
+- 📁 **Config-Based Paths** - All paths managed through YAML config, no environment variables needed
 
 ## 🔧 Supported Platforms
 

@@ -27,11 +27,9 @@ class TestBenchmarkRunner:
             matrix=RunMatrix(
                 niter=[100],
                 api=["sync"],
-                nireq=[1],
-                nstreams=["1"],
+                hint=["latency"],
                 device=["CPU"],
                 infer_precision=["FP16"],
-                threads=[4],
             ),
             cooldown_sec=1,
             timeout_sec=60,
@@ -46,9 +44,7 @@ class TestBenchmarkRunner:
             "device": "CPU",
             "api": "sync",
             "niter": 100,
-            "nireq": 1,
-            "nstreams": "1",
-            "threads": 4,
+            "hint": "latency",
             "infer_precision": "FP16",
         }
 
@@ -132,8 +128,20 @@ class TestBenchmarkRunner:
     def test_run_matrix(self, mock_sleep, mock_device, run_config):
         """Test running matrix of benchmarks."""
         matrix_specs = [
-            {"model_name": "model1", "device": "CPU", "api": "sync", "niter": 100, "nireq": 1},
-            {"model_name": "model2", "device": "CPU", "api": "sync", "niter": 100, "nireq": 1},
+            {
+                "model_name": "model1",
+                "device": "CPU",
+                "api": "sync",
+                "niter": 100,
+                "hint": "latency",
+            },
+            {
+                "model_name": "model2",
+                "device": "CPU",
+                "api": "sync",
+                "niter": 100,
+                "hint": "throughput",
+            },
         ]
 
         runner = BenchmarkRunner(mock_device, run_config)
@@ -160,7 +168,13 @@ class TestBenchmarkRunner:
             cooldown_sec=0,
         )
         matrix_specs = [
-            {"model_name": "model1", "device": "CPU", "api": "sync", "niter": 100, "nireq": 1}
+            {
+                "model_name": "model1",
+                "device": "CPU",
+                "api": "sync",
+                "niter": 100,
+                "hint": "latency",
+            }
         ]
 
         runner = BenchmarkRunner(mock_device, config)
@@ -172,7 +186,13 @@ class TestBenchmarkRunner:
     def test_run_matrix_with_progress_callback(self, mock_device, run_config):
         """Test running matrix with progress callback."""
         matrix_specs = [
-            {"model_name": "model1", "device": "CPU", "api": "sync", "niter": 100, "nireq": 1}
+            {
+                "model_name": "model1",
+                "device": "CPU",
+                "api": "sync",
+                "niter": 100,
+                "hint": "latency",
+            }
         ]
         progress_callback = MagicMock()
 
@@ -200,9 +220,7 @@ class TestBenchmarkRunner:
             "-d CPU",
             "-api sync",
             "-niter 100",
-            "-nireq 1",
-            "-nstreams 1",
-            "-nthreads 4",
+            "-hint latency",
             "-infer_precision FP16",
         ]
 
@@ -210,15 +228,13 @@ class TestBenchmarkRunner:
             assert part in cmd
 
     def test_build_command_gpu_device(self, mock_device, run_config):
-        """Test building command for GPU device (no CPU-specific options)."""
+        """Test building command for GPU device."""
         spec = {
             "model_name": "resnet50",
             "device": "GPU",
             "api": "sync",
             "niter": 100,
-            "nireq": 1,
-            "nstreams": "1",
-            "threads": 4,
+            "hint": "throughput",
             "infer_precision": "FP16",
         }
 
@@ -226,9 +242,7 @@ class TestBenchmarkRunner:
         cmd = runner._build_command(spec)
 
         assert "-d GPU" in cmd
-        # CPU-specific options should not be present for GPU
-        assert "-nstreams" not in cmd
-        assert "-nthreads" not in cmd
+        assert "-hint throughput" in cmd
 
     def test_build_command_missing_optional_fields(self, mock_device, run_config):
         """Test building command with missing optional fields."""
@@ -237,8 +251,7 @@ class TestBenchmarkRunner:
             "device": "CPU",
             "api": "sync",
             "niter": 100,
-            "nireq": 1,
-            # Missing nstreams, threads, infer_precision
+            # Missing hint and infer_precision
         }
 
         runner = BenchmarkRunner(mock_device, run_config)
@@ -246,9 +259,31 @@ class TestBenchmarkRunner:
 
         assert "-m models/resnet50.xml" in cmd
         assert "-d CPU" in cmd
-        assert "-nstreams" not in cmd
-        assert "-nthreads" not in cmd
+        assert "-hint" not in cmd
         assert "-infer_precision" not in cmd
+
+    def test_build_command_hint_none_with_fine_tuning(self, mock_device, run_config):
+        """Test building command with hint=none allows fine-tuning options."""
+        spec = {
+            "model_name": "resnet50",
+            "device": "CPU",
+            "api": "sync",
+            "niter": 100,
+            "hint": "none",
+            "nireq": 2,
+            "nstreams": "4",
+            "threads": 8,
+            "infer_precision": "FP16",
+        }
+
+        runner = BenchmarkRunner(mock_device, run_config)
+        cmd = runner._build_command(spec)
+
+        assert "-hint none" in cmd
+        assert "-nireq 2" in cmd
+        assert "-nstreams 4" in cmd
+        assert "-nthreads 8" in cmd
+        assert "-infer_precision FP16" in cmd
 
     def test_build_command_custom_remote_dir(self, mock_device, run_config, benchmark_spec):
         """Test building command with custom remote directory."""
@@ -276,7 +311,7 @@ class TestBenchmarkRunner:
         assert "-d CPU" in cmd
         assert "-api sync" in cmd
         assert "-niter 10" in cmd
-        assert "-nireq 1" in cmd
+        assert "-hint latency" in cmd
 
     def test_run_single_logs_command(self, mock_device, run_config, benchmark_spec):
         """Test that run_single logs the command being executed."""
@@ -301,12 +336,18 @@ class TestBenchmarkRunner:
             # Check that error was logged
             mock_logger.error.assert_called_once()
             error_call = mock_logger.error.call_args[0][0]
-            assert "Benchmark failed: benchmark failed" in error_call
+            assert "Benchmark failed with rc=1: benchmark failed" in error_call
 
     def test_run_matrix_logs_progress(self, mock_device, run_config):
         """Test that run_matrix logs progress information."""
         matrix_specs = [
-            {"model_name": "model1", "device": "CPU", "api": "sync", "niter": 100, "nireq": 1}
+            {
+                "model_name": "model1",
+                "device": "CPU",
+                "api": "sync",
+                "niter": 100,
+                "hint": "latency",
+            }
         ]
         runner = BenchmarkRunner(mock_device, run_config)
 
@@ -324,8 +365,20 @@ class TestBenchmarkRunner:
     def test_run_matrix_logs_cooldown(self, mock_device, run_config):
         """Test that run_matrix logs cooldown information."""
         matrix_specs = [
-            {"model_name": "model1", "device": "CPU", "api": "sync", "niter": 100, "nireq": 1},
-            {"model_name": "model2", "device": "CPU", "api": "sync", "niter": 100, "nireq": 1},
+            {
+                "model_name": "model1",
+                "device": "CPU",
+                "api": "sync",
+                "niter": 100,
+                "hint": "latency",
+            },
+            {
+                "model_name": "model2",
+                "device": "CPU",
+                "api": "sync",
+                "niter": 100,
+                "hint": "throughput",
+            },
         ]
         runner = BenchmarkRunner(mock_device, run_config)
 

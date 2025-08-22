@@ -36,7 +36,8 @@ class TestCacheDirYAMLIntegration:
             assert experiment.project.name == "ovmobilebench-android"
             assert experiment.project.run_id == "android_benchmark_001"
             assert experiment.project.description == "OpenVINO benchmark on Android device"
-            assert experiment.project.cache_dir == "ovmb_cache"
+            # cache_dir should be resolved to absolute path
+            assert experiment.project.cache_dir.endswith("ovmb_cache")
         finally:
             yaml_path.unlink()
 
@@ -72,18 +73,21 @@ class TestCacheDirYAMLIntegration:
                 experiment.project.description
                 == "Performance benchmarking on Raspberry Pi with OpenVINO"
             )
-            assert experiment.project.cache_dir == "ovmb_cache"
+            # cache_dir should be resolved to absolute path
+            assert experiment.project.cache_dir.endswith("ovmb_cache")
         finally:
             yaml_path.unlink()
 
-    def test_load_yaml_with_custom_cache_dir(self):
+    def test_load_yaml_with_custom_cache_dir(self, tmp_path):
         """Test loading YAML with custom cache directory."""
+        # Use tmp_path for custom cache dir to avoid permission issues
+        custom_cache = tmp_path / "custom" / "path" / "to" / "cache"
         custom_config = {
             "project": {
                 "name": "custom-experiment",
                 "run_id": "custom-001",
                 "description": "Custom cache directory test",
-                "cache_dir": "/custom/path/to/cache",
+                "cache_dir": str(custom_cache),
             },
             "openvino": {"mode": "install", "install_dir": "/path/to/ov"},
             "device": {"kind": "android", "serials": ["device1"]},
@@ -97,7 +101,7 @@ class TestCacheDirYAMLIntegration:
 
         try:
             experiment = load_experiment(yaml_path)
-            assert experiment.project.cache_dir == "/custom/path/to/cache"
+            assert experiment.project.cache_dir == str(custom_cache)
         finally:
             yaml_path.unlink()
 
@@ -122,7 +126,8 @@ class TestCacheDirYAMLIntegration:
         try:
             experiment = load_experiment(yaml_path)
             assert experiment.project.name == "no-cache-experiment"
-            assert experiment.project.cache_dir == "ovmb_cache"  # Should use default
+            # cache_dir should be resolved to absolute path
+            assert experiment.project.cache_dir.endswith("ovmb_cache")  # Should use default
         finally:
             yaml_path.unlink()
 
@@ -150,7 +155,8 @@ class TestCacheDirYAMLIntegration:
             assert experiment.project.name == "e2e-android-resnet50"
             assert experiment.project.run_id == "test_001"
             assert experiment.project.description == "E2E test for Android ResNet50 benchmarking"
-            assert experiment.project.cache_dir == "ovmb_cache"
+            # cache_dir should be resolved to absolute path
+            assert experiment.project.cache_dir.endswith("ovmb_cache")
         finally:
             yaml_path.unlink()
 
@@ -175,7 +181,8 @@ class TestCacheDirYAMLIntegration:
 
         try:
             experiment = load_experiment(yaml_path)
-            assert experiment.project.cache_dir == "valid_cache_dir"
+            # cache_dir should be resolved to absolute path
+            assert experiment.project.cache_dir.endswith("valid_cache_dir")
             # Verify it's a string type
             assert isinstance(experiment.project.cache_dir, str)
         finally:
@@ -202,7 +209,7 @@ class TestCacheDirYAMLIntegration:
             assert rpi_data["project"]["cache_dir"] == "ovmb_cache"
 
         # Test e2e config - just verify cache_dir in raw YAML
-        e2e_path = Path("tests/e2e/configs/android_resnet50.yaml")
+        e2e_path = Path("experiments/android_example.yaml")
         if e2e_path.exists():
             with open(e2e_path) as f:
                 e2e_data = yaml.safe_load(f)

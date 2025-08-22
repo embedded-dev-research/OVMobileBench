@@ -133,16 +133,14 @@ class TestExperiment:
                 "device": ["CPU"],
                 "api": ["sync"],
                 "niter": [100, 200],
-                "nireq": [1],
-                "nstreams": ["1"],
-                "threads": [2, 4],
+                "hint": ["latency", "throughput"],
                 "infer_precision": ["FP16"],
             },
         }
 
         exp = Experiment(**minimal_config)
 
-        # 1 model * 2 niter * 2 threads * 3 repeats * 1 device = 12
+        # 1 model * 2 niter * 2 hints * 3 repeats * 1 device = 12
         total = exp.get_total_runs()
         assert total == 12
 

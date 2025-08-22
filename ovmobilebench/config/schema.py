@@ -11,17 +11,36 @@ class Toolchain(BaseModel):
     android_ndk: str | None = Field(None, description="Path to Android NDK")
     abi: str | None = Field("arm64-v8a", description="Target ABI")
     api_level: int | None = Field(24, description="Android API level")
-    cmake: str = Field("cmake", description="CMake executable path")
-    ninja: str = Field("ninja", description="Ninja executable path")
 
 
 class BuildOptions(BaseModel):
-    """Build configuration options."""
+    """Build configuration options - all CMake options go here."""
 
+    # Build type
+    CMAKE_BUILD_TYPE: Literal["Release", "RelWithDebInfo", "Debug"] = "Release"
+
+    # Compiler options
+    CMAKE_C_COMPILER_LAUNCHER: str | None = None  # e.g., "ccache"
+    CMAKE_CXX_COMPILER_LAUNCHER: str | None = None  # e.g., "ccache"
+
+    # Generator
+    CMAKE_GENERATOR: str | None = None  # e.g., "Ninja"
+
+    # Android toolchain options
+    CMAKE_TOOLCHAIN_FILE: str | None = None
+    ANDROID_ABI: str | None = None  # e.g., "arm64-v8a"
+    ANDROID_PLATFORM: str | None = None  # e.g., "android-30"
+    ANDROID_STL: str | None = None  # e.g., "c++_shared"
+
+    # OpenVINO component options
     ENABLE_INTEL_GPU: Literal["ON", "OFF"] = "OFF"
     ENABLE_ONEDNN_FOR_ARM: Literal["ON", "OFF"] = "OFF"
     ENABLE_PYTHON: Literal["ON", "OFF"] = "OFF"
     BUILD_SHARED_LIBS: Literal["ON", "OFF"] = "ON"
+    ENABLE_TESTS: Literal["ON", "OFF"] = "OFF"
+    ENABLE_FUNCTIONAL_TESTS: Literal["ON", "OFF"] = "OFF"
+    ENABLE_SAMPLES: Literal["ON", "OFF"] = "ON"  # We need benchmark_app
+    ENABLE_OPENCV: Literal["ON", "OFF"] = "OFF"
 
 
 class OpenVINOConfig(BaseModel):
@@ -37,7 +56,6 @@ class OpenVINOConfig(BaseModel):
         None, description="Path to OpenVINO source code (for build mode)"
     )
     commit: str = Field("HEAD", description="Git commit/tag to build (for build mode)")
-    build_type: Literal["Release", "RelWithDebInfo", "Debug"] = "RelWithDebInfo"
 
     # For 'install' mode
     install_dir: str | None = Field(
@@ -51,9 +69,7 @@ class OpenVINOConfig(BaseModel):
 
     # Common build options (for build mode)
     toolchain: Toolchain = Field(
-        default_factory=lambda: Toolchain(
-            android_ndk=None, abi="arm64-v8a", api_level=24, cmake="cmake", ninja="ninja"
-        )
+        default_factory=lambda: Toolchain(android_ndk=None, abi="arm64-v8a", api_level=24)
     )
     options: BuildOptions = Field(default_factory=lambda: BuildOptions())
 
@@ -161,11 +177,15 @@ class RunMatrix(BaseModel):
 
     niter: list[int] = Field([200], description="Number of iterations")
     api: list[Literal["sync", "async"]] = Field(["sync"], description="API mode")
-    nireq: list[int] = Field([1], description="Number of infer requests")
-    nstreams: list[str] = Field(["1"], description="Number of streams")
+    hint: list[Literal["latency", "throughput", "none"]] = Field(
+        ["latency"], description="Performance hint"
+    )
     device: list[str] = Field(["CPU"], description="Target device")
     infer_precision: list[str] = Field(["FP16"], description="Inference precision")
-    threads: list[int] = Field([4], description="Number of threads")
+    # Legacy fields - kept for backward compatibility but not used with hint
+    nireq: list[int] = Field(default=[1], description="Number of infer requests (use hint instead)")
+    nstreams: list[str] = Field(default=["1"], description="Number of streams (use hint instead)")
+    threads: list[int] = Field(default=[4], description="Number of threads (use hint instead)")
 
 
 class RunConfig(BaseModel):
@@ -176,11 +196,9 @@ class RunConfig(BaseModel):
         default_factory=lambda: RunMatrix(
             niter=[200],
             api=["sync"],
-            nireq=[1],
-            nstreams=["1"],
+            hint=["latency"],
             device=["CPU"],
             infer_precision=["FP16"],
-            threads=[4],
         )
     )
     cooldown_sec: int = Field(default=0, description="Cooldown between runs in seconds")
@@ -276,23 +294,19 @@ class Experiment(BaseModel):
         for dev in matrix.device:
             for api in matrix.api:
                 for niter in matrix.niter:
-                    for nireq in matrix.nireq:
-                        for nstreams in matrix.nstreams:
-                            for threads in matrix.threads:
-                                for precision in matrix.infer_precision:
-                                    combos.append(
-                                        {
-                                            "model_name": model.name,
-                                            "model_xml": model.path,
-                                            "device": dev,
-                                            "api": api,
-                                            "niter": niter,
-                                            "nireq": nireq,
-                                            "nstreams": nstreams,
-                                            "threads": threads,
-                                            "infer_precision": precision,
-                                        }
-                                    )
+                    for hint in matrix.hint:
+                        for precision in matrix.infer_precision:
+                            combos.append(
+                                {
+                                    "model_name": model.name,
+                                    "model_xml": model.path,
+                                    "device": dev,
+                                    "api": api,
+                                    "niter": niter,
+                                    "hint": hint,
+                                    "infer_precision": precision,
+                                }
+                            )
         return combos
 
     def get_total_runs(self) -> int:

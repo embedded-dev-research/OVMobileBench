@@ -43,7 +43,9 @@ class Pipeline:
 
         if openvino_config.mode == "build":
             logger.info("Building OpenVINO from source")
-            build_dir = self.artifacts_dir / "build"
+            # Use cache_dir for build to persist between runs
+            cache_dir = Path(self.config.project.cache_dir)
+            build_dir = cache_dir / "openvino_build"
             builder = OpenVINOBuilder(openvino_config, build_dir, self.verbose)
             return builder.build()
 
@@ -74,7 +76,9 @@ class Pipeline:
         openvino_config = self.config.openvino
 
         if openvino_config.mode == "build":
-            build_dir = self.artifacts_dir / "build"
+            # Use cache_dir for build to persist between runs
+            cache_dir = Path(self.config.project.cache_dir)
+            build_dir = cache_dir / "openvino_build"
             builder = OpenVINOBuilder(openvino_config, build_dir, self.verbose)
             artifacts = builder.get_artifacts()
         elif openvino_config.mode == "install":
@@ -104,9 +108,27 @@ class Pipeline:
             logger.info("[DRY RUN] Would deploy to devices")
             return
 
-        bundle_path = self.artifacts_dir / "packages" / f"ovbundle_{self.config.project.run_id}"
+        # The actual tar.gz file
+        bundle_path = (
+            self.artifacts_dir / "packages" / f"ovbundle_{self.config.project.run_id}.tar.gz"
+        )
 
-        for serial in self.config.device.serials:
+        # Handle auto-detection of devices
+        serials = self.config.device.serials
+        if not serials:
+            # Auto-detect devices
+            if self.config.device.kind == "android":
+                from .devices.android import list_android_devices
+
+                detected = list_android_devices()
+                if not detected:
+                    raise DeviceError("No Android devices detected for deployment")
+                serials = [serial for serial, _ in detected]
+                logger.info(f"Auto-detected devices for deployment: {serials}")
+            else:
+                raise DeviceError("Auto-detection not supported for non-Android devices")
+
+        for serial in serials:
             logger.info(f"Deploying to device: {serial}")
             device = self._get_device(serial)
 
@@ -117,7 +139,7 @@ class Pipeline:
             device.cleanup(self.config.device.push_dir)
             device.mkdir(self.config.device.push_dir)
 
-            # Push bundle
+            # Push bundle (tar.gz file)
             device.push(bundle_path, self.config.device.push_dir)
 
             # Extract on device
@@ -137,7 +159,24 @@ class Pipeline:
 
         all_results = []
 
-        for serial in self.config.device.serials:
+        # Handle auto-detection of devices
+        serials = self.config.device.serials
+        if not serials:
+            # Auto-detect devices
+            if self.config.device.kind == "android":
+                from .devices.android import list_android_devices
+
+                detected = list_android_devices()
+                if not detected:
+                    logger.warning("No Android devices detected")
+                    return []
+                serials = [serial for serial, _ in detected]
+                logger.info(f"Auto-detected devices: {serials}")
+            else:
+                logger.error("Auto-detection not supported for non-Android devices")
+                return []
+
+        for serial in serials:
             logger.info(f"Running benchmarks on device: {serial}")
             device = self._get_device(serial)
 

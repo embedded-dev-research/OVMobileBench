@@ -20,15 +20,14 @@ class TestOpenVINOBuilder:
             mode="build",
             source_dir="/path/to/openvino",
             commit="HEAD",
-            build_type="Release",
             toolchain=Toolchain(
                 android_ndk="/path/to/ndk",
                 abi="arm64-v8a",
                 api_level=24,
-                cmake="cmake",
-                ninja="ninja",
             ),
             options=BuildOptions(
+                CMAKE_BUILD_TYPE="Release",
+                CMAKE_GENERATOR="Ninja",
                 ENABLE_INTEL_GPU="OFF",
                 ENABLE_ONEDNN_FOR_ARM="OFF",
                 ENABLE_PYTHON="OFF",
@@ -51,8 +50,10 @@ class TestOpenVINOBuilder:
             mode="build",
             source_dir="/path/to/openvino",
             commit="HEAD",
-            build_type="Release",
             toolchain=Toolchain(android_ndk=None),
+            options=BuildOptions(
+                CMAKE_BUILD_TYPE="Release",
+            ),
         )
 
     @patch("ovmobilebench.builders.openvino.ensure_dir")
@@ -87,19 +88,23 @@ class TestOpenVINOBuilder:
             builder.build()
 
     @patch("ovmobilebench.builders.openvino.ensure_dir")
-    def test_build_enabled_success(self, mock_ensure_dir, build_config):
+    def test_build_enabled_success(self, mock_ensure_dir, build_config, tmp_path):
         """Test successful build when building is enabled."""
-        mock_ensure_dir.return_value = Path("/build/dir")
+        build_dir = tmp_path / "build"
+        mock_ensure_dir.return_value = build_dir
 
-        builder = OpenVINOBuilder(build_config, Path("/build/dir"))
+        builder = OpenVINOBuilder(build_config, build_dir)
 
-        with patch.object(builder, "_checkout_commit") as mock_checkout:
-            with patch.object(builder, "_configure_cmake") as mock_configure:
-                with patch.object(builder, "_build") as mock_build:
-                    with patch("ovmobilebench.builders.openvino.logger") as mock_logger:
-                        result = builder.build()
+        with patch.object(builder, "_clone_openvino"):
+            with patch.object(builder, "_checkout_commit") as mock_checkout:
+                with patch.object(builder, "_configure_cmake") as mock_configure:
+                    with patch.object(builder, "_build") as mock_build:
+                        with patch("ovmobilebench.builders.openvino.logger") as mock_logger:
+                            result = builder.build()
 
-                        assert result == Path("/build/dir/bin")
+                        # Result should be bin/<arch>/<build_type>
+                        # OpenVINO CMake outputs to 'aarch64' for ARM64
+                        assert result == build_dir / "bin" / "aarch64" / "Release"
                         mock_checkout.assert_called_once()
                         mock_configure.assert_called_once()
                         mock_build.assert_called_once()
@@ -161,7 +166,8 @@ class TestOpenVINOBuilder:
             assert "-B" in args
             # Check build dir argument - handle platform-specific path separators
             assert str(Path("/build/dir")) in args
-            assert "-GNinja" in args
+            assert "-G" in args
+            assert "Ninja" in args
             assert "-DCMAKE_BUILD_TYPE=Release" in args
             assert "-DCMAKE_TOOLCHAIN_FILE=/path/to/ndk/build/cmake/android.toolchain.cmake" in args
             assert "-DANDROID_ABI=arm64-v8a" in args
@@ -286,8 +292,8 @@ class TestOpenVINOBuilder:
             artifacts = builder.get_artifacts()
 
             expected = {
-                "benchmark_app": Path("/build/dir/bin/arm64-v8a/benchmark_app"),
-                "libs": Path("/build/dir/bin/arm64-v8a"),
+                "benchmark_app": Path("/build/dir/bin/aarch64/Release/benchmark_app"),
+                "libs": Path("/build/dir/bin/aarch64/Release"),
             }
             assert artifacts == expected
 
@@ -354,18 +360,21 @@ class TestOpenVINOBuilder:
         build_config = OpenVINOConfig(
             mode="build",
             source_dir="/path/to/openvino",
-            build_type="Debug",
+            options=BuildOptions(
+                CMAKE_BUILD_TYPE="Debug",
+            ),
         )
         mock_ensure_dir.return_value = Path("/build/dir")
 
         builder = OpenVINOBuilder(build_config, Path("/build/dir"))
 
         with patch("ovmobilebench.builders.openvino.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0)
-            builder._configure_cmake()
+            with patch("shutil.which", return_value=None):  # No ninja/ccache
+                mock_run.return_value = MagicMock(returncode=0)
+                builder._configure_cmake()
 
-            args = mock_run.call_args[0][0]
-            assert "-DCMAKE_BUILD_TYPE=Debug" in args
+                args = mock_run.call_args[0][0]
+                assert "-DCMAKE_BUILD_TYPE=Debug" in args
 
     @patch("ovmobilebench.builders.openvino.ensure_dir")
     def test_custom_toolchain_settings(self, mock_ensure_dir):

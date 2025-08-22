@@ -196,8 +196,12 @@ class SdkManager:
             if not self.sdkmanager_path.exists():
                 raise ComponentNotFoundError("sdkmanager", self.cmdline_tools_dir)
 
-            # Make sdkmanager executable
-            self.sdkmanager_path.chmod(0o755)
+            # Make all scripts in bin directory executable
+            bin_dir = self.sdk_root / "cmdline-tools" / "latest" / "bin"
+            if bin_dir.exists():
+                for script in bin_dir.iterdir():
+                    if script.is_file():
+                        script.chmod(0o755)
 
             if self.logger:
                 self.logger.success("Command-line tools installed")

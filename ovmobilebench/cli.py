@@ -216,81 +216,103 @@ def list_ssh_devices():
 
 @app.command("setup-android")
 def setup_android(
-    api_level: int = typer.Option(30, "--api", help="Android API level"),
-    create_avd: bool = typer.Option(False, "--create-avd", help="Create AVD for emulator"),
-    sdk_root: Path = typer.Option(None, "--sdk-root", help="Android SDK root path"),
+    config_file: Path = typer.Option(
+        "experiments/android_example.yaml", "-c", "--config", help="Path to configuration file"
+    ),
+    api_level: int = typer.Option(None, "--api", help="Android API level (overrides config)"),
+    create_avd: bool = typer.Option(
+        None, "--create-avd", help="Create AVD for emulator (overrides config)"
+    ),
+    sdk_root: Path = typer.Option(
+        None, "--sdk-root", help="Android SDK root path (overrides config)"
+    ),
     ndk_version: str = typer.Option(
         None, "--ndk-version", help="NDK version (e.g., r26d, 26.3.11579264). Default: latest"
-    ),
-    verify_only: bool = typer.Option(
-        False, "--verify-only", help="Only verify existing installation without installing"
     ),
     verbose: bool = typer.Option(False, "-v", "--verbose", help="Enable verbose output"),
 ):
     """Setup Android SDK/NDK for OVMobileBench."""
     from ovmobilebench.android.installer.api import ensure_android_tools, verify_installation
     from ovmobilebench.android.installer.types import NdkSpec
-    from ovmobilebench.config.loader import get_project_root
+    from ovmobilebench.config.loader import load_experiment
 
-    if sdk_root is None:
-        # Try to get from environment first
-        sdk_root = os.environ.get("ANDROID_HOME")
-        if not sdk_root:
-            # Use default in cache directory
+    # Load config
+    try:
+        experiment = load_experiment(config_file)
+        # Get values from config
+        if api_level is None:
+            api_level = (
+                experiment.device.api_level if hasattr(experiment.device, "api_level") else 30
+            )
+        if create_avd is None:
+            # Default: create AVD only if no physical devices specified in config
+            create_avd = (
+                not experiment.device.serials
+                if hasattr(experiment.device, "serials") and experiment.device.serials
+                else True
+            )
+        if sdk_root is None:
+            # Get cache_dir from config
+            cache_dir = Path(experiment.project.cache_dir)
+            sdk_root = cache_dir / "android-sdk"
+            console.print(f"[blue]Using SDK location from config: {sdk_root}[/blue]")
+    except Exception as e:
+        # Fallback if config can't be loaded
+        console.print(f"[yellow]Warning: Could not load config: {e}[/yellow]")
+        if api_level is None:
+            api_level = 30
+        if create_avd is None:
+            create_avd = False
+        if sdk_root is None:
+            from ovmobilebench.config.loader import get_project_root
+
             project_root = get_project_root()
             cache_dir = project_root / "ovmb_cache"
             sdk_root = cache_dir / "android-sdk"
             console.print(f"[blue]Using default SDK location: {sdk_root}[/blue]")
+
+    # First, check what's already installed
+    console.print("[bold blue]Checking existing Android SDK/NDK installation...[/bold blue]")
+
+    try:
+        verification_result = verify_installation(sdk_root, verbose=verbose)
+
+        # Check if essential components are present
+        has_platform_tools = verification_result.get("platform_tools", False)
+        has_emulator = verification_result.get("emulator", False)
+        system_images = verification_result.get("system_images", [])
+        ndk_versions = verification_result.get("ndk_versions", [])
+
+        required_system_image = f"system-images;android-{api_level};google_apis;arm64-v8a"
+        has_system_image = any(required_system_image in img for img in system_images)
+
+        # Check what needs to be installed
+        needs_installation = []
+        if not has_platform_tools:
+            needs_installation.append("platform-tools")
+        if not has_emulator:
+            needs_installation.append("emulator")
+        if not has_system_image and create_avd:
+            needs_installation.append(f"system-image (API {api_level})")
+        if not ndk_versions:
+            needs_installation.append("NDK")
+
+        if not needs_installation:
+            console.print(
+                "[bold green]✓ All required Android components are already installed[/bold green]"
+            )
+            console.print(f"SDK Root: {sdk_root}")
+            if ndk_versions:
+                console.print(f"NDK Versions: {', '.join(ndk_versions)}")
+            return
         else:
-            sdk_root = Path(sdk_root)
+            console.print(f"[yellow]Missing components: {', '.join(needs_installation)}[/yellow]")
+            console.print("[blue]Installing missing components...[/blue]")
 
-    if verify_only:
-        console.print("[bold blue]Verifying Android SDK/NDK installation...[/bold blue]")
-
-        try:
-            verification_result = verify_installation(sdk_root, verbose=verbose)
-
-            # Check if essential components are present
-            required_components = ["platform_tools", "emulator"]
-            missing_components = []
-
-            for component in required_components:
-                if not verification_result.get(component, False):
-                    missing_components.append(component)
-
-            # Check for system images and NDK
-            system_images = verification_result.get("system_images", [])
-            ndk_versions = verification_result.get("ndk_versions", [])
-
-            required_system_image = f"system-images;android-{api_level};google_apis;arm64-v8a"
-            has_system_image = any(required_system_image in img for img in system_images)
-
-            if not has_system_image:
-                missing_components.append(f"system-image-api{api_level}")
-
-            if not ndk_versions:
-                missing_components.append("ndk")
-
-            if missing_components:
-                console.print(
-                    f"[bold red]✗ Verification failed. Missing components: {', '.join(missing_components)}[/bold red]"
-                )
-                console.print(
-                    "[yellow]Run without --verify-only to install missing components.[/yellow]"
-                )
-                raise typer.Exit(1)
-            else:
-                console.print(
-                    "[bold green]✓ All required Android components are installed[/bold green]"
-                )
-                console.print(f"SDK Root: {sdk_root}")
-                if ndk_versions:
-                    console.print(f"NDK Versions: {', '.join(ndk_versions)}")
-                return
-
-        except Exception as e:
-            console.print(f"[bold red]✗ Verification failed: {e}[/bold red]")
-            raise typer.Exit(1)
+    except Exception as e:
+        # If verification fails, assume nothing is installed
+        console.print(f"[yellow]Could not verify installation: {e}[/yellow]")
+        console.print("[blue]Proceeding with full installation...[/blue]")
 
     console.print("[bold blue]Setting up Android SDK/NDK...[/bold blue]")
     avd_name = f"ovmobilebench_avd_api{api_level}" if create_avd else None
