@@ -33,7 +33,7 @@ jobs:
 #            config_file: experiments/android_x86_64_ci.yaml
           - os: macOS-latest  # macOS on Apple Silicon (M1/M2)
             android-api: 30
-            arch: arm64
+            arch: arm64-v8a  # Android ARM64 architecture
             config_file: experiments/android_example.yaml
     runs-on: ${{ matrix.os }}
 

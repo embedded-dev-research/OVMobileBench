@@ -377,6 +377,25 @@ def setup_android(
         ndk_alias = "latest"
         console.print("Using latest available NDK version")
 
+    # Normalize architecture string for Android SDK compatibility
+    # The config might use simplified names but Android SDK needs full names
+    arch_mapping = {
+        "arm64": "arm64-v8a",
+        "arm": "armeabi-v7a",
+        "x86": "x86",
+        "x86_64": "x86_64",
+        "arm64-v8a": "arm64-v8a",  # Already in correct format
+        "armeabi-v7a": "armeabi-v7a",  # Already in correct format
+    }
+
+    if arch in arch_mapping:
+        normalized_arch = arch_mapping[arch]
+        if arch != normalized_arch:
+            console.print(f"[blue]Normalizing architecture: {arch} → {normalized_arch}[/blue]")
+        arch = normalized_arch
+    else:
+        console.print(f"[yellow]Warning: Unknown architecture '{arch}', using as-is[/yellow]")
+
     try:
         # Cast arch to proper type
         arch_typed: Arch = arch  # type: ignore
