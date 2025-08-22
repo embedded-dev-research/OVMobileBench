@@ -151,9 +151,14 @@ class TestEmulatorHelper:
         with patch("pathlib.Path.exists", return_value=True):
             # Mock subprocess.run to simulate successful boot
             with patch("subprocess.run") as mock_run:
-                # First call: wait-for-device succeeds
-                # Second call: getprop returns "1" (booted)
+                # Our new implementation makes these calls:
+                # 1. adb devices (initial check)
+                # 2. adb wait-for-device
+                # 3. adb shell getprop sys.boot_completed
                 mock_run.side_effect = [
+                    Mock(
+                        returncode=0, stdout="List of devices attached\nemulator-5554\tdevice\n"
+                    ),  # adb devices
                     Mock(returncode=0),  # wait-for-device
                     Mock(returncode=0, stdout="1\n"),  # getprop sys.boot_completed
                 ]
@@ -162,8 +167,8 @@ class TestEmulatorHelper:
                     result = wait_for_boot(timeout=10)
 
                 assert result is True
-                # Should have called adb at least twice
-                assert mock_run.call_count >= 2
+                # Should have called adb at least 3 times
+                assert mock_run.call_count >= 3
 
     def test_wait_for_boot_timeout(self):
         """Test emulator boot timeout."""

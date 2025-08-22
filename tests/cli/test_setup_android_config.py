@@ -15,14 +15,20 @@ class TestSetupAndroidWithConfig:
 
     def test_setup_android_reads_config(self, tmp_path):
         """Test that setup-android reads SDK location from config."""
-        # Create a test config
+        # Create a test config with x86_64 architecture
         config_data = {
             "project": {
                 "name": "test",
                 "run_id": "test_001",
                 "cache_dir": str(tmp_path / "test_cache"),
             },
-            "openvino": {"mode": "build"},
+            "openvino": {
+                "mode": "build",
+                "toolchain": {
+                    "abi": "x86_64",  # Specify architecture to match what we check
+                    "api_level": 30,
+                },
+            },
             "device": {"kind": "android", "serials": []},
             "models": [{"name": "model1", "path": "model1.xml"}],
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
@@ -34,11 +40,11 @@ class TestSetupAndroidWithConfig:
 
         with patch("ovmobilebench.android.installer.api.verify_installation") as mock_verify:
             with patch("ovmobilebench.android.installer.api.ensure_android_tools") as mock_ensure:
-                # Mock verification to say everything is installed
+                # Mock verification to say everything is installed (with x86_64)
                 mock_verify.return_value = {
                     "platform_tools": True,
                     "emulator": True,
-                    "system_images": ["system-images;android-30;google_apis;arm64-v8a"],
+                    "system_images": ["system-images;android-30;google_apis;x86_64"],
                     "ndk_versions": ["27.2.12479018"],
                 }
 
@@ -56,14 +62,20 @@ class TestSetupAndroidWithConfig:
 
     def test_setup_android_installs_missing_components(self, tmp_path):
         """Test that setup-android installs only missing components."""
-        # Create a test config
+        # Create a test config with x86_64 architecture
         config_data = {
             "project": {
                 "name": "test",
                 "run_id": "test_001",
                 "cache_dir": str(tmp_path / "test_cache"),
             },
-            "openvino": {"mode": "build"},
+            "openvino": {
+                "mode": "build",
+                "toolchain": {
+                    "abi": "x86_64",
+                    "api_level": 30,
+                },
+            },
             "device": {"kind": "android", "serials": []},
             "models": [{"name": "model1", "path": "model1.xml"}],
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
@@ -79,11 +91,16 @@ class TestSetupAndroidWithConfig:
                 mock_verify.return_value = {
                     "platform_tools": True,
                     "emulator": True,
-                    "system_images": ["system-images;android-30;google_apis;arm64-v8a"],
+                    "system_images": ["system-images;android-30;google_apis;x86_64"],
                     "ndk_versions": [],  # NDK missing
                 }
 
-                mock_ensure.return_value = MagicMock(returncode=0)
+                mock_ensure.return_value = {
+                    "sdk_root": str(tmp_path / "test_cache" / "android-sdk"),
+                    "ndk_path": str(
+                        tmp_path / "test_cache" / "android-sdk" / "ndk" / "27.2.12479018"
+                    ),
+                }
 
                 result = runner.invoke(
                     app,
