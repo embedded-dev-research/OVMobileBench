@@ -1,21 +1,6 @@
 # List of tests to skip temporarily
 # Format: test_file.py::TestClass::test_method or test_file.py::test_function
 # Lines starting with # are comments
-# Updated for new directory structure
-
-# ============================================
-# Packaging Tests - Bundle Creation Mock Issues
-# ============================================
-tests/packaging/test_packaging_packager.py::TestPackager::test_create_bundle_custom_name
-tests/packaging/test_packaging_packager.py::TestPackager::test_create_bundle_missing_libs
-tests/packaging/test_packaging_packager.py::TestPackager::test_create_bundle_with_extra_files
-tests/packaging/test_packaging_packager.py::TestPackager::test_copy_libs
-tests/packaging/test_packaging_packager.py::TestPackager::test_copy_libs_no_files
-tests/packaging/test_packaging_packager.py::TestPackager::test_copy_libs_directories_ignored
-tests/packaging/test_packaging_packager.py::TestPackager::test_copy_models_success
-tests/packaging/test_packaging_packager.py::TestPackager::test_copy_models_missing_xml
-tests/packaging/test_packaging_packager.py::TestPackager::test_copy_models_missing_bin
-tests/packaging/test_packaging_packager.py::TestPackager::test_create_bundle_logs_completion
 
 # ============================================
 # Android Installer CLI Tests - Environment Setup
