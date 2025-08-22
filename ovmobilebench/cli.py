@@ -220,6 +220,9 @@ def setup_android(
         "experiments/android_example.yaml", "-c", "--config", help="Path to configuration file"
     ),
     api_level: int = typer.Option(None, "--api", help="Android API level (overrides config)"),
+    arch: str = typer.Option(
+        None, "--arch", help="Architecture (x86_64, arm64-v8a) (overrides config)"
+    ),
     create_avd: bool = typer.Option(
         None, "--create-avd", help="Create AVD for emulator (overrides config)"
     ),
@@ -233,7 +236,7 @@ def setup_android(
 ):
     """Setup Android SDK/NDK for OVMobileBench."""
     from ovmobilebench.android.installer.api import ensure_android_tools, verify_installation
-    from ovmobilebench.android.installer.types import NdkSpec
+    from ovmobilebench.android.installer.types import Arch, NdkSpec
     from ovmobilebench.config.loader import load_experiment
 
     # Load config
@@ -244,6 +247,12 @@ def setup_android(
             api_level = (
                 experiment.device.api_level if hasattr(experiment.device, "api_level") else 30
             )
+        if arch is None:
+            # Get architecture from openvino.toolchain.abi in config
+            if hasattr(experiment, "openvino") and hasattr(experiment.openvino, "toolchain"):
+                arch = experiment.openvino.toolchain.abi
+            else:
+                arch = "x86_64"  # Default for CI
         if create_avd is None:
             # Default: create AVD only if no physical devices specified in config
             create_avd = (
@@ -261,6 +270,8 @@ def setup_android(
         console.print(f"[yellow]Warning: Could not load config: {e}[/yellow]")
         if api_level is None:
             api_level = 30
+        if arch is None:
+            arch = "x86_64"  # Default for CI
         if create_avd is None:
             create_avd = False
         if sdk_root is None:
@@ -283,7 +294,7 @@ def setup_android(
         system_images = verification_result.get("system_images", [])
         ndk_versions = verification_result.get("ndk_versions", [])
 
-        required_system_image = f"system-images;android-{api_level};google_apis;arm64-v8a"
+        required_system_image = f"system-images;android-{api_level};google_apis;{arch}"
         has_system_image = any(required_system_image in img for img in system_images)
 
         # Check what needs to be installed
@@ -327,11 +338,13 @@ def setup_android(
         console.print("Using latest available NDK version")
 
     try:
+        # Cast arch to proper type
+        arch_typed: Arch = arch  # type: ignore
         result = ensure_android_tools(
             sdk_root=sdk_root,
             api=api_level,
             target="google_apis",
-            arch="arm64-v8a",
+            arch=arch_typed,
             ndk=NdkSpec(alias=ndk_alias),
             install_platform_tools=True,
             install_emulator=True,

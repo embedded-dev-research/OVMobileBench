@@ -119,7 +119,13 @@ def start_emulator(avd_name: str = None, api_level: int = 30):
     elif platform.system() == "Darwin":  # macOS
         cmd.extend(["-accel", "on"])
 
-    subprocess.Popen(cmd)
+    # Set environment variables for AVD location
+    env = os.environ.copy()
+    env["ANDROID_SDK_ROOT"] = ANDROID_HOME
+    env["ANDROID_HOME"] = ANDROID_HOME
+    env["ANDROID_AVD_HOME"] = str(Path(ANDROID_HOME) / "avd")
+
+    subprocess.Popen(cmd, env=env)
     logger.info("Emulator started in background")
 
 
