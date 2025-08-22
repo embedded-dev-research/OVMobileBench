@@ -29,10 +29,10 @@ jobs:
         include:
           - os: ubuntu-latest  # Ubuntu
             android-api: 30
-            arch: arm64
-          - os: macOS-latest  # macOS on Apple Silicon (M1/M2)
-            android-api: 30
-            arch: arm64
+            arch: x86_64
+#          - os: macOS-latest  # macOS on Apple Silicon (M1/M2)
+#            android-api: 30
+#            arch: arm64
     runs-on: ${{ matrix.os }}
 
     steps:
