@@ -36,16 +36,17 @@ class TestEnvironmentConfig:
             # Check that JAVA_HOME was set
             assert os.environ.get("JAVA_HOME") == "/opt/java/jdk-17"
             # Check that Java bin was added to PATH
-            java_bin = str(Path("/opt/java/jdk-17") / "bin")
+            # Use os.path.join to get platform-appropriate path
+            java_bin = os.path.join("/opt/java/jdk-17", "bin")
             current_path = os.environ.get("PATH", "")
-            # Normalize path separators for comparison
-            if (
-                java_bin.replace("/", "\\") in current_path
-                or java_bin.replace("\\", "/") in current_path
-            ):
-                assert True  # Path found with either separator
-            else:
-                assert java_bin in current_path
+            # Check if path is in PATH with either separator style
+            java_bin_unix = "/opt/java/jdk-17/bin"
+            java_bin_win = "\\opt\\java\\jdk-17\\bin"
+            assert (
+                java_bin in current_path
+                or java_bin_unix in current_path
+                or java_bin_win in current_path
+            )
             # No print expected when java_home is explicitly set in config
 
         finally:
@@ -112,16 +113,17 @@ class TestEnvironmentConfig:
             assert os.environ.get("JAVA_HOME") == "/usr/lib/jvm/java-17"
             assert os.environ.get("ANDROID_HOME") == "/opt/android-sdk"
             assert os.environ.get("ANDROID_SDK_ROOT") == "/opt/android-sdk"
-            java_bin = str(Path("/usr/lib/jvm/java-17") / "bin")
+            # Check that Java bin was added to PATH
+            java_bin = os.path.join("/usr/lib/jvm/java-17", "bin")
             current_path = os.environ.get("PATH", "")
-            # Normalize path separators for comparison
-            if (
-                java_bin.replace("/", "\\") in current_path
-                or java_bin.replace("\\", "/") in current_path
-            ):
-                assert True  # Path found with either separator
-            else:
-                assert java_bin in current_path
+            # Check if path is in PATH with either separator style
+            java_bin_unix = "/usr/lib/jvm/java-17/bin"
+            java_bin_win = "\\usr\\lib\\jvm\\java-17\\bin"
+            assert (
+                java_bin in current_path
+                or java_bin_unix in current_path
+                or java_bin_win in current_path
+            )
 
         finally:
             # Restore original environment
@@ -297,7 +299,9 @@ class TestEnvironmentInExperiment:
                 os.environ.get("JAVA_HOME")
                 == "/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.8/x64"
             )
-            assert os.environ.get("ANDROID_HOME") == f"{home_dir}/ovmb_cache/android-sdk"
+            # On Windows, paths in environment use backslashes
+            expected_android_home = str(Path(home_dir) / "ovmb_cache" / "android-sdk")
+            assert os.environ.get("ANDROID_HOME") == expected_android_home
 
         finally:
             # Restore original environment
@@ -354,7 +358,8 @@ class TestEnvironmentInExperiment:
                 result = setup_environment(config, project_dir)
 
             # Check that AVD home was auto-set based on SDK root
-            expected_avd_home = "/opt/android-sdk/.android/avd"
+            # Use os.path.join to get platform-appropriate path
+            expected_avd_home = os.path.join("/opt/android-sdk", ".android", "avd")
             assert result["environment"]["avd_home"] == expected_avd_home
             assert os.environ.get("ANDROID_AVD_HOME") == expected_avd_home
 
