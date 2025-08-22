@@ -28,9 +28,13 @@ class TestPipeline:
         config.openvino.toolchain = Mock()
         config.openvino.options = Mock()
         config.device = Mock()
-        config.device.type = "android"
-        config.device.serial = "test_device"
+        config.device.kind = "android"
+        config.device.serials = ["test_device"]
+        config.device.push_dir = "/data/local/tmp/benchmark"
         config.models = [Mock(name="model1", path="/path/to/model.xml")]
+        config.get_model_list = Mock(
+            return_value=[Mock(name="model1", xml_path="/path/to/model.xml")]
+        )
         config.run = Mock()
         config.run.repeats = 1
         config.run.matrix = Mock()
@@ -143,11 +147,20 @@ class TestPipeline:
     def test_deploy(self, mock_config):
         """Test deploy."""
         mock_device = Mock()
+        mock_device.is_available.return_value = True
+        mock_device.cleanup.return_value = None
+        mock_device.mkdir.return_value = None
+        mock_device.push.return_value = None
+        mock_device.shell.return_value = (0, "", "")
 
-        with patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir:
+        with (
+            patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir,
+            patch("ovmobilebench.pipeline.Pipeline._get_device") as mock_get_device,
+        ):
             mock_ensure_dir.return_value = Path("/artifacts/test-123")
+            mock_get_device.return_value = mock_device
+
             pipeline = Pipeline(mock_config)
-            pipeline.device = mock_device
             pipeline.package_path = Path("/bundle.tar.gz")
 
             pipeline.deploy()
@@ -168,12 +181,19 @@ class TestPipeline:
     def test_deploy_error(self, mock_config):
         """Test deploy error handling."""
         mock_device = Mock()
+        mock_device.is_available.return_value = True
+        mock_device.cleanup.return_value = None
+        mock_device.mkdir.return_value = None
         mock_device.push.side_effect = DeviceError("Push failed")
 
-        with patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir:
+        with (
+            patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir,
+            patch("ovmobilebench.pipeline.Pipeline._get_device") as mock_get_device,
+        ):
             mock_ensure_dir.return_value = Path("/artifacts/test-123")
+            mock_get_device.return_value = mock_device
+
             pipeline = Pipeline(mock_config)
-            pipeline.device = mock_device
             pipeline.package_path = Path("/bundle.tar.gz")
 
             with pytest.raises(DeviceError):
@@ -186,16 +206,25 @@ class TestPipeline:
         mock_runner.run_matrix.return_value = [{"result": "data"}]
         mock_runner_class.return_value = mock_runner
 
-        with patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir:
+        mock_device = Mock()
+        mock_device.is_available.return_value = True
+
+        with (
+            patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir,
+            patch("ovmobilebench.pipeline.Pipeline._get_device") as mock_get_device,
+        ):
             mock_ensure_dir.return_value = Path("/artifacts/test-123")
+            mock_get_device.return_value = mock_device
+
             pipeline = Pipeline(mock_config)
-            pipeline.device = Mock()
 
             pipeline.run()
 
             mock_runner_class.assert_called_once()
             mock_runner.run_matrix.assert_called_once()
-            assert pipeline.results == [{"result": "data"}]
+            # Check that results contain the basic data from runner
+            assert len(pipeline.results) == 1
+            assert pipeline.results[0]["result"] == "data"
 
     @patch("ovmobilebench.pipeline.BenchmarkRunner")
     def test_run_dry_run(self, mock_runner_class, mock_config):
@@ -212,7 +241,10 @@ class TestPipeline:
     @patch("ovmobilebench.pipeline.JSONSink")
     def test_report(self, mock_json_sink_class, mock_parser_class, mock_config):
         """Test report generation."""
-        mock_config.report.sinks = ["json"]
+        sink_config = Mock()
+        sink_config.type = "json"
+        sink_config.path = "/reports/results.json"
+        mock_config.report.sinks = [sink_config]
         mock_config.report.aggregate = False
         mock_config.report.tags = {}
 
@@ -242,24 +274,42 @@ class TestPipeline:
         with patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir:
             mock_ensure_dir.return_value = Path("/artifacts/test-123")
             pipeline = Pipeline(mock_config, dry_run=True)
-            pipeline.results = [{"raw": "result"}]
+            # Add proper result structure with required fields
+            pipeline.results = [
+                {
+                    "raw": "result",
+                    "spec": {"model": "test"},
+                    "returncode": 0,
+                    "stdout": "output",
+                    "stderr": "",
+                    "duration_sec": 1.0,
+                    "timestamp": "2024-01-01T00:00:00",
+                    "device_serial": "test_device",
+                    "device_info": {},
+                    "project": {},
+                    "model_tags": {},
+                }
+            ]
 
             # Dry run should still process results but not write
             pipeline.report()
 
             # Should not crash
 
-    @patch("ovmobilebench.pipeline.AndroidDevice")
-    def test_get_device_android(self, mock_android_class, mock_config):
+    def test_get_device_android(self, mock_config):
         """Test getting Android device using _get_device."""
         mock_config.device.kind = "android"  # Use 'kind' not 'type' for android
         mock_config.device.serial = "test_device"
         mock_config.device.push_dir = "/data/local/tmp"
-        mock_device = Mock()
-        mock_android_class.return_value = mock_device
 
-        with patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir:
+        with (
+            patch("ovmobilebench.pipeline.ensure_dir") as mock_ensure_dir,
+            patch("ovmobilebench.devices.android.AndroidDevice") as mock_android_class,
+        ):
             mock_ensure_dir.return_value = Path("/artifacts/test-123")
+            mock_device = Mock()
+            mock_android_class.return_value = mock_device
+
             pipeline = Pipeline(mock_config)
 
             # _get_device is a private method

@@ -4,59 +4,6 @@
 # Updated for new directory structure
 
 # ============================================
-# Android Device Tests - Complex Mocking Required
-# ============================================
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_shell_with_timeout
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_shell_with_exception
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_exists_with_exception
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_get_cpu_info
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_get_memory_info
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_get_gpu_info
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_get_battery_info
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_set_performance_mode
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_start_screen_record
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_stop_screen_record
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_uninstall_apk
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_forward_reverse_ports
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_get_prop
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_set_prop
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_clear_logcat
-tests/devices/test_android_device_complete.py::TestAndroidDeviceComplete::test_get_logcat
-
-# ============================================
-# CLI Tests - Import and Mock Issues
-# ============================================
-tests/cli/test_cli.py::TestCLI::test_list_devices_command
-tests/cli/test_cli.py::TestCLI::test_list_ssh_devices_command
-tests/cli/test_cli.py::TestCLI::test_list_ssh_devices_empty
-tests/cli/test_cli.py::TestCLI::test_version_callback
-
-# ============================================
-# Pipeline Tests - Mock Configuration Issues
-# ============================================
-tests/pipeline/test_pipeline.py::TestPipeline::test_deploy
-tests/pipeline/test_pipeline.py::TestPipeline::test_deploy_error
-tests/pipeline/test_pipeline.py::TestPipeline::test_run
-tests/pipeline/test_pipeline.py::TestPipeline::test_report
-tests/pipeline/test_pipeline.py::TestPipeline::test_report_dry_run
-tests/pipeline/test_pipeline.py::TestPipeline::test_get_device_android
-
-# ============================================
-# Core Artifacts Tests - Path Mock Issues
-# ============================================
-tests/core/test_core_artifacts.py::TestArtifactManager::test_register_artifact_file
-tests/core/test_core_artifacts.py::TestArtifactManager::test_register_artifact_directory
-tests/core/test_core_artifacts.py::TestArtifactManager::test_cleanup_old_artifacts
-
-# ============================================
-# Core FS Tests - Function Import Issues
-# ============================================
-tests/core/test_core_fs.py::TestCopyTree::test_copy_tree_file_permission_error
-tests/core/test_core_fs.py::TestFormatSize::test_format_size_kilobytes
-tests/core/test_core_fs.py::TestFormatSize::test_format_size_megabytes
-tests/core/test_core_fs.py::TestFormatSize::test_format_size_gigabytes
-
-# ============================================
 # Packaging Tests - Bundle Creation Mock Issues
 # ============================================
 tests/packaging/test_packaging_packager.py::TestPackager::test_create_bundle_custom_name

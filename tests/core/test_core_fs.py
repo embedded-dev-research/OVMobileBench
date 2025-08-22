@@ -319,7 +319,8 @@ class TestCopyTree:
         with pytest.raises(PermissionError):
             with patch("pathlib.Path.exists", return_value=True):
                 with patch("pathlib.Path.is_file", return_value=True):
-                    copy_tree("/test/source.txt", "/test/dest.txt")
+                    with patch("ovmobilebench.core.fs.ensure_dir"):
+                        copy_tree("/test/source.txt", "/test/dest.txt")
 
     @patch("shutil.copytree", side_effect=PermissionError("Permission denied"))
     def test_copy_tree_dir_permission_error(self, mock_copytree):
@@ -465,19 +466,19 @@ class TestFormatSize:
         """Test formatting size in kilobytes."""
         assert format_size(1024) == "1.00 KB"
         assert format_size(1536) == "1.50 KB"  # 1.5 KB
-        assert format_size(1048575) == "1023.00 KB"  # Just under 1 MB
+        assert format_size(1048575) == "1024.00 KB"  # Just under 1 MB
 
     def test_format_size_megabytes(self):
         """Test formatting size in megabytes."""
         assert format_size(1048576) == "1.00 MB"  # 1 MB
         assert format_size(1572864) == "1.50 MB"  # 1.5 MB
-        assert format_size(1073741823) == "1023.00 MB"  # Just under 1 GB
+        assert format_size(1073741823) == "1024.00 MB"  # Just under 1 GB
 
     def test_format_size_gigabytes(self):
         """Test formatting size in gigabytes."""
         assert format_size(1073741824) == "1.00 GB"  # 1 GB
         assert format_size(1610612736) == "1.50 GB"  # 1.5 GB
-        assert format_size(1099511627775) == "1023.00 GB"  # Just under 1 TB
+        assert format_size(1099511627775) == "1024.00 GB"  # Just under 1 TB
 
     def test_format_size_terabytes(self):
         """Test formatting size in terabytes."""
