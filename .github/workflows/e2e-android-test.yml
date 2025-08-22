@@ -86,7 +86,7 @@ jobs:
         uses: actions/cache@v4
         id: android-sdk-cache
         with:
-          path: ~/ovmb_cache/android-sdk
+          path: ovmb_cache/android-sdk
           key: android-sdk-${{ runner.os }}-${{ matrix.android-api }}-${{ matrix.arch }}-v1${{
             github.event.inputs.clear_cache == 'true' && '-nocache' || '' }}
           restore-keys: |
@@ -98,7 +98,7 @@ jobs:
         uses: actions/cache@v4
         id: models-cache
         with:
-          path: ~/ovmb_cache/models
+          path: ovmb_cache/models
           key: models-${{ runner.os }}-${{ hashFiles('tests/e2e/test_model_helper.py') }}-v1
           restore-keys: |
             models-${{ runner.os }}-
@@ -109,8 +109,8 @@ jobs:
           # Check if cache was forced to be cleared
           if [ "${{ github.event.inputs.clear_cache }}" = "true" ]; then
             echo "🧹 Cache clearing was requested - installing from scratch"
-            rm -rf $HOME/ovmb_cache/android-sdk 2>/dev/null || true
-            rm -rf $HOME/ovmb_cache/models 2>/dev/null || true
+            rm -rf $PWD/ovmb_cache/android-sdk 2>/dev/null || true
+            rm -rf $PWD/ovmb_cache/models 2>/dev/null || true
           fi
 
           # Use config file from matrix
@@ -119,10 +119,10 @@ jobs:
           echo "  OS: ${{ matrix.os }}"
 
           # Set Android environment variables for AVD location
-          export ANDROID_HOME=$HOME/ovmb_cache/android-sdk
-          export ANDROID_SDK_ROOT=$HOME/ovmb_cache/android-sdk
-          export ANDROID_SDK_HOME=$HOME/ovmb_cache/android-sdk
-          export ANDROID_AVD_HOME=$HOME/ovmb_cache/android-sdk/.android/avd
+          export ANDROID_HOME=$PWD/ovmb_cache/android-sdk
+          export ANDROID_SDK_ROOT=$PWD/ovmb_cache/android-sdk
+          export ANDROID_SDK_HOME=$PWD/ovmb_cache/android-sdk
+          export ANDROID_AVD_HOME=$PWD/ovmb_cache/android-sdk/.android/avd
 
           echo "📍 Environment variables set:"
           echo "  ANDROID_HOME=$ANDROID_HOME"
@@ -139,7 +139,7 @@ jobs:
 
           # Display cache stats
           echo "📊 Android SDK setup complete:"
-          echo "  Cache size: $(du -sh $HOME/ovmb_cache 2>/dev/null || echo 'calculating...')"
+          echo "  Cache size: $(du -sh $PWD/ovmb_cache 2>/dev/null || echo 'calculating...')"
 
           # List created AVDs
           echo "📱 Created AVDs:"
@@ -149,10 +149,10 @@ jobs:
       - name: Start Android Emulator
         run: |
           # Set Android environment variables for AVD location
-          export ANDROID_HOME=$HOME/ovmb_cache/android-sdk
-          export ANDROID_SDK_ROOT=$HOME/ovmb_cache/android-sdk
-          export ANDROID_SDK_HOME=$HOME/ovmb_cache/android-sdk
-          export ANDROID_AVD_HOME=$HOME/ovmb_cache/android-sdk/.android/avd
+          export ANDROID_HOME=$PWD/ovmb_cache/android-sdk
+          export ANDROID_SDK_ROOT=$PWD/ovmb_cache/android-sdk
+          export ANDROID_SDK_HOME=$PWD/ovmb_cache/android-sdk
+          export ANDROID_AVD_HOME=$PWD/ovmb_cache/android-sdk/.android/avd
 
           echo "📍 Starting emulator with environment:"
           echo "  ANDROID_AVD_HOME=$ANDROID_AVD_HOME"
@@ -236,10 +236,10 @@ jobs:
         if: always()
         run: |
           # Set Android environment variables
-          export ANDROID_HOME=$HOME/ovmb_cache/android-sdk
-          export ANDROID_SDK_ROOT=$HOME/ovmb_cache/android-sdk
-          export ANDROID_SDK_HOME=$HOME/ovmb_cache/android-sdk
-          export ANDROID_AVD_HOME=$HOME/ovmb_cache/android-sdk/.android/avd
+          export ANDROID_HOME=$PWD/ovmb_cache/android-sdk
+          export ANDROID_SDK_ROOT=$PWD/ovmb_cache/android-sdk
+          export ANDROID_SDK_HOME=$PWD/ovmb_cache/android-sdk
+          export ANDROID_AVD_HOME=$PWD/ovmb_cache/android-sdk/.android/avd
 
           python tests/e2e/test_emulator_helper.py -c ${{ matrix.config_file }} stop-emulator
 
