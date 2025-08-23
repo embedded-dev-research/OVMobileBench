@@ -53,7 +53,8 @@ test:
 	pytest tests/ -v
 
 test-e2e:
-	pytest tests/e2e/ -v
+	# E2E tests moved to helpers directory as utility scripts
+	@echo "E2E scripts are now in heplers/ directory"
 
 clean:
 	rm -rf artifacts/

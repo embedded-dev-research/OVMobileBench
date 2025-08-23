@@ -10,9 +10,9 @@ from unittest.mock import patch
 
 import pytest
 
-sys.path.append(str(Path(__file__).parent.parent.parent / "tests" / "e2e"))
+sys.path.append(str(Path(__file__).parent.parent.parent / "heplers"))
 
-from test_validate_results import (
+from validate_results import (
     find_report_files,
     main,
     validate_report,
@@ -27,7 +27,7 @@ class TestValidationHelper:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_root = Path(temp_dir)
 
-            with patch("test_validate_results.Path") as mock_path:
+            with patch("validate_results.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
@@ -42,7 +42,7 @@ class TestValidationHelper:
             artifacts_dir = project_root / "artifacts"
             artifacts_dir.mkdir()
 
-            with patch("test_validate_results.Path") as mock_path:
+            with patch("validate_results.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
@@ -71,7 +71,7 @@ class TestValidationHelper:
             (run1_dir / "other.json").touch()
             (run2_dir / "summary.txt").touch()
 
-            with patch("test_validate_results.Path") as mock_path:
+            with patch("validate_results.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
@@ -321,7 +321,7 @@ class TestValidationMain:
 
     def test_main_no_reports_found(self):
         """Test main function when no reports are found."""
-        with patch("test_validate_results.find_report_files", return_value=[]):
+        with patch("validate_results.find_report_files", return_value=[]):
             with pytest.raises(SystemExit) as exc_info:
                 main()
 
@@ -331,8 +331,8 @@ class TestValidationMain:
         """Test main function when all reports are valid."""
         mock_reports = [Path("report1.json"), Path("report2.json")]
 
-        with patch("test_validate_results.find_report_files", return_value=mock_reports):
-            with patch("test_validate_results.validate_report", return_value=True):
+        with patch("validate_results.find_report_files", return_value=mock_reports):
+            with patch("validate_results.validate_report", return_value=True):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -342,8 +342,8 @@ class TestValidationMain:
         """Test main function when some reports are invalid."""
         mock_reports = [Path("report1.json"), Path("report2.json")]
 
-        with patch("test_validate_results.find_report_files", return_value=mock_reports):
-            with patch("test_validate_results.validate_report", side_effect=[True, False]):
+        with patch("validate_results.find_report_files", return_value=mock_reports):
+            with patch("validate_results.validate_report", side_effect=[True, False]):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -353,9 +353,9 @@ class TestValidationMain:
         """Test main function when validation raises exception."""
         mock_reports = [Path("report1.json")]
 
-        with patch("test_validate_results.find_report_files", return_value=mock_reports):
+        with patch("validate_results.find_report_files", return_value=mock_reports):
             with patch(
-                "test_validate_results.validate_report", side_effect=Exception("Validation error")
+                "validate_results.validate_report", side_effect=Exception("Validation error")
             ):
                 with pytest.raises(Exception, match="Validation error"):
                     main()
@@ -387,7 +387,7 @@ class TestValidationIntegration:
             with open(report_path, "w") as f:
                 json.dump(valid_report, f)
 
-            with patch("test_validate_results.Path") as mock_path:
+            with patch("validate_results.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 

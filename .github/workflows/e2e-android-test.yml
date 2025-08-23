@@ -76,11 +76,11 @@ jobs:
 
       - name: Enable KVM for Android emulator (Linux only)
         if: runner.os == 'Linux'
-        run: bash tests/e2e/scripts/setup_kvm_linux.sh
+        run: bash heplers/scripts/setup_kvm_linux.sh
 
       - name: Enable Hypervisor.framework for Android emulator (macOS only)
         if: runner.os == 'macOS'
-        run: bash tests/e2e/scripts/setup_hypervisor_macos.sh
+        run: bash heplers/scripts/setup_hypervisor_macos.sh
 
       - name: Cache Android SDK
         uses: actions/cache@v4
@@ -99,7 +99,7 @@ jobs:
         id: models-cache
         with:
           path: ovmb_cache/models
-          key: models-${{ runner.os }}-${{ hashFiles('tests/e2e/test_model_helper.py') }}-v1
+          key: models-${{ runner.os }}-${{ hashFiles('heplers/model_helper.py') }}-v1
           restore-keys: |
             models-${{ runner.os }}-
             models-
@@ -160,10 +160,10 @@ jobs:
           echo "📱 Available AVDs:"
           ls -la $ANDROID_AVD_HOME 2>/dev/null || echo "No AVDs found"
 
-          python tests/e2e/test_emulator_helper.py -c ${{ matrix.config_file }} start-emulator &
+          python heplers/emulator_helper.py -c ${{ matrix.config_file }} start-emulator &
           # Give emulator a moment to start before checking
           sleep 10
-          python tests/e2e/test_emulator_helper.py -c ${{ matrix.config_file }} wait-for-boot
+          python heplers/emulator_helper.py -c ${{ matrix.config_file }} wait-for-boot
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -176,7 +176,7 @@ jobs:
 
       # === PREPARE MODEL ===
       - name: Download ResNet-50 model
-        run: python tests/e2e/test_model_helper.py -c ${{ matrix.config_file }} download-resnet50
+        run: python heplers/model_helper.py -c ${{ matrix.config_file }} download-resnet50
 
       # === OVMOBILEBENCH PIPELINE ===
       - name: List available devices
@@ -227,17 +227,17 @@ jobs:
 
       # === VALIDATION ===
       - name: Validate results
-        run: python tests/e2e/test_validate_results.py
+        run: python heplers/validate_results.py
 
       - name: Display benchmark results
-        run: python tests/e2e/test_display_results.py
+        run: python heplers/display_results.py
 
       # === CLEANUP ===
       - name: Stop emulator
         if: always()
         run: |
           # Environment variables should already be set from setup step
-          python tests/e2e/test_emulator_helper.py -c ${{ matrix.config_file }} stop-emulator
+          python heplers/emulator_helper.py -c ${{ matrix.config_file }} stop-emulator
 
       - name: Upload artifacts
         if: always()
@@ -252,6 +252,6 @@ jobs:
       - name: Post results to PR
         if: github.event_name == 'pull_request'
         run: |
-          python tests/e2e/test_pr_comment.py \
+          python heplers/pr_comment.py \
             --api ${{ matrix.android-api }} \
             --pr ${{ github.event.pull_request.number }}

@@ -10,10 +10,10 @@ from unittest.mock import patch
 
 import pytest
 
-sys.path.append(str(Path(__file__).parent.parent.parent / "tests" / "e2e"))
+sys.path.append(str(Path(__file__).parent.parent.parent / "heplers"))
 
 # Import the display functions
-from test_display_results import (
+from display_results import (
     display_report,
     find_latest_report,
     main,
@@ -28,7 +28,7 @@ class TestDisplayHelper:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_root = Path(temp_dir)
 
-            with patch("test_display_results.Path") as mock_path:
+            with patch("display_results.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
@@ -43,7 +43,7 @@ class TestDisplayHelper:
             artifacts_dir = project_root / "artifacts"
             artifacts_dir.mkdir()
 
-            with patch("test_display_results.Path") as mock_path:
+            with patch("display_results.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
@@ -62,7 +62,7 @@ class TestDisplayHelper:
             report_path = run_dir / "report.json"
             report_path.touch()
 
-            with patch("test_display_results.Path") as mock_path:
+            with patch("display_results.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
@@ -93,7 +93,7 @@ class TestDisplayHelper:
             time.sleep(0.01)
             report2_path.touch()
 
-            with patch("test_display_results.Path") as mock_path:
+            with patch("display_results.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
@@ -297,15 +297,15 @@ class TestDisplayMain:
 
     def test_main_no_report_found(self):
         """Test main function when no report is found."""
-        with patch("test_display_results.find_latest_report", return_value=None):
+        with patch("display_results.find_latest_report", return_value=None):
             main()  # Should not raise exception
 
     def test_main_report_found(self):
         """Test main function when report is found."""
         mock_report_path = Path("test_report.json")
 
-        with patch("test_display_results.find_latest_report", return_value=mock_report_path):
-            with patch("test_display_results.display_report") as mock_display:
+        with patch("display_results.find_latest_report", return_value=mock_report_path):
+            with patch("display_results.display_report") as mock_display:
                 main()
 
                 mock_display.assert_called_once_with()
@@ -314,10 +314,8 @@ class TestDisplayMain:
         """Test main function when display_report raises exception."""
         mock_report_path = Path("test_report.json")
 
-        with patch("test_display_results.find_latest_report", return_value=mock_report_path):
-            with patch(
-                "test_display_results.display_report", side_effect=Exception("Display error")
-            ):
+        with patch("display_results.find_latest_report", return_value=mock_report_path):
+            with patch("display_results.display_report", side_effect=Exception("Display error")):
                 with pytest.raises(Exception, match="Display error"):
                     main()
 
@@ -362,7 +360,7 @@ class TestDisplayIntegration:
             with open(report_path, "w") as f:
                 json.dump(report_data, f)
 
-            with patch("test_display_results.Path") as mock_path:
+            with patch("display_results.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 

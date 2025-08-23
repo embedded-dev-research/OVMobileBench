@@ -7,10 +7,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-sys.path.append(str(Path(__file__).parent.parent.parent / "tests" / "e2e"))
+sys.path.append(str(Path(__file__).parent.parent.parent / "heplers"))
 
 # Patch cache_dir before importing
-from test_model_helper import (
+from model_helper import (
     cleanup_invalid_models,
     download_detection_models,
     download_openvino_notebooks_models,
@@ -33,7 +33,7 @@ class TestModelHelper:
 
     def test_list_cached_models(self):
         """Test listing cached models works."""
-        with patch("test_model_helper.logger"):
+        with patch("model_helper.logger"):
             # Should not crash even if no models exist
             result = list_cached_models()
             assert isinstance(result, list)
@@ -51,7 +51,7 @@ class TestModelHelperIntegration:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         self.patcher = patch(
-            "test_model_helper.get_cache_dir_from_config",
+            "model_helper.get_cache_dir_from_config",
             return_value=Path(tmp_path / "ovmb_cache"),
         )
         self.patcher.start()
@@ -65,7 +65,7 @@ class TestModelHelperIntegration:
         (self.cache_dir / "model1.bin").write_bytes(b"bin")
         (self.cache_dir / "model2.xml").write_text("xml")
 
-        with patch("test_model_helper.logger") as mock_logger:
+        with patch("model_helper.logger") as mock_logger:
             list_cached_models()
 
         # Check that models were logged

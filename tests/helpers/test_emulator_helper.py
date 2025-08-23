@@ -7,16 +7,16 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-# Add e2e directory to path
-sys.path.append(str(Path(__file__).parent.parent.parent / "tests" / "e2e"))
+# Add helpers directory to path
+sys.path.append(str(Path(__file__).parent.parent.parent / "heplers"))
 
-# Import and configure test_emulator_helper module
-import test_emulator_helper
+# Import and configure emulator_helper module
+import emulator_helper
 
 # Set ANDROID_HOME, AVD_HOME and ARCHITECTURE for all tests
-test_emulator_helper.ANDROID_HOME = "/mock/android-sdk"
-test_emulator_helper.AVD_HOME = "/mock/android-sdk/.android/avd"
-test_emulator_helper.ARCHITECTURE = "arm64-v8a"  # Default for tests
+emulator_helper.ANDROID_HOME = "/mock/android-sdk"
+emulator_helper.AVD_HOME = "/mock/android-sdk/.android/avd"
+emulator_helper.ARCHITECTURE = "arm64-v8a"  # Default for tests
 
 
 class TestEmulatorHelper:
@@ -26,13 +26,13 @@ class TestEmulatorHelper:
     def setup(self):
         """Setup test environment."""
         # Ensure ANDROID_HOME, AVD_HOME and ARCHITECTURE are set for all tests
-        test_emulator_helper.ANDROID_HOME = "/mock/android-sdk"
-        test_emulator_helper.AVD_HOME = "/mock/android-sdk/.android/avd"
-        test_emulator_helper.ARCHITECTURE = "arm64-v8a"  # Default for tests
+        emulator_helper.ANDROID_HOME = "/mock/android-sdk"
+        emulator_helper.AVD_HOME = "/mock/android-sdk/.android/avd"
+        emulator_helper.ARCHITECTURE = "arm64-v8a"  # Default for tests
 
     def test_create_avd_with_default_name(self):
         """Test AVD creation with default naming."""
-        from test_emulator_helper import create_avd
+        from emulator_helper import create_avd
 
         with patch("subprocess.run") as mock_run:
             with patch("pathlib.Path.mkdir"):  # Mock mkdir to avoid filesystem operations
@@ -55,7 +55,7 @@ class TestEmulatorHelper:
 
     def test_create_avd_with_custom_name(self):
         """Test AVD creation with custom name."""
-        from test_emulator_helper import create_avd
+        from emulator_helper import create_avd
 
         with patch("subprocess.run") as mock_run:
             with patch("pathlib.Path.mkdir"):  # Mock mkdir to avoid filesystem operations
@@ -78,7 +78,7 @@ class TestEmulatorHelper:
 
     def test_create_avd_failure(self):
         """Test AVD creation failure handling."""
-        from test_emulator_helper import create_avd
+        from emulator_helper import create_avd
 
         with patch("subprocess.run") as mock_run:
             with patch("pathlib.Path.mkdir"):  # Mock mkdir to avoid filesystem operations
@@ -90,7 +90,7 @@ class TestEmulatorHelper:
     @patch("platform.system")
     def test_start_emulator_linux(self, mock_platform):
         """Test emulator start on Linux with KVM acceleration."""
-        from test_emulator_helper import start_emulator
+        from emulator_helper import start_emulator
 
         mock_platform.return_value = "Linux"
 
@@ -112,7 +112,7 @@ class TestEmulatorHelper:
     @patch("platform.system")
     def test_start_emulator_macos(self, mock_platform):
         """Test emulator start on macOS with native acceleration."""
-        from test_emulator_helper import start_emulator
+        from emulator_helper import start_emulator
 
         mock_platform.return_value = "Darwin"
 
@@ -132,7 +132,7 @@ class TestEmulatorHelper:
     @patch("platform.system")
     def test_start_emulator_other_platform(self, mock_platform):
         """Test emulator start on other platforms (Windows)."""
-        from test_emulator_helper import start_emulator
+        from emulator_helper import start_emulator
 
         mock_platform.return_value = "Windows"
 
@@ -151,7 +151,7 @@ class TestEmulatorHelper:
 
     def test_wait_for_boot_success(self):
         """Test successful emulator boot wait."""
-        from test_emulator_helper import wait_for_boot
+        from emulator_helper import wait_for_boot
 
         # Mock Path.exists for adb
         with patch("pathlib.Path.exists", return_value=True):
@@ -178,7 +178,7 @@ class TestEmulatorHelper:
 
     def test_wait_for_boot_timeout(self):
         """Test emulator boot timeout."""
-        from test_emulator_helper import wait_for_boot
+        from emulator_helper import wait_for_boot
 
         with patch("subprocess.run") as mock_run:
             # Always return "1" (still booting)
@@ -192,7 +192,7 @@ class TestEmulatorHelper:
 
     def test_wait_for_boot_adb_failure(self):
         """Test wait for boot with adb failure."""
-        from test_emulator_helper import wait_for_boot
+        from emulator_helper import wait_for_boot
 
         with patch("pathlib.Path.exists", return_value=True):
             with patch("subprocess.run") as mock_run:
@@ -209,7 +209,7 @@ class TestEmulatorHelper:
 
     def test_stop_emulator(self):
         """Test emulator stop."""
-        from test_emulator_helper import stop_emulator
+        from emulator_helper import stop_emulator
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(returncode=0)
@@ -224,7 +224,7 @@ class TestEmulatorHelper:
 
     def test_delete_avd_with_default_name(self):
         """Test AVD deletion with default name."""
-        from test_emulator_helper import delete_avd
+        from emulator_helper import delete_avd
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(returncode=0)
@@ -243,7 +243,7 @@ class TestEmulatorHelper:
 
     def test_delete_avd_with_custom_name(self):
         """Test AVD deletion with custom name."""
-        from test_emulator_helper import delete_avd
+        from emulator_helper import delete_avd
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(returncode=0)
@@ -262,7 +262,7 @@ class TestEmulatorHelper:
 
     def test_delete_avd_failure_handling(self):
         """Test AVD deletion failure handling."""
-        from test_emulator_helper import delete_avd
+        from emulator_helper import delete_avd
 
         with patch("subprocess.run") as mock_run:
             # Since check=False, CalledProcessError won't be raised

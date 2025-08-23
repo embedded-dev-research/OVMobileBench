@@ -10,9 +10,9 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-sys.path.append(str(Path(__file__).parent.parent.parent / "tests" / "e2e"))
+sys.path.append(str(Path(__file__).parent.parent.parent / "heplers"))
 
-from test_pr_comment import (
+from pr_comment import (
     find_latest_report,
     generate_markdown_comment,
     main,
@@ -28,7 +28,7 @@ class TestPRCommentHelper:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_root = Path(temp_dir)
 
-            with patch("test_pr_comment.Path") as mock_path:
+            with patch("pr_comment.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
@@ -43,7 +43,7 @@ class TestPRCommentHelper:
             artifacts_dir = project_root / "artifacts"
             artifacts_dir.mkdir()
 
-            with patch("test_pr_comment.Path") as mock_path:
+            with patch("pr_comment.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
@@ -74,7 +74,7 @@ class TestPRCommentHelper:
             time.sleep(0.01)
             report2_path.touch()
 
-            with patch("test_pr_comment.Path") as mock_path:
+            with patch("pr_comment.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
@@ -299,8 +299,8 @@ class TestPRCommentMain:
 
     def test_main_no_report_found(self):
         """Test main function when no report is found."""
-        with patch("test_pr_comment.find_latest_report", return_value=None):
-            with patch("sys.argv", ["test_pr_comment.py", "--api", "30"]):
+        with patch("pr_comment.find_latest_report", return_value=None):
+            with patch("sys.argv", ["pr_comment.py", "--api", "30"]):
                 main()  # Should not raise exception
 
     def test_main_with_pr_number(self):
@@ -308,10 +308,10 @@ class TestPRCommentMain:
         mock_report_path = Path("test_report.json")
         test_comment = "Generated comment"
 
-        with patch("test_pr_comment.find_latest_report", return_value=mock_report_path):
-            with patch("test_pr_comment.generate_markdown_comment", return_value=test_comment):
-                with patch("test_pr_comment.post_to_github") as mock_post:
-                    with patch("sys.argv", ["test_pr_comment.py", "--api", "30", "--pr", "123"]):
+        with patch("pr_comment.find_latest_report", return_value=mock_report_path):
+            with patch("pr_comment.generate_markdown_comment", return_value=test_comment):
+                with patch("pr_comment.post_to_github") as mock_post:
+                    with patch("sys.argv", ["pr_comment.py", "--api", "30", "--pr", "123"]):
                         main()
 
                         mock_post.assert_called_once_with(test_comment, 123)
@@ -321,17 +321,17 @@ class TestPRCommentMain:
         mock_report_path = Path("test_report.json")
         test_comment = "Generated comment"
 
-        with patch("test_pr_comment.find_latest_report", return_value=mock_report_path):
-            with patch("test_pr_comment.generate_markdown_comment", return_value=test_comment):
+        with patch("pr_comment.find_latest_report", return_value=mock_report_path):
+            with patch("pr_comment.generate_markdown_comment", return_value=test_comment):
                 with patch("builtins.print") as mock_print:
-                    with patch("sys.argv", ["test_pr_comment.py", "--api", "30"]):
+                    with patch("sys.argv", ["pr_comment.py", "--api", "30"]):
                         main()
 
                         mock_print.assert_called_with(test_comment)
 
     def test_main_missing_api_argument(self):
         """Test main function without required API argument."""
-        with patch("sys.argv", ["test_pr_comment.py"]):
+        with patch("sys.argv", ["pr_comment.py"]):
             with pytest.raises(SystemExit):  # argparse should exit
                 main()
 
@@ -339,12 +339,12 @@ class TestPRCommentMain:
         """Test main function when comment generation fails."""
         mock_report_path = Path("test_report.json")
 
-        with patch("test_pr_comment.find_latest_report", return_value=mock_report_path):
+        with patch("pr_comment.find_latest_report", return_value=mock_report_path):
             with patch(
-                "test_pr_comment.generate_markdown_comment",
+                "pr_comment.generate_markdown_comment",
                 side_effect=Exception("Generation error"),
             ):
-                with patch("sys.argv", ["test_pr_comment.py", "--api", "30"]):
+                with patch("sys.argv", ["pr_comment.py", "--api", "30"]):
                     with pytest.raises(Exception, match="Generation error"):
                         main()
 
@@ -386,7 +386,7 @@ class TestPRCommentIntegration:
             with open(report_path, "w") as f:
                 json.dump(report_data, f)
 
-            with patch("test_pr_comment.Path") as mock_path:
+            with patch("pr_comment.Path") as mock_path:
                 mock_path.return_value.parent.parent.parent = project_root
                 mock_path.__file__ = __file__
 
