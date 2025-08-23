@@ -155,7 +155,13 @@ class TestSdkManager:
         def create_structure(*args):
             extracted_dir = self.sdk_root / "cmdline-tools" / "bin"
             extracted_dir.mkdir(parents=True)
-            (extracted_dir / "sdkmanager").touch()
+            # Create the right sdkmanager file based on platform
+            import platform
+
+            if platform.system() == "Windows":
+                (extracted_dir / "sdkmanager.bat").touch()
+            else:
+                (extracted_dir / "sdkmanager").touch()
 
         mock_zip.extractall.side_effect = create_structure
 
