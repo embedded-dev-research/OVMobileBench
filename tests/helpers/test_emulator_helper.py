@@ -197,10 +197,12 @@ class TestEmulatorHelper:
         with patch("pathlib.Path.exists", return_value=True):
             with patch("subprocess.run") as mock_run:
                 # Simulate adb failure - keep returning error
-                mock_run.return_value = Mock(returncode=1)
+                mock_run.return_value = Mock(returncode=1, stdout="")
 
                 with patch("time.sleep"):  # Speed up test
-                    with patch("time.time", side_effect=[0, 1, 2, 3, 400]):  # Simulate timeout
+                    # Provide enough time values for all calls, then jump to timeout
+                    time_values = list(range(0, 20)) + [400] * 10  # Provide plenty of values
+                    with patch("time.time", side_effect=time_values):  # Simulate timeout
                         result = wait_for_boot(timeout=10)
 
                 assert result is False  # Should return False on timeout
