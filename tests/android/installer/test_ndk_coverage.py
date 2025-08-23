@@ -107,12 +107,16 @@ class TestNdkResolverCoverage:
     def test_install_via_download_tar_success(self):
         """Test TAR extraction method directly."""
         # Test the _extract_tar method directly since it's not used in normal flow
+        import os
         import tarfile
-        from tempfile import NamedTemporaryFile
+        import tempfile
 
-        with NamedTemporaryFile(suffix=".tar.gz", delete=False) as tf:
-            tar_path = Path(tf.name)
+        # Create temp file and close it immediately to avoid Windows file lock issues
+        fd, temp_path = tempfile.mkstemp(suffix=".tar.gz")
+        os.close(fd)  # Close the file descriptor immediately
+        tar_path = Path(temp_path)
 
+        try:
             # Create a valid tar file
             with tarfile.open(tar_path, "w:gz") as tar:
                 # Add a dummy file
@@ -126,13 +130,16 @@ class TestNdkResolverCoverage:
             dest = self.sdk_root / "extract_test"
             dest.mkdir()
 
+            self.resolver._extract_tar(tar_path, dest)
+            # Check file was extracted
+            assert (dest / "test.txt").exists()
+            assert (dest / "test.txt").read_text() == "test"
+        finally:
+            # Clean up - use try/except to handle Windows permission issues
             try:
-                self.resolver._extract_tar(tar_path, dest)
-                # Check file was extracted
-                assert (dest / "test.txt").exists()
-                assert (dest / "test.txt").read_text() == "test"
-            finally:
-                tar_path.unlink(missing_ok=True)
+                tar_path.unlink()
+            except (PermissionError, FileNotFoundError):
+                pass  # Ignore errors on cleanup
 
     def test_install_via_download_dmg_success(self):
         """Test DMG extraction method for macOS."""
