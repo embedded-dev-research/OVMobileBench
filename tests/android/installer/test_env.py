@@ -51,8 +51,12 @@ class TestEnvExporter:
             assert env_vars["ANDROID_PLATFORM_TOOLS"] == str(platform_tools.absolute())
 
     @patch("builtins.open", new_callable=mock_open)
-    def test_export_to_github_env(self, mock_file):
+    @patch("pathlib.Path.exists")
+    def test_export_to_github_env(self, mock_exists, mock_file):
         """Test exporting to GitHub environment file."""
+        # Mock that the paths exist
+        mock_exists.return_value = True
+
         exporter = EnvExporter()
         github_env = Path("/tmp/github_env")
         sdk_root = Path("/opt/android-sdk")

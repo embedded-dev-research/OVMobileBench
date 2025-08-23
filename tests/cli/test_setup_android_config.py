@@ -29,7 +29,10 @@ class TestSetupAndroidWithConfig:
                     "api_level": 30,
                 },
             },
-            "device": {"kind": "android", "serials": []},
+            "device": {
+                "kind": "android",
+                "serials": ["emulator-5554"],
+            },  # Add serial to avoid AVD creation
             "models": [{"name": "model1", "path": "model1.xml"}],
             "report": {"sinks": [{"type": "json", "path": "results.json"}]},
         }

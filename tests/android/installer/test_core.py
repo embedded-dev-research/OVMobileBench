@@ -295,7 +295,7 @@ class TestAndroidInstaller:
                             assert "ndk" in result["performed"]
 
     @patch("ovmobilebench.android.installer.detect.detect_host")
-    @patch("ovmobilebench.android.installer.detect.check_disk_space")
+    @patch("ovmobilebench.android.installer.core.check_disk_space")
     def test_ensure_low_disk_space_warning(self, mock_check_disk, mock_detect_host):
         """Test warning for low disk space."""
         mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=True)
@@ -315,24 +315,28 @@ class TestAndroidInstaller:
             )
             mock_build_plan.return_value = mock_plan
 
-            installer.ensure(
-                api=30,
-                target="google_atd",
-                arch="arm64-v8a",
-                ndk=NdkSpec(alias="r26d"),
-                dry_run=True,
-            )
+            # Mock NDK resolve_path for dry run
+            with patch.object(installer.ndk, "resolve_path") as mock_resolve:
+                mock_resolve.return_value = self.sdk_root / "ndk" / "r26d"
 
-            # Check that warning was logged
-            logger.warning.assert_called_with("Low disk space detected (< 15GB free)")
+                installer.ensure(
+                    api=30,
+                    target="google_atd",
+                    arch="arm64-v8a",
+                    ndk=NdkSpec(alias="r26d"),
+                    dry_run=True,
+                )
+
+                # Check that warning was logged
+                logger.warning.assert_called_with("Low disk space detected (< 15GB free)")
 
     def test_ensure_logs_host_info(self):
         """Test that host information is logged."""
         logger = Mock()
         installer = AndroidInstaller(self.sdk_root, logger=logger)
 
-        with patch("ovmobilebench.android.installer.detect.detect_host") as mock_detect:
-            with patch("ovmobilebench.android.installer.detect.check_disk_space"):
+        with patch("ovmobilebench.android.installer.core.detect_host") as mock_detect:
+            with patch("ovmobilebench.android.installer.core.check_disk_space"):
                 mock_detect.return_value = HostInfo(
                     os="linux", arch="arm64", has_kvm=True, java_version="17.0.8"
                 )
@@ -348,13 +352,17 @@ class TestAndroidInstaller:
                     )
                     mock_build_plan.return_value = mock_plan
 
-                    installer.ensure(
-                        api=30,
-                        target="google_atd",
-                        arch="arm64-v8a",
-                        ndk=NdkSpec(alias="r26d"),
-                        dry_run=True,
-                    )
+                    # Mock NDK resolve_path for dry run
+                    with patch.object(installer.ndk, "resolve_path") as mock_resolve:
+                        mock_resolve.return_value = self.sdk_root / "ndk" / "r26d"
+
+                        installer.ensure(
+                            api=30,
+                            target="google_atd",
+                            arch="arm64-v8a",
+                            ndk=NdkSpec(alias="r26d"),
+                            dry_run=True,
+                        )
 
                     # Check that host info was logged
                     logger.info.assert_any_call(

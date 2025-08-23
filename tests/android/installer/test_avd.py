@@ -32,7 +32,7 @@ class TestAvdManager:
         assert manager.sdk_root == self.sdk_root.absolute()
         assert manager.logger == logger
 
-    @patch("ovmobilebench.android.installer.detect.detect_host")
+    @patch("ovmobilebench.android.installer.avd.detect_host")
     def test_get_avdmanager_path_linux(self, mock_detect):
         """Test getting avdmanager path on Linux."""
         mock_detect.return_value = Mock(os="linux")
@@ -44,7 +44,7 @@ class TestAvdManager:
         else:
             assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager"
 
-    @patch("ovmobilebench.android.installer.detect.detect_host")
+    @patch("ovmobilebench.android.installer.avd.detect_host")
     def test_get_avdmanager_path_windows(self, mock_detect):
         """Test getting avdmanager path on Windows."""
         mock_detect.return_value = Mock(os="windows")

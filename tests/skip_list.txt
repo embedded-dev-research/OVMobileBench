@@ -3,26 +3,6 @@
 # Lines starting with # are comments
 
 # ============================================
-# Android Installer CLI Tests - Environment Setup
-# ============================================
-tests/android/installer/test_cli.py::TestAndroidInstallerCLI::test_setup_command_basic
-tests/android/installer/test_cli.py::TestAndroidInstallerCLI::test_setup_command_with_ndk
-tests/android/installer/test_cli.py::TestAndroidInstallerCLI::test_setup_command_dry_run
-tests/android/installer/test_cli.py::TestAndroidInstallerCLI::test_verify_command
-tests/android/installer/test_cli.py::TestAndroidInstallerCLI::test_verify_command_nothing_installed
-tests/android/installer/test_cli.py::TestAndroidInstallerCLI::test_main_help
-tests/android/installer/test_cli.py::TestAndroidInstallerCLI::test_setup_with_avd
-tests/android/installer/test_cli.py::TestAndroidInstallerCLI::test_setup_verbose
-tests/android/installer/test_cli.py::TestAndroidInstallerCLI::test_setup_with_jsonl
-tests/android/installer/test_cli.py::TestAndroidInstallerCLI::test_setup_with_force
-
-# ============================================
-# Android Installer Core Tests - Filesystem Access
-# ============================================
-tests/android/installer/test_core.py::TestAndroidInstaller::test_ensure_low_disk_space_warning
-tests/android/installer/test_core.py::TestAndroidInstaller::test_ensure_logs_host_info
-
-# ============================================
 # Android Installer Integration Tests - External Dependencies
 # ============================================
 tests/android/installer/test_integration.py::TestAndroidInstallerIntegration::test_full_installation_flow
@@ -55,22 +35,3 @@ tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_list
 # Android Installer NDK Tests - External Tool Required
 # ============================================
 tests/android/installer/test_ndk.py::TestNdkResolver::test_install_via_download_zip
-
-# ============================================
-# Android Installer SDK Manager Tests - External Tool Required
-# ============================================
-tests/android/installer/test_sdkmanager.py::TestSdkManager::test_get_sdkmanager_path_windows
-tests/android/installer/test_sdkmanager.py::TestSdkManager::test_ensure_cmdline_tools_install
-tests/android/installer/test_sdkmanager.py::TestSdkManager::test_ensure_cmdline_tools_download_failure
-
-# ============================================
-# Android Installer AVD Tests - Windows Only
-# ============================================
-tests/android/installer/test_avd.py::TestAvdManager::test_get_avdmanager_path_windows
-
-# ============================================
-# Android Installer Environment Tests - GitHub Actions Only
-# ============================================
-tests/android/installer/test_env.py::TestEnvExporter::test_export_to_github_env
-tests/helpers/test_emulator_helper.py::TestEmulatorHelper::test_wait_for_boot_adb_failure
-tests/cli/test_setup_android_config.py::TestSetupAndroidWithConfig::test_setup_android_reads_config
