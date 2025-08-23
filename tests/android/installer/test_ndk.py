@@ -2,7 +2,7 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -213,34 +213,51 @@ class TestNdkResolver:
         version = self.resolver.get_version(ndk_path)
         assert version == "r26d"
 
-    @patch("urllib.request.urlretrieve")
-    @patch("zipfile.ZipFile")
+    @patch("ovmobilebench.android.installer.ndk.shutil.rmtree")
+    @patch("ovmobilebench.android.installer.ndk.urlretrieve")
+    @patch("ovmobilebench.android.installer.ndk.zipfile.ZipFile")
     @patch("ovmobilebench.android.installer.detect.get_ndk_filename")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_install_via_download_zip(
-        self, mock_detect_host, mock_get_filename, mock_zipfile, mock_urlretrieve
+        self, mock_detect_host, mock_get_filename, mock_zipfile, mock_urlretrieve, mock_rmtree
     ):
         """Test installing NDK via direct download (ZIP)."""
+        from ovmobilebench.android.installer.types import HostInfo
+
         # Mock Linux host to avoid DMG
-        mock_detect_host.return_value = Mock(os="linux")
+        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=True)
         mock_get_filename.return_value = "android-ndk-r26d-linux.zip"
 
-        # Mock ZIP extraction
-        mock_zip = MagicMock()
+        # Mock successful download
+        def create_temp_file(url, path):
+            Path(path).touch()
+
+        mock_urlretrieve.side_effect = create_temp_file
+
+        # Mock successful extraction and create NDK directory
+        def mock_extract(dest_dir):
+            ndk_dir = dest_dir / "android-ndk-r26d"
+            ndk_dir.mkdir(parents=True)
+            (ndk_dir / "ndk-build").touch()
+            (ndk_dir / "toolchains").mkdir()
+            (ndk_dir / "prebuilt").mkdir()
+
+        mock_zip = Mock()
         mock_zipfile.return_value.__enter__.return_value = mock_zip
+        mock_zip.extractall.side_effect = mock_extract
 
-        with patch("tempfile.TemporaryDirectory") as mock_tmpdir:
-            mock_tmpdir.return_value.__enter__.return_value = self.tmpdir.name
+        # Mock rename operation
+        def mock_rename(dst):
+            dst.mkdir(parents=True, exist_ok=True)
+            (dst / "ndk-build").touch()
+            (dst / "toolchains").mkdir(exist_ok=True)
+            (dst / "prebuilt").mkdir(exist_ok=True)
+            return dst
 
-            # Create extracted directory structure
-            extracted_dir = self.sdk_root / "ndk" / "android-ndk-r26d"
-            extracted_dir.mkdir(parents=True)
-            (extracted_dir / "ndk-build").touch()
-            (extracted_dir / "toolchains").mkdir()
+        with patch("pathlib.Path.rename", side_effect=mock_rename):
+            result = self.resolver._install_via_download("r26d")
 
-            # Mock the rename operation
-            with patch.object(Path, "rename"):
-                self.resolver._install_via_download("r26d")
-
+            # Should return the target directory
+            assert result.name in ["26.3.11579264", "r26d"]
             mock_urlretrieve.assert_called_once()
             assert "android-ndk-r26d-linux.zip" in mock_urlretrieve.call_args[0][0]

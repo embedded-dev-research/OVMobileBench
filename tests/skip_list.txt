@@ -2,36 +2,10 @@
 # Format: test_file.py::TestClass::test_method or test_file.py::test_function
 # Lines starting with # are comments
 
-# ============================================
-# Android Installer Integration Tests - External Dependencies
-# ============================================
-tests/android/installer/test_integration.py::TestAndroidInstallerIntegration::test_full_installation_flow
-tests/android/installer/test_integration.py::TestAndroidInstallerIntegration::test_ndk_only_installation
-tests/android/installer/test_integration.py::TestAndroidInstallerIntegration::test_environment_export
-tests/android/installer/test_integration.py::TestAndroidInstallerIntegration::test_api_function_export
-tests/android/installer/test_integration.py::TestAndroidInstallerIntegration::test_concurrent_component_installation
-tests/android/installer/test_integration.py::TestEndToEndScenarios::test_ci_environment_setup
-tests/android/installer/test_integration.py::TestEndToEndScenarios::test_development_environment_setup
-tests/android/installer/test_integration.py::TestEndToEndScenarios::test_windows_environment_setup
-
-# ============================================
-# Android Installer NDK Coverage Tests - Download Required
-# ============================================
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_via_download_zip_success
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_via_download_network_error
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_via_download_http_error
 tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_via_download_tar_success
 tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_via_download_dmg_success
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_via_download_unpack_error
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_via_download_no_valid_ndk
 tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_get_download_url
 tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_ndk_with_sdkmanager_success
 tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_resolve_path_with_ndk_home_env
 tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_resolve_path_with_android_ndk_env
 tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_resolve_path_env_invalid
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_list_installed_with_multiple_ndks
-
-# ============================================
-# Android Installer NDK Tests - External Tool Required
-# ============================================
-tests/android/installer/test_ndk.py::TestNdkResolver::test_install_via_download_zip

@@ -31,15 +31,19 @@ class TestAndroidInstallerIntegration:
         """Clean up test environment."""
         self.tmpdir.cleanup()
 
+    @patch("subprocess.run")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     @patch("ovmobilebench.android.installer.detect.check_disk_space")
-    def test_full_installation_flow(self, mock_check_disk, mock_detect_host):
+    def test_full_installation_flow(self, mock_check_disk, mock_detect_host, mock_subprocess):
         """Test complete installation flow."""
         # Mock host detection
         mock_detect_host.return_value = HostInfo(
             os="linux", arch="x86_64", has_kvm=True, java_version="17"
         )
         mock_check_disk.return_value = True
+
+        # Mock subprocess to avoid actual command execution
+        mock_subprocess.return_value = Mock(returncode=0, stdout="", stderr="")
 
         # Create mock components
         self._create_cmdline_tools()
@@ -48,6 +52,7 @@ class TestAndroidInstallerIntegration:
         self._create_system_image(30, "google_atd", "arm64-v8a")
         self._create_emulator()
         self._create_ndk("26.3.11579264")
+        self._create_cmake()
 
         installer = AndroidInstaller(self.sdk_root)
 
@@ -68,13 +73,23 @@ class TestAndroidInstallerIntegration:
             assert result["sdk_root"] == self.sdk_root
             assert result["avd_created"] is True
 
+    @patch("subprocess.run")
     @patch("ovmobilebench.android.installer.detect.detect_host")
-    def test_ndk_only_installation(self, mock_detect_host):
+    def test_ndk_only_installation(self, mock_detect_host, mock_subprocess):
         """Test NDK-only installation flow."""
         mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=False)
 
+        # Mock subprocess to avoid actual command execution
+        mock_subprocess.return_value = Mock(returncode=0, stdout="", stderr="")
+
         self._create_cmdline_tools()
         ndk_path = self._create_ndk("26.3.11579264")
+        # Also create cmake and platform as they're checked
+        self._create_cmake()
+        (self.sdk_root / "platforms" / "android-30").mkdir(parents=True)
+        (self.sdk_root / "system-images" / "android-30" / "google_atd" / "arm64-v8a").mkdir(
+            parents=True
+        )
 
         installer = AndroidInstaller(self.sdk_root)
 
@@ -138,7 +153,7 @@ class TestAndroidInstallerIntegration:
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_environment_export(self, mock_detect_host):
         """Test environment variable export."""
-        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64")
+        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=True)
 
         self._create_cmdline_tools()
         self._create_platform_tools()
@@ -147,12 +162,12 @@ class TestAndroidInstallerIntegration:
         installer = AndroidInstaller(self.sdk_root)
 
         # Export to dict
-        env_dict = installer.env.export_dict(ndk_path)
+        env_dict = installer.env.export(sdk_root=self.sdk_root, ndk_path=ndk_path)
 
         assert env_dict["ANDROID_HOME"] == str(self.sdk_root)
         assert env_dict["ANDROID_SDK_ROOT"] == str(self.sdk_root)
         assert env_dict["ANDROID_NDK_HOME"] == str(ndk_path)
-        assert str(self.sdk_root / "platform-tools") in env_dict["PATH"]
+        # PATH is not returned by export method, only set in environment
 
     @patch("ovmobilebench.android.installer.detect.detect_host")
     @patch("ovmobilebench.android.installer.detect.check_disk_space")
@@ -222,19 +237,19 @@ class TestAndroidInstallerIntegration:
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_api_function_export(self, mock_detect_host):
         """Test the public API export function."""
-        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64")
+        mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=True)
 
         ndk_path = self._create_ndk("26.3.11579264")
 
         env_vars = export_android_env(
             sdk_root=self.sdk_root,
             ndk_path=ndk_path,
-            format="dict",
         )
 
         assert isinstance(env_vars, dict)
         assert "ANDROID_HOME" in env_vars
-        assert "PATH" in env_vars
+        assert "ANDROID_SDK_ROOT" in env_vars
+        assert "ANDROID_NDK" in env_vars
 
     def test_api_function_verify(self):
         """Test the public API verify function."""
@@ -258,12 +273,18 @@ class TestAndroidInstallerIntegration:
             assert results["cmdline_tools"] is True
             assert results["platform_tools"] is False
 
+    @patch("subprocess.run")
     @patch("ovmobilebench.android.installer.detect.detect_host")
     @patch("ovmobilebench.android.installer.detect.check_disk_space")
-    def test_concurrent_component_installation(self, mock_check_disk, mock_detect_host):
+    def test_concurrent_component_installation(
+        self, mock_check_disk, mock_detect_host, mock_subprocess
+    ):
         """Test that components can be installed concurrently."""
         mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=True)
         mock_check_disk.return_value = True
+
+        # Mock subprocess to avoid actual command execution
+        mock_subprocess.return_value = Mock(returncode=0, stdout="", stderr="")
 
         installer = AndroidInstaller(self.sdk_root)
 
@@ -271,27 +292,40 @@ class TestAndroidInstallerIntegration:
         with patch.object(installer.sdk, "ensure_platform_tools") as mock_platform:
             with patch.object(installer.sdk, "ensure_emulator") as mock_emulator:
                 with patch.object(installer.sdk, "ensure_build_tools") as mock_build:
-                    # Create cmdline tools first (required)
-                    self._create_cmdline_tools()
+                    with patch.object(installer.ndk, "ensure") as mock_ndk:
+                        # Create cmdline tools and mock components first
+                        self._create_cmdline_tools()
 
-                    # Set up return values
-                    mock_platform.return_value = self.sdk_root / "platform-tools"
-                    mock_emulator.return_value = self.sdk_root / "emulator"
-                    mock_build.return_value = self.sdk_root / "build-tools" / "34.0.0"
+                        # Create the directories that would be created
+                        (self.sdk_root / "platforms" / "android-30").mkdir(parents=True)
+                        (
+                            self.sdk_root
+                            / "system-images"
+                            / "android-30"
+                            / "google_atd"
+                            / "arm64-v8a"
+                        ).mkdir(parents=True)
+                        (self.sdk_root / "cmake" / "3.22.1").mkdir(parents=True)
 
-                    installer.ensure(
-                        api=30,
-                        target="google_atd",
-                        arch="arm64-v8a",
-                        ndk=NdkSpec(alias="r26d"),
-                        install_build_tools="34.0.0",
-                        dry_run=False,
-                    )
+                        # Set up return values
+                        mock_platform.return_value = self.sdk_root / "platform-tools"
+                        mock_emulator.return_value = self.sdk_root / "emulator"
+                        mock_build.return_value = self.sdk_root / "build-tools" / "34.0.0"
+                        mock_ndk.return_value = self.sdk_root / "ndk" / "26.3.11579264"
 
-                    # All should be called
-                    mock_platform.assert_called_once()
-                    mock_emulator.assert_called_once()
-                    mock_build.assert_called_once_with("34.0.0")
+                        installer.ensure(
+                            api=30,
+                            target="google_atd",
+                            arch="arm64-v8a",
+                            ndk=NdkSpec(alias="r26d"),
+                            install_build_tools="34.0.0",
+                            dry_run=False,
+                        )
+
+                        # All should be called
+                        mock_platform.assert_called_once()
+                        mock_emulator.assert_called_once()
+                        mock_build.assert_called_once_with("34.0.0")
 
     # Helper methods to create mock components
 
@@ -337,6 +371,14 @@ class TestAndroidInstallerIntegration:
         (ndk_dir / "toolchains").mkdir()
         return ndk_dir
 
+    def _create_cmake(self):
+        """Create mock cmake."""
+        cmake_dir = self.sdk_root / "cmake" / "3.22.1"
+        cmake_dir.mkdir(parents=True)
+        (cmake_dir / "bin" / "cmake").parent.mkdir(parents=True, exist_ok=True)
+        (cmake_dir / "bin" / "cmake").touch()
+        return cmake_dir
+
 
 @pytest.mark.integration
 class TestEndToEndScenarios:
@@ -363,7 +405,7 @@ class TestEndToEndScenarios:
                 api=30,
                 target="google_atd",
                 arch="arm64-v8a",
-                ndk="r26d",
+                ndk=NdkSpec(alias="r26d"),
                 create_avd_name=None,  # No AVD in CI without KVM
                 dry_run=True,
             )
@@ -380,7 +422,7 @@ class TestEndToEndScenarios:
             api=33,
             target="google_apis",
             arch="arm64-v8a",
-            ndk="r26d",
+            ndk=NdkSpec(alias="r26d"),
             create_avd_name="dev_avd",
             install_build_tools="34.0.0",
             dry_run=True,
@@ -398,7 +440,7 @@ class TestEndToEndScenarios:
             api=30,
             target="google_atd",
             arch="x86_64",  # x86_64 for Windows with HAXM
-            ndk="r26d",
+            ndk=NdkSpec(alias="r26d"),
             create_avd_name="win_avd",
             dry_run=True,
         )
