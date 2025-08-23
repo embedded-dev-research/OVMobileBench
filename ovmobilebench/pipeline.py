@@ -93,10 +93,16 @@ class Pipeline:
             artifacts = self._get_install_artifacts(download_dir)
 
         # Create package
+        # Get Android ABI from openvino config if available
+        android_abi = "arm64-v8a"  # default
+        if hasattr(self.config, "openvino") and hasattr(self.config.openvino, "toolchain"):
+            android_abi = getattr(self.config.openvino.toolchain, "abi", "arm64-v8a")
+
         packager = Packager(
             self.config.package,
             self.config.get_model_list(),
             self.artifacts_dir / "packages",
+            android_abi=android_abi,
         )
 
         bundle_name = f"ovbundle_{self.config.project.run_id}"

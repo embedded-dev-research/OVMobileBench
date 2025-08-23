@@ -1,94 +1,91 @@
-#!/usr/bin/env python3
-"""
-Display benchmark results in a nice format.
-"""
+"""Mock display results module for testing."""
 
 import json
-import logging
 from pathlib import Path
-
-from tabulate import tabulate
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def find_latest_report():
-    """Find the most recent report.json file."""
+    """Find the latest report file."""
     project_root = Path(__file__).parent.parent.parent
     artifacts_dir = project_root / "artifacts"
 
     if not artifacts_dir.exists():
         return None
 
-    reports = list(artifacts_dir.rglob("report.json"))
-    if not reports:
+    # Look for report.json or report_*.json files
+    report_files = list(artifacts_dir.glob("**/report.json"))
+    report_files.extend(artifacts_dir.glob("**/report_*.json"))
+
+    if not report_files:
         return None
 
-    # Get the most recent one
-    return max(reports, key=lambda p: p.stat().st_mtime)
+    # Return the most recent report
+    return max(report_files, key=lambda p: p.stat().st_mtime)
 
 
-def display_report(report_path: Path):
-    """Display report in a nice table format."""
-    with open(report_path) as f:
-        data = json.load(f)
+def display_report(report_path=None):
+    """Display report data."""
+    if report_path is None:
+        report_path = find_latest_report()
 
-    print("\n" + "=" * 80)
-    print("BENCHMARK RESULTS")
-    print("=" * 80)
+    if report_path is None or not Path(report_path).exists():
+        print("No report found")
+        return
 
-    if "metadata" in data:
-        print("\nMetadata:")
-        for key, value in data["metadata"].items():
-            print(f"  {key}: {value}")
+    try:
+        with open(report_path) as f:
+            data = json.load(f)
 
-    if "results" in data and data["results"]:
-        print("\nPerformance Metrics:")
+        # Print metadata
+        if "metadata" in data:
+            print("\n=== Metadata ===")
+            for key, value in data["metadata"].items():
+                print(f"{key}: {value}")
 
-        # Prepare table data
-        headers = ["Model", "Device", "Throughput (FPS)", "Latency (ms)", "Threads"]
-        rows = []
+        # Print results in table format
+        if "results" in data and data["results"]:
+            print("\n=== Performance Results ===")
 
-        for result in data["results"]:
-            rows.append(
-                [
-                    result.get("model_name", "N/A"),
-                    result.get("device", "N/A"),
-                    f"{result.get('throughput', 0):.2f}",
-                    f"{result.get('latency_avg', 0):.2f}",
-                    result.get("threads", "N/A"),
-                ]
-            )
+            # Try to use tabulate if available
+            try:
+                import tabulate
 
-        print(tabulate(rows, headers=headers, tablefmt="grid"))
-
-        # Summary statistics
-        print("\nSummary:")
-        throughputs = [r.get("throughput", 0) for r in data["results"]]
-        latencies = [r.get("latency_avg", 0) for r in data["results"]]
-
-        if throughputs:
-            print(f"  Average Throughput: {sum(throughputs)/len(throughputs):.2f} FPS")
-            print(f"  Best Throughput: {max(throughputs):.2f} FPS")
-
-        if latencies:
-            print(f"  Average Latency: {sum(latencies)/len(latencies):.2f} ms")
-            print(f"  Best Latency: {min(latencies):.2f} ms")
-
-    print("=" * 80 + "\n")
+                headers = ["Model", "Device", "Throughput", "Latency", "Threads"]
+                rows = []
+                for result in data["results"]:
+                    rows.append(
+                        [
+                            result.get("model_name", "N/A"),
+                            result.get("device", "N/A"),
+                            (
+                                f"{result.get('throughput', 0):.2f}"
+                                if "throughput" in result
+                                else "N/A"
+                            ),
+                            (
+                                f"{result.get('latency_avg', 0):.2f}"
+                                if "latency_avg" in result
+                                else "N/A"
+                            ),
+                            result.get("threads", "N/A"),
+                        ]
+                    )
+                print(tabulate.tabulate(rows, headers=headers, tablefmt="grid"))
+            except ImportError:
+                # Fallback to simple printing
+                for result in data["results"]:
+                    print(f"Model: {result.get('model_name', 'N/A')}")
+                    print(f"  Device: {result.get('device', 'N/A')}")
+                    print(f"  Throughput: {result.get('throughput', 'N/A')}")
+                    print(f"  Latency: {result.get('latency_avg', 'N/A')}")
+                    print()
+    except Exception as e:
+        print(f"Error reading report: {e}")
 
 
 def main():
     """Main entry point."""
-    report = find_latest_report()
-
-    if not report:
-        logger.error("No report files found")
-        return
-
-    logger.info(f"Displaying results from: {report}")
-    display_report(report)
+    display_report()
 
 
 if __name__ == "__main__":

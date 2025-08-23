@@ -56,22 +56,26 @@ class TestAndroidInstallerIntegration:
 
         installer = AndroidInstaller(self.sdk_root)
 
-        # Mock AVD creation
-        with patch.object(installer.avd, "create") as mock_avd_create:
-            mock_avd_create.return_value = True
+        # Mock license acceptance to avoid actual sdkmanager call
+        with patch.object(installer.sdk, "accept_licenses") as mock_accept:
+            mock_accept.return_value = None
 
-            result = installer.ensure(
-                api=30,
-                target="google_atd",
-                arch="arm64-v8a",
-                ndk=NdkSpec(alias="r26d"),
-                create_avd_name="test_avd",
-                dry_run=False,
-            )
+            # Mock AVD creation
+            with patch.object(installer.avd, "create") as mock_avd_create:
+                mock_avd_create.return_value = True
 
-            assert isinstance(result, dict)
-            assert result["sdk_root"] == self.sdk_root
-            assert result["avd_created"] is True
+                result = installer.ensure(
+                    api=30,
+                    target="google_atd",
+                    arch="arm64-v8a",
+                    ndk=NdkSpec(alias="r26d"),
+                    create_avd_name="test_avd",
+                    dry_run=False,
+                )
+
+                assert isinstance(result, dict)
+                assert result["sdk_root"] == self.sdk_root
+                assert result["avd_created"] is True
 
     @patch("subprocess.run")
     @patch("ovmobilebench.android.installer.detect.detect_host")
@@ -288,44 +292,48 @@ class TestAndroidInstallerIntegration:
 
         installer = AndroidInstaller(self.sdk_root)
 
-        # Mock multiple components needing installation
-        with patch.object(installer.sdk, "ensure_platform_tools") as mock_platform:
-            with patch.object(installer.sdk, "ensure_emulator") as mock_emulator:
-                with patch.object(installer.sdk, "ensure_build_tools") as mock_build:
-                    with patch.object(installer.ndk, "ensure") as mock_ndk:
-                        # Create cmdline tools and mock components first
-                        self._create_cmdline_tools()
+        # Mock license acceptance to avoid actual sdkmanager call
+        with patch.object(installer.sdk, "accept_licenses") as mock_accept:
+            mock_accept.return_value = None
 
-                        # Create the directories that would be created
-                        (self.sdk_root / "platforms" / "android-30").mkdir(parents=True)
-                        (
-                            self.sdk_root
-                            / "system-images"
-                            / "android-30"
-                            / "google_atd"
-                            / "arm64-v8a"
-                        ).mkdir(parents=True)
-                        (self.sdk_root / "cmake" / "3.22.1").mkdir(parents=True)
+            # Mock multiple components needing installation
+            with patch.object(installer.sdk, "ensure_platform_tools") as mock_platform:
+                with patch.object(installer.sdk, "ensure_emulator") as mock_emulator:
+                    with patch.object(installer.sdk, "ensure_build_tools") as mock_build:
+                        with patch.object(installer.ndk, "ensure") as mock_ndk:
+                            # Create cmdline tools and mock components first
+                            self._create_cmdline_tools()
 
-                        # Set up return values
-                        mock_platform.return_value = self.sdk_root / "platform-tools"
-                        mock_emulator.return_value = self.sdk_root / "emulator"
-                        mock_build.return_value = self.sdk_root / "build-tools" / "34.0.0"
-                        mock_ndk.return_value = self.sdk_root / "ndk" / "26.3.11579264"
+                            # Create the directories that would be created
+                            (self.sdk_root / "platforms" / "android-30").mkdir(parents=True)
+                            (
+                                self.sdk_root
+                                / "system-images"
+                                / "android-30"
+                                / "google_atd"
+                                / "arm64-v8a"
+                            ).mkdir(parents=True)
+                            (self.sdk_root / "cmake" / "3.22.1").mkdir(parents=True)
 
-                        installer.ensure(
-                            api=30,
-                            target="google_atd",
-                            arch="arm64-v8a",
-                            ndk=NdkSpec(alias="r26d"),
-                            install_build_tools="34.0.0",
-                            dry_run=False,
-                        )
+                            # Set up return values
+                            mock_platform.return_value = self.sdk_root / "platform-tools"
+                            mock_emulator.return_value = self.sdk_root / "emulator"
+                            mock_build.return_value = self.sdk_root / "build-tools" / "34.0.0"
+                            mock_ndk.return_value = self.sdk_root / "ndk" / "26.3.11579264"
 
-                        # All should be called
-                        mock_platform.assert_called_once()
-                        mock_emulator.assert_called_once()
-                        mock_build.assert_called_once_with("34.0.0")
+                            installer.ensure(
+                                api=30,
+                                target="google_atd",
+                                arch="arm64-v8a",
+                                ndk=NdkSpec(alias="r26d"),
+                                install_build_tools="34.0.0",
+                                dry_run=False,
+                            )
+
+                            # All should be called
+                            mock_platform.assert_called_once()
+                            mock_emulator.assert_called_once()
+                            mock_build.assert_called_once_with("34.0.0")
 
     # Helper methods to create mock components
 

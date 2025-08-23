@@ -1,11 +1,3 @@
 # List of tests to skip temporarily
 # Format: test_file.py::TestClass::test_method or test_file.py::test_function
 # Lines starting with # are comments
-
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_via_download_tar_success
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_via_download_dmg_success
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_get_download_url
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_install_ndk_with_sdkmanager_success
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_resolve_path_with_ndk_home_env
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_resolve_path_with_android_ndk_env
-tests/android/installer/test_ndk_coverage.py::TestNdkResolverCoverage::test_resolve_path_env_invalid

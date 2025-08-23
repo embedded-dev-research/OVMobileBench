@@ -361,9 +361,17 @@ class TestPipeline:
             mock_config.get_model_list.assert_called_once()
 
             # Verify Packager was called with the model list
-            mock_packager_class.assert_called_once_with(
-                mock_config.package, mock_model_list, mock_ensure_dir.return_value / "packages"
+            # Note: Now includes android_abi parameter
+            mock_packager_class.assert_called_once()
+            call_args = mock_packager_class.call_args
+            assert call_args[0] == (
+                mock_config.package,
+                mock_model_list,
+                mock_ensure_dir.return_value / "packages",
             )
+            assert (
+                "android_abi" in call_args[1]
+            )  # Check that android_abi is passed as keyword argument
 
             assert result == Path("/bundle.tar.gz")
 

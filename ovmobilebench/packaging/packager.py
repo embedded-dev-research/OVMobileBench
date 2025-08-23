@@ -20,10 +20,12 @@ class Packager:
         config: PackageConfig,
         models: list[ModelItem],
         output_dir: Path,
+        android_abi: str = "arm64-v8a",
     ):
         self.config = config
         self.models = models
         self.output_dir = ensure_dir(output_dir)
+        self.android_abi = android_abi
 
     def create_bundle(
         self,
@@ -111,21 +113,33 @@ class Packager:
             logger.warning("Android NDK not found, libc++_shared.so will not be included")
             return
 
-        # Find libc++_shared.so for aarch64
+        # Map Android ABI to NDK arch directory name
+        abi_to_arch = {
+            "arm64-v8a": "aarch64-linux-android",
+            "armeabi-v7a": "arm-linux-androideabi",
+            "x86": "i686-linux-android",
+            "x86_64": "x86_64-linux-android",
+        }
+
+        arch_dir = abi_to_arch.get(self.android_abi, "aarch64-linux-android")
+
+        # Find libc++_shared.so for the target architecture
         stl_paths = [
             ndk_root
-            / "toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so",
+            / f"toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/{arch_dir}/libc++_shared.so",
             ndk_root
-            / "toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so",
+            / f"toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/{arch_dir}/libc++_shared.so",
+            ndk_root
+            / f"toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib/{arch_dir}/libc++_shared.so",
         ]
 
         for stl_path in stl_paths:
             if stl_path.exists():
                 shutil.copy2(stl_path, dest_dir / "libc++_shared.so")
-                logger.info("Copied libc++_shared.so from Android NDK")
+                logger.info(f"Copied libc++_shared.so for {self.android_abi} from Android NDK")
                 return
 
-        logger.warning("libc++_shared.so not found in Android NDK")
+        logger.warning(f"libc++_shared.so not found in Android NDK for {self.android_abi}")
 
     def _copy_models(self, models_dir: Path):
         """Copy model files."""

@@ -119,7 +119,7 @@ def get_ndk_filename(version: str) -> str:
     if host.os == "windows":
         return f"android-ndk-{version}-windows.zip"
     elif host.os == "darwin":
-        return f"android-ndk-{version}-darwin.dmg"
+        return f"android-ndk-{version}-darwin.zip"
     else:
         return f"android-ndk-{version}-linux.zip"
 
