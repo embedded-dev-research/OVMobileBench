@@ -73,7 +73,7 @@ repos:
     rev: v2.4.1
     hooks:
       - id: codespell
-        args: ['--skip=*.json,*.yaml,*.yml,*.txt,*.csv,*.lock', '--ignore-words-list=nd,teh,hist,carmel,heplers']
+        args: ['--skip=*.json,*.yaml,*.yml,*.txt,*.csv,*.lock', '--ignore-words-list=nd,teh,hist,carmel,helpers']
 
 ci:
   autofix_prs: false

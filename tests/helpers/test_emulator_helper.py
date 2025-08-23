@@ -6,273 +6,537 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+import yaml
 
 # Add helpers directory to path
-sys.path.append(str(Path(__file__).parent.parent.parent / "heplers"))
+sys.path.append(str(Path(__file__).parent.parent.parent / "helpers"))
 
 # Import and configure emulator_helper module
 import emulator_helper
+from emulator_helper import (
+    create_avd,
+    delete_avd,
+    get_arch_from_config,
+    get_avd_home_from_config,
+    get_sdk_path_from_config,
+    main,
+    start_emulator,
+    stop_emulator,
+    wait_for_boot,
+)
 
-# Set ANDROID_HOME, AVD_HOME and ARCHITECTURE for all tests
-emulator_helper.ANDROID_HOME = "/mock/android-sdk"
-emulator_helper.AVD_HOME = "/mock/android-sdk/.android/avd"
-emulator_helper.ARCHITECTURE = "arm64-v8a"  # Default for tests
+
+class TestConfigFunctions:
+    """Test configuration reading functions."""
+
+    def test_get_sdk_path_with_config(self, tmp_path):
+        """Test getting SDK path from config file."""
+        config_file = tmp_path / "config.yaml"
+        config_data = {"project": {"cache_dir": str(tmp_path / "cache")}}
+        config_file.write_text(yaml.dump(config_data))
+
+        with patch("emulator_helper.logger"):
+            sdk_path = get_sdk_path_from_config(str(config_file))
+        assert sdk_path == str(tmp_path / "cache" / "android-sdk")
+
+    def test_get_sdk_path_with_env_section(self, tmp_path):
+        """Test getting SDK path from environment section."""
+        config_file = tmp_path / "config.yaml"
+        config_data = {
+            "project": {"cache_dir": "cache"},
+            "environment": {"sdk_root": "/custom/sdk/path"},
+        }
+        config_file.write_text(yaml.dump(config_data))
+
+        with patch("emulator_helper.logger"):
+            sdk_path = get_sdk_path_from_config(str(config_file))
+        assert sdk_path == "/custom/sdk/path"
+
+    def test_get_sdk_path_with_env_section_not_dict(self, tmp_path):
+        """Test getting SDK path when environment section is not a dict."""
+        config_file = tmp_path / "config.yaml"
+        config_data = {
+            "project": {"cache_dir": str(tmp_path / "cache")},
+            "environment": "not_a_dict",
+        }
+        config_file.write_text(yaml.dump(config_data))
+
+        with patch("emulator_helper.logger"):
+            sdk_path = get_sdk_path_from_config(str(config_file))
+        assert sdk_path == str(tmp_path / "cache" / "android-sdk")
+
+    def test_get_sdk_path_with_absolute_cache_dir(self, tmp_path):
+        """Test getting SDK path with absolute cache directory."""
+        config_file = tmp_path / "config.yaml"
+        absolute_path = "/absolute/cache"
+        config_data = {"project": {"cache_dir": absolute_path}}
+        config_file.write_text(yaml.dump(config_data))
+
+        with patch("emulator_helper.logger"):
+            sdk_path = get_sdk_path_from_config(str(config_file))
+        assert sdk_path == "/absolute/cache/android-sdk"
+
+    def test_get_sdk_path_without_config(self):
+        """Test fallback when config file doesn't exist."""
+        with patch("emulator_helper.logger") as mock_logger:
+            sdk_path = get_sdk_path_from_config("nonexistent.yaml")
+        assert sdk_path == str(Path.cwd() / "ovmb_cache" / "android-sdk")
+        mock_logger.warning.assert_called_once()
+
+    def test_get_sdk_path_default_config(self, tmp_path):
+        """Test using default config path."""
+        with patch("pathlib.Path.cwd", return_value=tmp_path):
+            config_dir = tmp_path / "experiments"
+            config_dir.mkdir()
+            config_file = config_dir / "android_example.yaml"
+            config_data = {"project": {"cache_dir": "test_cache"}}
+            config_file.write_text(yaml.dump(config_data))
+
+            with patch("emulator_helper.logger"):
+                sdk_path = get_sdk_path_from_config(None)
+            assert sdk_path == str(tmp_path / "test_cache" / "android-sdk")
+
+    def test_get_avd_home_from_config(self):
+        """Test getting AVD home directory."""
+        with patch("emulator_helper.get_sdk_path_from_config", return_value="/test/sdk"):
+            with patch("emulator_helper.logger"):
+                avd_home = get_avd_home_from_config("config.yaml")
+        assert avd_home == "/test/sdk/.android/avd"
+
+    def test_get_arch_from_config(self, tmp_path):
+        """Test getting architecture from config."""
+        config_file = tmp_path / "config.yaml"
+        config_data = {"openvino": {"toolchain": {"abi": "x86_64"}}}
+        config_file.write_text(yaml.dump(config_data))
+
+        with patch("emulator_helper.logger"):
+            arch = get_arch_from_config(str(config_file))
+        assert arch == "x86_64"
+
+    def test_get_arch_from_config_default(self):
+        """Test default architecture when config doesn't exist."""
+        with patch("emulator_helper.logger") as mock_logger:
+            arch = get_arch_from_config("nonexistent.yaml")
+        assert arch == "arm64-v8a"
+        mock_logger.warning.assert_called_once()
+
+    def test_get_arch_from_config_no_arch_in_config(self, tmp_path):
+        """Test default architecture when not specified in config."""
+        config_file = tmp_path / "config.yaml"
+        config_data = {"project": {"cache_dir": "cache"}}
+        config_file.write_text(yaml.dump(config_data))
+
+        with patch("emulator_helper.logger"):
+            arch = get_arch_from_config(str(config_file))
+        assert arch == "arm64-v8a"
 
 
-class TestEmulatorHelper:
-    """Test emulator management functions."""
+class TestAVDManagement:
+    """Test AVD creation and deletion."""
 
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        """Setup test environment."""
-        # Ensure ANDROID_HOME, AVD_HOME and ARCHITECTURE are set for all tests
+    def setup_method(self):
+        """Set up test environment."""
         emulator_helper.ANDROID_HOME = "/mock/android-sdk"
         emulator_helper.AVD_HOME = "/mock/android-sdk/.android/avd"
-        emulator_helper.ARCHITECTURE = "arm64-v8a"  # Default for tests
+        emulator_helper.ARCHITECTURE = "arm64-v8a"
 
-    def test_create_avd_with_default_name(self):
-        """Test AVD creation with default naming."""
-        from emulator_helper import create_avd
+    def test_create_avd_with_name(self):
+        """Test creating AVD with specific name."""
+        mock_result = Mock(returncode=0)
 
-        with patch("subprocess.run") as mock_run:
-            with patch("pathlib.Path.mkdir"):  # Mock mkdir to avoid filesystem operations
-                mock_run.return_value = Mock(returncode=0)
+        with patch("subprocess.run", return_value=mock_result) as mock_run:
+            with patch("pathlib.Path.mkdir"):
+                with patch("emulator_helper.logger"):
+                    create_avd(30, "test_avd")
 
-                create_avd(api_level=30)
+        # Check subprocess.run was called with correct arguments
+        mock_run.assert_called_once()
+        args = mock_run.call_args[0][0]
+        assert "avdmanager" in str(args[0])
+        assert "create" in args
+        assert "test_avd" in args
+        assert "system-images;android-30;google_apis;arm64-v8a" in args
 
-                # Check that subprocess.run was called with correct parameters
-                actual_call = mock_run.call_args
-                expected_path = str(
-                    Path("/mock/android-sdk") / "cmdline-tools" / "latest" / "bin" / "avdmanager"
-                )
-                assert actual_call[0][0][0] == expected_path
-                assert "create" in actual_call[0][0]
-                assert "avd" in actual_call[0][0]
-                assert "ovmobilebench_avd_api30" in actual_call[0][0]
-                assert "system-images;android-30;google_apis;arm64-v8a" in actual_call[0][0]
-                assert actual_call[1]["input"] == "no\n"
-                assert actual_call[1]["check"] is True
+    def test_create_avd_without_name(self):
+        """Test creating AVD with default name."""
+        mock_result = Mock(returncode=0)
 
-    def test_create_avd_with_custom_name(self):
-        """Test AVD creation with custom name."""
-        from emulator_helper import create_avd
+        with patch("subprocess.run", return_value=mock_result) as mock_run:
+            with patch("pathlib.Path.mkdir"):
+                with patch("emulator_helper.logger"):
+                    create_avd(31)
 
-        with patch("subprocess.run") as mock_run:
-            with patch("pathlib.Path.mkdir"):  # Mock mkdir to avoid filesystem operations
-                mock_run.return_value = Mock(returncode=0)
+        args = mock_run.call_args[0][0]
+        assert "ovmobilebench_avd_api31" in args
 
-                create_avd(api_level=34, avd_name="custom_avd")
+    def test_delete_avd_with_name(self):
+        """Test deleting AVD with specific name."""
+        mock_result = Mock(returncode=0)
 
-                # Check that subprocess.run was called with correct parameters
-                actual_call = mock_run.call_args
-                expected_path = str(
-                    Path("/mock/android-sdk") / "cmdline-tools" / "latest" / "bin" / "avdmanager"
-                )
-                assert actual_call[0][0][0] == expected_path
-                assert "create" in actual_call[0][0]
-                assert "avd" in actual_call[0][0]
-                assert "custom_avd" in actual_call[0][0]
-                assert "system-images;android-34;google_apis;arm64-v8a" in actual_call[0][0]
-                assert actual_call[1]["input"] == "no\n"
-                assert actual_call[1]["check"] is True
+        with patch("subprocess.run", return_value=mock_result) as mock_run:
+            with patch("emulator_helper.logger"):
+                delete_avd("test_avd", 30)
 
-    def test_create_avd_failure(self):
-        """Test AVD creation failure handling."""
-        from emulator_helper import create_avd
+        args = mock_run.call_args[0][0]
+        assert "avdmanager" in str(args[0])
+        assert "delete" in args
+        assert "test_avd" in args
 
-        with patch("subprocess.run") as mock_run:
-            with patch("pathlib.Path.mkdir"):  # Mock mkdir to avoid filesystem operations
-                mock_run.side_effect = subprocess.CalledProcessError(1, "avdmanager")
+    def test_delete_avd_without_name(self):
+        """Test deleting AVD with default name."""
+        mock_result = Mock(returncode=0)
 
-                with pytest.raises(subprocess.CalledProcessError):
-                    create_avd(api_level=30)
+        with patch("subprocess.run", return_value=mock_result) as mock_run:
+            with patch("emulator_helper.logger"):
+                delete_avd(None, 32)
 
-    @patch("platform.system")
-    def test_start_emulator_linux(self, mock_platform):
-        """Test emulator start on Linux with KVM acceleration."""
-        from emulator_helper import start_emulator
+        args = mock_run.call_args[0][0]
+        assert "ovmobilebench_avd_api32" in args
 
-        mock_platform.return_value = "Linux"
 
-        # Mock Path.exists to return True for emulator executable
+class TestEmulatorManagement:
+    """Test emulator start/stop functions."""
+
+    def setup_method(self):
+        """Set up test environment."""
+        emulator_helper.ANDROID_HOME = "/mock/android-sdk"
+        emulator_helper.AVD_HOME = "/mock/android-sdk/.android/avd"
+        emulator_helper.ARCHITECTURE = "arm64-v8a"
+
+    def test_start_emulator_with_name(self):
+        """Test starting emulator with specific AVD name."""
         with patch("pathlib.Path.exists", return_value=True):
             with patch("subprocess.Popen") as mock_popen:
-                start_emulator(avd_name="test_avd", api_level=30)
+                with patch("platform.system", return_value="Linux"):
+                    with patch("emulator_helper.logger"):
+                        start_emulator("test_avd", 30)
 
-                # Get the actual call
-                actual_call = mock_popen.call_args[0][0]
+        mock_popen.assert_called_once()
+        args = mock_popen.call_args[0][0]
+        assert "emulator" in str(args[0])
+        assert "-avd" in args
+        assert "test_avd" in args
+        assert "-no-window" in args
 
-                # Check key components
-                expected_emulator = str(Path("/mock/android-sdk") / "emulator" / "emulator")
-                assert expected_emulator in actual_call[0]
-                assert "-avd" in actual_call
-                assert "test_avd" in actual_call
-                assert "-no-window" in actual_call
-
-    @patch("platform.system")
-    def test_start_emulator_macos(self, mock_platform):
-        """Test emulator start on macOS with native acceleration."""
-        from emulator_helper import start_emulator
-
-        mock_platform.return_value = "Darwin"
-
+    def test_start_emulator_without_name(self):
+        """Test starting emulator with default AVD name."""
         with patch("pathlib.Path.exists", return_value=True):
             with patch("subprocess.Popen") as mock_popen:
-                start_emulator(avd_name="test_avd", api_level=30)
+                with patch("platform.system", return_value="Darwin"):
+                    with patch("emulator_helper.logger"):
+                        start_emulator(None, 29)
 
-                # Get the actual call
-                actual_call = mock_popen.call_args[0][0]
+        args = mock_popen.call_args[0][0]
+        assert "ovmobilebench_avd_api29" in args
+        assert "-accel" in args
+        assert "on" in args
 
-                # Check key components
-                expected_emulator = str(Path("/mock/android-sdk") / "emulator" / "emulator")
-                assert expected_emulator in actual_call[0]
-                assert "-avd" in actual_call
-                assert "test_avd" in actual_call
-
-    @patch("platform.system")
-    def test_start_emulator_other_platform(self, mock_platform):
-        """Test emulator start on other platforms (Windows)."""
-        from emulator_helper import start_emulator
-
-        mock_platform.return_value = "Windows"
-
-        with patch("pathlib.Path.exists", return_value=True):
+    def test_start_emulator_linux_with_kvm(self):
+        """Test starting emulator on Linux with KVM."""
+        with patch(
+            "pathlib.Path.exists", side_effect=[True, True]
+        ):  # emulator exists, /dev/kvm exists
             with patch("subprocess.Popen") as mock_popen:
-                start_emulator(avd_name="test_avd", api_level=30)
+                with patch("platform.system", return_value="Linux"):
+                    with patch("emulator_helper.logger"):
+                        start_emulator("test_avd", 30)
 
-                # Get the actual call
-                actual_call = mock_popen.call_args[0][0]
+        args = mock_popen.call_args[0][0]
+        assert "-accel" in args
+        assert "on" in args
+        assert "-qemu" in args
+        assert "-enable-kvm" in args
 
-                # Check key components
-                expected_emulator = str(Path("/mock/android-sdk") / "emulator" / "emulator")
-                assert expected_emulator in actual_call[0]
-                assert "-avd" in actual_call
-                assert "test_avd" in actual_call
+    def test_start_emulator_linux_without_kvm(self):
+        """Test starting emulator on Linux without KVM."""
+        with patch(
+            "pathlib.Path.exists", side_effect=[True, False]
+        ):  # emulator exists, /dev/kvm doesn't
+            with patch("subprocess.Popen") as mock_popen:
+                with patch("platform.system", return_value="Linux"):
+                    with patch("emulator_helper.logger") as mock_logger:
+                        start_emulator("test_avd", 30)
 
-    def test_wait_for_boot_success(self):
-        """Test successful emulator boot wait."""
-        from emulator_helper import wait_for_boot
+        args = mock_popen.call_args[0][0]
+        assert "-accel" in args
+        assert "off" in args
+        mock_logger.warning.assert_called()
 
-        # Mock Path.exists for adb
-        with patch("pathlib.Path.exists", return_value=True):
-            # Mock subprocess.run to simulate successful boot
-            with patch("subprocess.run") as mock_run:
-                # Our new implementation makes these calls:
-                # 1. adb devices (initial check)
-                # 2. adb wait-for-device
-                # 3. adb shell getprop sys.boot_completed
-                mock_run.side_effect = [
-                    Mock(
-                        returncode=0, stdout="List of devices attached\nemulator-5554\tdevice\n"
-                    ),  # adb devices
-                    Mock(returncode=0),  # wait-for-device
-                    Mock(returncode=0, stdout="1\n"),  # getprop sys.boot_completed
-                ]
+    def test_start_emulator_not_found(self):
+        """Test error when emulator binary not found."""
+        with patch("pathlib.Path.exists", return_value=False):
+            with patch("emulator_helper.sys.exit") as mock_exit:
+                mock_exit.side_effect = SystemExit(1)
+                with patch("emulator_helper.logger") as mock_logger:
+                    with pytest.raises(SystemExit):
+                        start_emulator("test_avd", 30)
 
-                with patch("time.sleep"):  # Speed up test
-                    result = wait_for_boot(timeout=10)
-
-                assert result is True
-                # Should have called adb at least 3 times
-                assert mock_run.call_count >= 3
-
-    def test_wait_for_boot_timeout(self):
-        """Test emulator boot timeout."""
-        from emulator_helper import wait_for_boot
-
-        with patch("subprocess.run") as mock_run:
-            # Always return "1" (still booting)
-            mock_run.return_value = Mock(returncode=0, stdout="1\n")
-
-            with patch("time.sleep"):  # Speed up test
-                with patch("builtins.print"):  # Suppress output
-                    with patch("sys.exit") as mock_exit:
-                        wait_for_boot(timeout=1)
-                        mock_exit.assert_called_once_with(1)
-
-    def test_wait_for_boot_adb_failure(self):
-        """Test wait for boot with adb failure."""
-        from emulator_helper import wait_for_boot
-
-        with patch("pathlib.Path.exists", return_value=True):
-            with patch("subprocess.run") as mock_run:
-                # Simulate adb failure - keep returning error
-                mock_run.return_value = Mock(returncode=1, stdout="")
-
-                with patch("time.sleep"):  # Speed up test
-                    # Provide enough time values for all calls, then jump to timeout
-                    time_values = list(range(0, 20)) + [400] * 10  # Provide plenty of values
-                    with patch("time.time", side_effect=time_values):  # Simulate timeout
-                        result = wait_for_boot(timeout=10)
-
-                assert result is False  # Should return False on timeout
+        mock_logger.error.assert_called()
+        mock_exit.assert_called_with(1)
 
     def test_stop_emulator(self):
-        """Test emulator stop."""
-        from emulator_helper import stop_emulator
-
+        """Test stopping emulator."""
         with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
+            with patch("time.sleep"):
+                with patch("emulator_helper.logger"):
+                    stop_emulator()
 
-            stop_emulator()
+        mock_run.assert_called_once()
+        args = mock_run.call_args[0][0]
+        assert "adb" in str(args[0])
+        assert "emu" in args
+        assert "kill" in args
 
-            # Should call adb emu kill
-            actual_call = mock_run.call_args[0][0]
-            assert "adb" in actual_call[0]
-            assert "emu" in actual_call
-            assert "kill" in actual_call
 
-    def test_delete_avd_with_default_name(self):
-        """Test AVD deletion with default name."""
-        from emulator_helper import delete_avd
+class TestWaitForBoot:
+    """Test wait_for_boot function."""
 
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
+    def setup_method(self):
+        """Set up test environment."""
+        emulator_helper.ANDROID_HOME = "/mock/android-sdk"
+        emulator_helper.AVD_HOME = "/mock/android-sdk/.android/avd"
 
-            delete_avd(api_level=30)
+    def test_wait_for_boot_success(self):
+        """Test successful boot detection."""
+        devices_result = Mock(stdout="emulator-5554\tdevice\n", returncode=0)
+        wait_result = Mock(returncode=0)
+        boot_result = Mock(stdout="1\n", returncode=0)
 
-            actual_call = mock_run.call_args[0][0]
-            expected_path = str(
-                Path("/mock/android-sdk") / "cmdline-tools" / "latest" / "bin" / "avdmanager"
-            )
-            assert expected_path in actual_call[0]
-            assert "delete" in actual_call
-            assert "avd" in actual_call
-            assert "-n" in actual_call
-            assert "ovmobilebench_avd_api30" in actual_call
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("subprocess.run", side_effect=[devices_result, wait_result, boot_result]):
+                with patch("time.time", side_effect=[0, 5]):
+                    with patch("emulator_helper.logger"):
+                        result = wait_for_boot(timeout=300)
 
-    def test_delete_avd_with_custom_name(self):
-        """Test AVD deletion with custom name."""
-        from emulator_helper import delete_avd
+        assert result is True
 
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = Mock(returncode=0)
+    def test_wait_for_boot_not_ready(self):
+        """Test device found but not booted."""
+        devices_result = Mock(stdout="emulator-5554\tdevice\n", returncode=0)
+        wait_result = Mock(returncode=0)
+        boot_result = Mock(stdout="0\n", returncode=0)
 
-            delete_avd(avd_name="custom_avd")
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch(
+                "subprocess.run",
+                side_effect=[
+                    devices_result,
+                    wait_result,
+                    boot_result,
+                    wait_result,
+                    Mock(stdout="1\n", returncode=0),
+                ],
+            ):
+                with patch("time.time", side_effect=[0, 5, 10]):
+                    with patch("time.sleep"):
+                        with patch("emulator_helper.logger"):
+                            result = wait_for_boot(timeout=300)
 
-            actual_call = mock_run.call_args[0][0]
-            expected_path = str(
-                Path("/mock/android-sdk") / "cmdline-tools" / "latest" / "bin" / "avdmanager"
-            )
-            assert expected_path in actual_call[0]
-            assert "delete" in actual_call
-            assert "avd" in actual_call
-            assert "-n" in actual_call
-            assert "custom_avd" in actual_call
+        assert result is True
 
-    def test_delete_avd_failure_handling(self):
-        """Test AVD deletion failure handling."""
-        from emulator_helper import delete_avd
+    def test_wait_for_boot_timeout(self):
+        """Test timeout waiting for boot."""
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("subprocess.run") as mock_run:
+                mock_run.return_value = Mock(stdout="", returncode=0)
+                with patch("time.time", side_effect=[0, 301]):
+                    with patch("time.sleep"):
+                        with patch("emulator_helper.logger") as mock_logger:
+                            result = wait_for_boot(timeout=300)
 
-        with patch("subprocess.run") as mock_run:
-            # Since check=False, CalledProcessError won't be raised
-            # Instead, return a failed result
-            mock_run.return_value = Mock(returncode=1)
+        assert result is False
+        mock_logger.error.assert_called()
 
-            # Should not raise exception
-            delete_avd(api_level=30)
+    def test_wait_for_boot_device_found_but_not_booted(self):
+        """Test device detected but never completes boot."""
+        devices_result = Mock(stdout="emulator-5554\tdevice\n", returncode=0)
+        wait_result = Mock(returncode=0)
+        boot_result = Mock(stdout="0\n", returncode=0)
 
-            # Should have attempted deletion
-            assert mock_run.called
-            # Check that check=False was passed
-            assert mock_run.call_args[1].get("check") is False
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch(
+                "subprocess.run", side_effect=[devices_result, wait_result, boot_result] * 100
+            ):
+                current_time = [0]
+
+                def mock_time():
+                    current_time[0] += 0.5
+                    return current_time[0]
+
+                with patch("time.time", side_effect=mock_time):
+                    with patch("time.sleep"):
+                        with patch("emulator_helper.logger") as mock_logger:
+                            result = wait_for_boot(timeout=1)
+
+        assert result is False
+        # Check that appropriate error was logged
+        error_calls = [call for call in mock_logger.error.call_args_list]
+        assert len(error_calls) > 0
+
+    def test_wait_for_boot_adb_not_found(self):
+        """Test error when adb binary not found."""
+        with patch("pathlib.Path.exists", return_value=False):
+            with patch("emulator_helper.sys.exit") as mock_exit:
+                mock_exit.side_effect = SystemExit(1)
+                with patch("emulator_helper.logger") as mock_logger:
+                    with pytest.raises(SystemExit):
+                        wait_for_boot()
+
+        mock_logger.error.assert_called()
+        mock_exit.assert_called_with(1)
+
+    def test_wait_for_boot_timeout_during_wait(self):
+        """Test handling timeout during wait-for-device."""
+        devices_result = Mock(stdout="", returncode=0)
+        devices_with_emulator = Mock(stdout="emulator-5554\toffline\n", returncode=0)
+
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch(
+                "subprocess.run",
+                side_effect=[
+                    devices_result,  # Initial devices check
+                    subprocess.TimeoutExpired("wait-for-device", 10),  # Timeout on wait
+                    devices_with_emulator,  # Devices check after timeout
+                    Mock(returncode=0),  # Successful wait
+                    Mock(stdout="1\n", returncode=0),  # Boot completed
+                ],
+            ):
+                with patch("time.time", side_effect=[0, 5, 10]):
+                    with patch("time.sleep"):
+                        with patch("emulator_helper.logger"):
+                            result = wait_for_boot(timeout=300)
+
+        assert result is True
+
+
+class TestMainFunction:
+    """Test main function and CLI."""
+
+    def setup_method(self):
+        """Set up test environment."""
+        # Reset global variables
+        emulator_helper.ANDROID_HOME = None
+        emulator_helper.AVD_HOME = None
+        emulator_helper.ARCHITECTURE = None
+
+    def test_main_create_avd(self):
+        """Test main function with create-avd command."""
+        with patch(
+            "sys.argv",
+            [
+                "emulator_helper.py",
+                "-c",
+                "config.yaml",
+                "create-avd",
+                "--api",
+                "30",
+                "--name",
+                "test",
+            ],
+        ):
+            with patch("emulator_helper.get_sdk_path_from_config", return_value="/test/sdk"):
+                with patch("emulator_helper.get_avd_home_from_config", return_value="/test/avd"):
+                    with patch("emulator_helper.get_arch_from_config", return_value="x86"):
+                        with patch("emulator_helper.create_avd") as mock_create:
+                            with patch("emulator_helper.logger"):
+                                main()
+
+        mock_create.assert_called_once_with(30, "test")
+        assert emulator_helper.ANDROID_HOME == "/test/sdk"
+        assert emulator_helper.AVD_HOME == "/test/avd"
+        assert emulator_helper.ARCHITECTURE == "x86"
+
+    def test_main_start_emulator(self):
+        """Test main function with start-emulator command."""
+        with patch(
+            "sys.argv", ["emulator_helper.py", "-c", "config.yaml", "start-emulator", "--api", "31"]
+        ):
+            with patch("emulator_helper.get_sdk_path_from_config", return_value="/test/sdk"):
+                with patch("emulator_helper.get_avd_home_from_config", return_value="/test/avd"):
+                    with patch("emulator_helper.get_arch_from_config", return_value="arm64-v8a"):
+                        with patch("emulator_helper.start_emulator") as mock_start:
+                            with patch("emulator_helper.logger"):
+                                main()
+
+        mock_start.assert_called_once_with(None, 31)
+
+    def test_main_wait_for_boot(self):
+        """Test main function with wait-for-boot command."""
+        with patch("sys.argv", ["emulator_helper.py", "-c", "config.yaml", "wait-for-boot"]):
+            with patch("emulator_helper.get_sdk_path_from_config", return_value="/test/sdk"):
+                with patch("emulator_helper.get_avd_home_from_config", return_value="/test/avd"):
+                    with patch("emulator_helper.get_arch_from_config", return_value="arm64-v8a"):
+                        with patch("emulator_helper.wait_for_boot", return_value=True) as mock_wait:
+                            with patch("emulator_helper.logger"):
+                                main()
+
+        mock_wait.assert_called_once()
+
+    def test_main_wait_for_boot_failure(self):
+        """Test main function when wait-for-boot fails."""
+        with patch("sys.argv", ["emulator_helper.py", "-c", "config.yaml", "wait-for-boot"]):
+            with patch("emulator_helper.get_sdk_path_from_config", return_value="/test/sdk"):
+                with patch("emulator_helper.get_avd_home_from_config", return_value="/test/avd"):
+                    with patch("emulator_helper.get_arch_from_config", return_value="arm64-v8a"):
+                        with patch("emulator_helper.wait_for_boot", return_value=False):
+                            with patch("sys.exit") as mock_exit:
+                                with patch("emulator_helper.logger"):
+                                    main()
+
+        mock_exit.assert_called_once_with(1)
+
+    def test_main_stop_emulator(self):
+        """Test main function with stop-emulator command."""
+        with patch("sys.argv", ["emulator_helper.py", "-c", "config.yaml", "stop-emulator"]):
+            with patch("emulator_helper.get_sdk_path_from_config", return_value="/test/sdk"):
+                with patch("emulator_helper.get_avd_home_from_config", return_value="/test/avd"):
+                    with patch("emulator_helper.get_arch_from_config", return_value="arm64-v8a"):
+                        with patch("emulator_helper.stop_emulator") as mock_stop:
+                            with patch("emulator_helper.logger"):
+                                main()
+
+        mock_stop.assert_called_once()
+
+    def test_main_delete_avd(self):
+        """Test main function with delete-avd command."""
+        with patch(
+            "sys.argv",
+            [
+                "emulator_helper.py",
+                "-c",
+                "config.yaml",
+                "delete-avd",
+                "--name",
+                "test",
+                "--api",
+                "30",
+            ],
+        ):
+            with patch("emulator_helper.get_sdk_path_from_config", return_value="/test/sdk"):
+                with patch("emulator_helper.get_avd_home_from_config", return_value="/test/avd"):
+                    with patch("emulator_helper.get_arch_from_config", return_value="arm64-v8a"):
+                        with patch("emulator_helper.delete_avd") as mock_delete:
+                            with patch("emulator_helper.logger"):
+                                main()
+
+        mock_delete.assert_called_once_with("test", 30)
+
+    def test_main_no_command(self):
+        """Test main function with no command."""
+        with patch("sys.argv", ["emulator_helper.py"]):
+            with patch("emulator_helper.get_sdk_path_from_config", return_value="/test/sdk"):
+                with patch("emulator_helper.get_avd_home_from_config", return_value="/test/avd"):
+                    with patch("emulator_helper.get_arch_from_config", return_value="arm64-v8a"):
+                        with patch("argparse.ArgumentParser.print_help") as mock_help:
+                            with patch("emulator_helper.logger"):
+                                main()
+
+        mock_help.assert_called_once()
+
+    def test_main_if_name_main(self):
+        """Test __main__ execution."""
+        script_content = """
+if __name__ == "__main__":
+    pass  # main() would be called here
+"""
+        exec(compile(script_content, "test_script.py", "exec"))

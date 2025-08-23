@@ -17,9 +17,9 @@ export PATH="$JAVA_HOME/bin:$PATH"
 python -m ovmobilebench.cli setup-android --api 30 --create-avd --verbose
 
 # 4. Run E2E tests
-python heplers/emulator_helper.py -c experiments/android_example.yaml start-emulator &
-python heplers/emulator_helper.py -c experiments/android_example.yaml wait-for-boot
-python heplers/model_helper.py -c experiments/android_example.yaml download-resnet50
+python helpers/emulator_helper.py -c experiments/android_example.yaml start-emulator &
+python helpers/emulator_helper.py -c experiments/android_example.yaml wait-for-boot
+python helpers/model_helper.py -c experiments/android_example.yaml download-resnet50
 python -m ovmobilebench.cli all -c experiments/android_example.yaml --verbose
 ```
 
@@ -41,14 +41,14 @@ Android emulator management. All commands accept `-c/--config` parameter to spec
 
 ```bash
 # Using default config (experiments/android_example.yaml)
-python heplers/emulator_helper.py start-emulator
-python heplers/emulator_helper.py wait-for-boot
-python heplers/emulator_helper.py stop-emulator
+python helpers/emulator_helper.py start-emulator
+python helpers/emulator_helper.py wait-for-boot
+python helpers/emulator_helper.py stop-emulator
 
 # Using custom config
-python heplers/emulator_helper.py -c my_config.yaml start-emulator
-python heplers/emulator_helper.py -c my_config.yaml wait-for-boot
-python heplers/emulator_helper.py -c my_config.yaml stop-emulator
+python helpers/emulator_helper.py -c my_config.yaml start-emulator
+python helpers/emulator_helper.py -c my_config.yaml wait-for-boot
+python helpers/emulator_helper.py -c my_config.yaml stop-emulator
 ```
 
 ### `test_model_helper.py`
@@ -63,10 +63,10 @@ Model management for testing. Accepts `-c/--config` parameter to specify config 
 
 ```bash
 # Using default config
-python heplers/model_helper.py download-resnet50
+python helpers/model_helper.py download-resnet50
 
 # Using custom config
-python heplers/model_helper.py -c my_config.yaml download-resnet50
+python helpers/model_helper.py -c my_config.yaml download-resnet50
 ```
 
 ### `test_validate_results.py`
@@ -140,17 +140,17 @@ python -m ovmobilebench.cli setup-android --api 30 --create-avd --verbose
 
 # Run tests
 CONFIG=experiments/android_example.yaml
-python heplers/emulator_helper.py -c $CONFIG start-emulator &
-python heplers/emulator_helper.py -c $CONFIG wait-for-boot
-python heplers/model_helper.py -c $CONFIG download-resnet50
+python helpers/emulator_helper.py -c $CONFIG start-emulator &
+python helpers/emulator_helper.py -c $CONFIG wait-for-boot
+python helpers/model_helper.py -c $CONFIG download-resnet50
 
 # Run complete pipeline (builds OpenVINO if needed)
 python -m ovmobilebench.cli all -c $CONFIG --verbose
 
 # Validate and cleanup
-python heplers/validate_results.py
-python heplers/display_results.py
-python heplers/emulator_helper.py -c $CONFIG stop-emulator
+python helpers/validate_results.py
+python helpers/display_results.py
+python helpers/emulator_helper.py -c $CONFIG stop-emulator
 ```
 
 ### Manual Steps

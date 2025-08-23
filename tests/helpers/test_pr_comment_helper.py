@@ -10,7 +10,7 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-sys.path.append(str(Path(__file__).parent.parent.parent / "heplers"))
+sys.path.append(str(Path(__file__).parent.parent.parent / "helpers"))
 
 from pr_comment import (
     find_latest_report,

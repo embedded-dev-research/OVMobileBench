@@ -54,7 +54,7 @@ test:
 
 test-e2e:
 	# E2E tests moved to helpers directory as utility scripts
-	@echo "E2E scripts are now in heplers/ directory"
+	@echo "E2E scripts are now in helpers/ directory"
 
 clean:
 	rm -rf artifacts/

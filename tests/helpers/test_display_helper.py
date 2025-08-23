@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-sys.path.append(str(Path(__file__).parent.parent.parent / "heplers"))
+sys.path.append(str(Path(__file__).parent.parent.parent / "helpers"))
 
 # Import the display functions
 from display_results import (
@@ -18,6 +18,14 @@ from display_results import (
     find_latest_report,
     main,
 )
+
+# Try to import tabulate for testing
+try:
+    import tabulate  # noqa: F401
+
+    HAS_TABULATE = True
+except ImportError:
+    HAS_TABULATE = False
 
 
 class TestDisplayHelper:
@@ -402,5 +410,57 @@ class TestDisplayIntegration:
                 print_output = str(mock_print.call_args_list)
                 # Check that the edge case values were processed without errors
                 assert "edge_case_model" in print_output or "CPU" in print_output
+        finally:
+            report_path.unlink()
+
+    def test_display_report_without_tabulate(self):
+        """Test displaying report when tabulate is not available (fallback to simple printing)."""
+        report_data = {
+            "results": [
+                {
+                    "model_name": "resnet50",
+                    "device": "CPU",
+                    "throughput": 25.5,
+                    "latency_avg": 39.2,
+                    "threads": 4,
+                },
+                {
+                    "model_name": "mobilenet",
+                    "device": "GPU",
+                    "throughput": 45.8,
+                    "latency_avg": 21.8,
+                    "threads": 2,
+                },
+            ]
+        }
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(report_data, f)
+            report_path = Path(f.name)
+
+        try:
+            # Mock the tabulate import to raise ImportError
+            import builtins
+
+            original_import = builtins.__import__
+
+            def mock_import(name, *args):
+                if name == "tabulate":
+                    raise ImportError("No module named 'tabulate'")
+                return original_import(name, *args)
+
+            with patch("builtins.__import__", side_effect=mock_import):
+                with patch("builtins.print") as mock_print:
+                    display_report(report_path)
+
+                    # Check that fallback printing was used
+                    print_calls = [str(call) for call in mock_print.call_args_list]
+                    # Should print model names in fallback format
+                    assert any("Model: resnet50" in call for call in print_calls)
+                    assert any("Device: CPU" in call for call in print_calls)
+                    assert any("Throughput: 25.5" in call for call in print_calls)
+                    assert any("Latency: 39.2" in call for call in print_calls)
+                    assert any("Model: mobilenet" in call for call in print_calls)
+                    assert any("Device: GPU" in call for call in print_calls)
         finally:
             report_path.unlink()

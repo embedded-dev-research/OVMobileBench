@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-sys.path.append(str(Path(__file__).parent.parent.parent / "heplers"))
+sys.path.append(str(Path(__file__).parent.parent.parent / "helpers"))
 
 from validate_results import (
     find_report_files,
