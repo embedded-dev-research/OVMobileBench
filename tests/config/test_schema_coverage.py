@@ -19,3 +19,15 @@ def test_device_type_to_kind_migration():
     device3 = DeviceConfig(kind="android", type="linux_ssh", serials=["test"])
     assert device3.kind == "android"
     assert device3.type == "linux_ssh"
+
+
+def test_openvino_config_properties():
+    """Test OpenVINOConfig properties."""
+    from ovmobilebench.config.schema import OpenVINOConfig
+
+    config = OpenVINOConfig(mode="build", source_dir="/test/source", commit="abc123")
+
+    # Test that properties work
+    assert config.mode == "build"
+    assert config.source_dir == "/test/source"
+    assert config.commit == "abc123"

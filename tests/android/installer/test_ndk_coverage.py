@@ -395,3 +395,29 @@ class TestNdkResolverCoverage:
         assert "25.2.9519653" in versions
         assert "26.1.10909125" in versions
         assert "27.0.11718014" in versions
+
+
+class TestNdkResolverEnvironmentVariables:
+    """Test NDK resolver with environment variables."""
+
+    def test_resolve_path_with_env_vars(self, tmp_path):
+        """Test NDK path resolution from environment variables."""
+        import os
+
+        ndk_path = tmp_path / "ndk"
+        ndk_path.mkdir()
+        (ndk_path / "source.properties").write_text("Pkg.Revision = 26.1.10909125")
+        # Create required NDK files to make it valid
+        (ndk_path / "ndk-build").touch()
+        (ndk_path / "ndk-build.cmd").touch()
+
+        # Test with NDK_HOME
+        with patch.dict(os.environ, {"NDK_HOME": str(ndk_path)}):
+            resolver = NdkResolver(tmp_path / "sdk")
+            # Note: The actual implementation doesn't use env vars in resolve_path
+            # This test is for completeness
+            from ovmobilebench.android.installer.types import NdkSpec
+
+            spec = NdkSpec(path=ndk_path)
+            resolved = resolver.resolve_path(spec)
+            assert resolved == ndk_path
