@@ -104,7 +104,9 @@ class Pipeline:
             logger.info("[DRY RUN] Would deploy to devices")
             return
 
-        bundle_path = self.artifacts_dir / "packages" / f"ovbundle_{self.config.project.run_id}"
+        bundle_path = (
+            self.artifacts_dir / "packages" / f"ovbundle_{self.config.project.run_id}.tar.gz"
+        )
 
         for serial in self.config.device.serials:
             logger.info(f"Deploying to device: {serial}")

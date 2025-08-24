@@ -286,8 +286,8 @@ class TestOpenVINOBuilder:
             artifacts = builder.get_artifacts()
 
             expected = {
-                "benchmark_app": Path("/build/dir/bin/arm64-v8a/benchmark_app"),
-                "libs": Path("/build/dir/bin/arm64-v8a"),
+                "benchmark_app": Path("/build/dir/bin/aarch64/Release/benchmark_app"),
+                "libs": Path("/build/dir/bin/aarch64/Release"),
             }
             assert artifacts == expected
 

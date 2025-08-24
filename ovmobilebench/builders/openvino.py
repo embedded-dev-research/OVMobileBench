@@ -1,6 +1,7 @@
 """OpenVINO build system."""
 
 import logging
+import os
 from pathlib import Path
 
 from ovmobilebench.config.schema import OpenVINOConfig
@@ -63,6 +64,7 @@ class OpenVINOBuilder:
             str(self.build_dir),
             "-GNinja",
             f"-DCMAKE_BUILD_TYPE={self.config.build_type}",
+            f"-DOUTPUT_ROOT={os.getcwd()}/{self.build_dir}",
         ]
 
         # Android-specific configuration
@@ -122,8 +124,8 @@ class OpenVINOBuilder:
     def get_artifacts(self) -> dict[str, Path]:
         """Get paths to build artifacts."""
         artifacts = {
-            "benchmark_app": self.build_dir / "bin" / "arm64-v8a" / "benchmark_app",
-            "libs": self.build_dir / "bin" / "arm64-v8a",
+            "benchmark_app": self.build_dir / "bin" / "aarch64" / "Release" / "benchmark_app",
+            "libs": self.build_dir / "bin" / "aarch64" / "Release",
         }
 
         # Verify artifacts exist
