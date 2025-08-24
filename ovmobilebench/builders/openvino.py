@@ -1,6 +1,7 @@
 """OpenVINO build system."""
 
 import logging
+import os
 from pathlib import Path
 
 from ovmobilebench.config.schema import OpenVINOConfig
@@ -114,6 +115,7 @@ class OpenVINOBuilder:
             "-B",
             str(self.build_dir),
             f"-DOUTPUT_ROOT={self.build_dir}",  # Set output root for proper artifact layout
+            f"-DCMAKE_BUILD_TYPE={self.config.build_type}",
         ]
 
         # Enable ccache if available and not already set in options
