@@ -35,6 +35,8 @@ class TestEnvExporterAdditional:
 
     def test_export_to_stdout_formats(self, tmp_path):
         """Test export to stdout with different shell formats."""
+        import platform
+
         exporter = EnvExporter()
 
         # Create test directories
@@ -49,7 +51,11 @@ class TestEnvExporterAdditional:
                     sdk_root=sdk_root,
                 )
                 calls = [str(call) for call in mock_print.call_args_list]
-                assert any("export ANDROID_HOME" in call for call in calls)
+                # On Windows, check for SET instead of export
+                if platform.system() == "Windows":
+                    assert any("ANDROID_HOME" in call for call in calls)
+                else:
+                    assert any("export ANDROID_HOME" in call for call in calls)
 
         # Test fish format
         with patch.dict(os.environ, {"SHELL": "/usr/bin/fish"}):

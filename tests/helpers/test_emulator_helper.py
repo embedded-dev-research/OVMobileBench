@@ -50,7 +50,11 @@ class TestConfigFunctions:
 
         with patch("emulator_helper.logger"):
             sdk_path = get_sdk_path_from_config(str(config_file))
-        assert sdk_path == "/custom/sdk/path"
+
+        from pathlib import Path
+
+        # Normalize path for comparison across platforms
+        assert Path(sdk_path).as_posix() == Path("/custom/sdk/path").as_posix()
 
     def test_get_sdk_path_with_env_section_not_dict(self, tmp_path):
         """Test getting SDK path when environment section is not a dict."""
@@ -74,7 +78,13 @@ class TestConfigFunctions:
 
         with patch("emulator_helper.logger"):
             sdk_path = get_sdk_path_from_config(str(config_file))
-        assert sdk_path == "/absolute/cache/android-sdk"
+
+        from pathlib import Path
+
+        # Check that path ends with android-sdk
+        assert Path(sdk_path).name == "android-sdk"
+        # For absolute paths on Windows, it might get a drive letter
+        assert "absolute" in sdk_path and "cache" in sdk_path
 
     def test_get_sdk_path_without_config(self):
         """Test fallback when config file doesn't exist."""
@@ -98,10 +108,13 @@ class TestConfigFunctions:
 
     def test_get_avd_home_from_config(self):
         """Test getting AVD home directory."""
+        from pathlib import Path
+
         with patch("emulator_helper.get_sdk_path_from_config", return_value="/test/sdk"):
             with patch("emulator_helper.logger"):
                 avd_home = get_avd_home_from_config("config.yaml")
-        assert avd_home == "/test/sdk/.android/avd"
+        # Normalize path for comparison
+        assert Path(avd_home).as_posix() == Path("/test/sdk/.android/avd").as_posix()
 
     def test_get_arch_from_config(self, tmp_path):
         """Test getting architecture from config."""

@@ -12,6 +12,12 @@ class TestInstallerCoreAdditional:
 
     def test_check_permissions_failure_with_details(self, tmp_path):
         """Test permission check failure with specific error."""
+        import platform
+
+        # Skip on Windows as chmod doesn't work the same way
+        if platform.system() == "Windows":
+            pytest.skip("Permission test not applicable on Windows")
+
         sdk_root = tmp_path / "android-sdk"
         sdk_root.mkdir()
 

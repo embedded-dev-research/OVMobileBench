@@ -198,12 +198,15 @@ def cleanup_invalid_models(config_file=None):
             try:
                 with open(file_path, "rb") as f:
                     header = f.read(100)
-                    if b"<!DOCTYPE html" in header or b"<html" in header:
-                        logger.info(
-                            f"  Removing invalid file (HTML): {file_path.relative_to(cache_dir)}"
-                        )
-                        file_path.unlink()
-                        cleaned += 1
+                    is_html = b"<!DOCTYPE html" in header or b"<html" in header
+
+                # Close file before attempting to delete on Windows
+                if is_html:
+                    logger.info(
+                        f"  Removing invalid file (HTML): {file_path.relative_to(cache_dir)}"
+                    )
+                    file_path.unlink()
+                    cleaned += 1
             except Exception as e:
                 logger.warning(f"  Could not check file {file_path}: {e}")
 

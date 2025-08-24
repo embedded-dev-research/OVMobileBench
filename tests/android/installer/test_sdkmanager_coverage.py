@@ -38,12 +38,20 @@ class TestSdkManagerAdditional:
 
     def test_run_sdkmanager_with_input(self, tmp_path):
         """Test running sdkmanager with input text."""
+        import platform
+
         # Create fake sdkmanager
         sdkmanager_dir = tmp_path / "cmdline-tools" / "latest" / "bin"
         sdkmanager_dir.mkdir(parents=True)
-        sdkmanager = sdkmanager_dir / "sdkmanager"
+
+        # Use platform-specific executable name
+        if platform.system() == "Windows":
+            sdkmanager = sdkmanager_dir / "sdkmanager.bat"
+        else:
+            sdkmanager = sdkmanager_dir / "sdkmanager"
         sdkmanager.touch()
-        sdkmanager.chmod(0o755)
+        if platform.system() != "Windows":
+            sdkmanager.chmod(0o755)
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
@@ -58,12 +66,20 @@ class TestSdkManagerAdditional:
 
     def test_accept_licenses(self, tmp_path):
         """Test accepting SDK licenses."""
+        import platform
+
         # Create fake sdkmanager
         sdkmanager_dir = tmp_path / "cmdline-tools" / "latest" / "bin"
         sdkmanager_dir.mkdir(parents=True)
-        sdkmanager = sdkmanager_dir / "sdkmanager"
+
+        # Use platform-specific executable name
+        if platform.system() == "Windows":
+            sdkmanager = sdkmanager_dir / "sdkmanager.bat"
+        else:
+            sdkmanager = sdkmanager_dir / "sdkmanager"
         sdkmanager.touch()
-        sdkmanager.chmod(0o755)
+        if platform.system() != "Windows":
+            sdkmanager.chmod(0o755)
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout="", stderr="")

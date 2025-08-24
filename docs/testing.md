@@ -369,7 +369,7 @@ Configuration in `.github/workflows/test.yml`:
     pytest tests/ --cov=ovmobilebench --cov-report=xml
 
 - name: Upload coverage
-  uses: codecov/codecov-action@v3
+  uses: codecov/codecov-action@v5
   with:
     file: ./coverage.xml
 ```
