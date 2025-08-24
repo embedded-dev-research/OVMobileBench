@@ -301,7 +301,7 @@ class TestBenchmarkRunner:
             # Check that error was logged
             mock_logger.error.assert_called_once()
             error_call = mock_logger.error.call_args[0][0]
-            assert "Benchmark failed: benchmark failed" in error_call
+            assert "Benchmark failed:\n\nbenchmark failed" in error_call
 
     def test_run_matrix_logs_progress(self, mock_device, run_config):
         """Test that run_matrix logs progress information."""

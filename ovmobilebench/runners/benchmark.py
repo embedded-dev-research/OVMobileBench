@@ -49,7 +49,7 @@ class BenchmarkRunner:
         }
 
         if rc != 0:
-            logger.error(f"Benchmark failed: {stderr}")
+            logger.error(f"Benchmark failed:\n{stdout}\n{stderr}")
 
         return result
 
