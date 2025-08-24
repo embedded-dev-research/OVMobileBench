@@ -96,8 +96,10 @@ class TestPackager:
                         mock_create_archive.assert_called_once()
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
+    @patch("shutil.copy2")
+    @patch("pathlib.Path.chmod")
     def test_create_bundle_custom_name(
-        self, mock_ensure_dir, package_config, single_model, artifacts
+        self, mock_chmod, mock_copy2, mock_ensure_dir, package_config, single_model, artifacts
     ):
         """Test bundle creation with custom name."""
         mock_ensure_dir.side_effect = lambda x: x
@@ -137,7 +139,11 @@ class TestPackager:
                         assert result == Path("/output/ovbundle.tar.gz")
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
-    def test_create_bundle_missing_libs(self, mock_ensure_dir, package_config, single_model):
+    @patch("shutil.copy2")
+    @patch("pathlib.Path.chmod")
+    def test_create_bundle_missing_libs(
+        self, mock_chmod, mock_copy2, mock_ensure_dir, package_config, single_model
+    ):
         """Test bundle creation without libs in artifacts."""
         mock_ensure_dir.side_effect = lambda x: x
         artifacts = {"benchmark_app": Path("/build/bin/benchmark_app")}  # Missing libs
@@ -152,13 +158,16 @@ class TestPackager:
 
                         packager.create_bundle(artifacts)
 
-                        # _copy_libs should still be called but won't copy anything
-                        mock_copy_libs.assert_called_once()
+                        # _copy_libs should NOT be called since libs is missing from artifacts
+                        mock_copy_libs.assert_not_called()
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
     @patch("ovmobilebench.packaging.packager.shutil.copy2")
     @patch("pathlib.Path.exists")
-    def test_create_bundle_with_extra_files(self, mock_exists, mock_copy2, mock_ensure_dir, models):
+    @patch("pathlib.Path.chmod")
+    def test_create_bundle_with_extra_files(
+        self, mock_chmod, mock_exists, mock_copy2, mock_ensure_dir, models
+    ):
         """Test bundle creation with extra files."""
         mock_ensure_dir.side_effect = lambda x: x
         mock_exists.return_value = True
@@ -207,56 +216,65 @@ class TestPackager:
                         result = packager.create_bundle(artifacts)
                         assert result == Path("/output/ovbundle.tar.gz")
 
-    def test_copy_libs(self, package_config, single_model):
+    @patch("ovmobilebench.packaging.packager.ensure_dir")
+    def test_copy_libs(self, mock_ensure_dir, package_config, single_model):
         """Test copying library files."""
+        mock_ensure_dir.side_effect = lambda x: x
         packager = Packager(package_config, single_model, Path("/output"))
 
         # Mock library directory with some files
         libs_dir = MagicMock()
-        libs_dir.glob.side_effect = [
-            [Path("/build/lib/libopenvino.so"), Path("/build/lib/libtest.so.1")],  # *.so
-            [Path("/build/lib/libother.so.2.0")],  # *.so.*
-        ]
+        libs_dir.exists.return_value = True
 
-        # Mock the files as actual files
-        for lib_path in [
-            Path("/build/lib/libopenvino.so"),
-            Path("/build/lib/libtest.so.1"),
-            Path("/build/lib/libother.so.2.0"),
-        ]:
-            lib_path.is_file = MagicMock(return_value=True)
-            lib_path.name = lib_path.name
+        # Create mock files
+        mock_lib1 = MagicMock()
+        mock_lib1.is_file.return_value = True
+        mock_lib1.relative_to.return_value = Path("libopenvino.so")
+        mock_lib1.name = "libopenvino.so"
+
+        mock_lib2 = MagicMock()
+        mock_lib2.is_file.return_value = True
+        mock_lib2.relative_to.return_value = Path("libtest.so.1")
+        mock_lib2.name = "libtest.so.1"
+
+        libs_dir.rglob.return_value = [mock_lib1, mock_lib2]
 
         dest_dir = Path("/bundle/lib")
 
         with patch("ovmobilebench.packaging.packager.shutil.copy2") as mock_copy2:
-            packager._copy_libs(libs_dir, dest_dir)
+            with patch.object(packager, "_copy_ndk_stl_lib"):
+                with patch("pathlib.Path.mkdir"):
+                    packager._copy_libs(libs_dir, dest_dir)
 
-            # Should copy all library files
-            expected_calls = [
-                call(Path("/build/lib/libopenvino.so"), dest_dir / "libopenvino.so"),
-                call(Path("/build/lib/libtest.so.1"), dest_dir / "libtest.so.1"),
-                call(Path("/build/lib/libother.so.2.0"), dest_dir / "libother.so.2.0"),
-            ]
-            mock_copy2.assert_has_calls(expected_calls, any_order=True)
+                    # Should copy all library files
+                    assert mock_copy2.call_count == 2
+                    # Check that both libraries were copied
+                    mock_copy2.assert_any_call(mock_lib1, dest_dir / "libopenvino.so")
+                    mock_copy2.assert_any_call(mock_lib2, dest_dir / "libtest.so.1")
 
-    def test_copy_libs_no_files(self, package_config, single_model):
+    @patch("ovmobilebench.packaging.packager.ensure_dir")
+    def test_copy_libs_no_files(self, mock_ensure_dir, package_config, single_model):
         """Test copying libraries when no files match patterns."""
+        mock_ensure_dir.side_effect = lambda x: x
         packager = Packager(package_config, single_model, Path("/output"))
 
         libs_dir = MagicMock()
-        libs_dir.glob.return_value = []  # No files found
+        libs_dir.exists.return_value = True
+        libs_dir.rglob.return_value = []  # No files found
 
         dest_dir = Path("/bundle/lib")
 
         with patch("ovmobilebench.packaging.packager.shutil.copy2") as mock_copy2:
-            packager._copy_libs(libs_dir, dest_dir)
+            with patch.object(packager, "_copy_ndk_stl_lib"):
+                packager._copy_libs(libs_dir, dest_dir)
 
-            # Should not copy anything
-            mock_copy2.assert_not_called()
+                # Should not copy anything
+                mock_copy2.assert_not_called()
 
-    def test_copy_libs_directories_ignored(self, package_config, single_model):
+    @patch("ovmobilebench.packaging.packager.ensure_dir")
+    def test_copy_libs_directories_ignored(self, mock_ensure_dir, package_config, single_model):
         """Test that directories are ignored when copying libs."""
+        mock_ensure_dir.side_effect = lambda x: x
         packager = Packager(package_config, single_model, Path("/output"))
 
         # Mock a directory that matches the pattern
@@ -264,21 +282,27 @@ class TestPackager:
         mock_dir.is_file.return_value = False  # It's a directory
 
         libs_dir = MagicMock()
-        libs_dir.glob.return_value = [mock_dir]
+        libs_dir.exists.return_value = True
+        libs_dir.rglob.return_value = [mock_dir]
 
         dest_dir = Path("/bundle/lib")
 
         with patch("ovmobilebench.packaging.packager.shutil.copy2") as mock_copy2:
-            packager._copy_libs(libs_dir, dest_dir)
+            with patch.object(packager, "_copy_ndk_stl_lib"):
+                packager._copy_libs(libs_dir, dest_dir)
 
-            # Should not copy directories
-            mock_copy2.assert_not_called()
+                # Should not copy directories
+                mock_copy2.assert_not_called()
 
+    @patch("ovmobilebench.packaging.packager.ensure_dir")
     @patch("ovmobilebench.packaging.packager.shutil.copy2")
     @patch("pathlib.Path.exists")
-    def test_copy_models_success(self, mock_exists, mock_copy2, package_config, models):
+    def test_copy_models_success(
+        self, mock_exists, mock_copy2, mock_ensure_dir, package_config, models
+    ):
         """Test successful model copying."""
         mock_exists.return_value = True  # All model files exist
+        mock_ensure_dir.side_effect = lambda x: x
 
         packager = Packager(package_config, models, Path("/output"))
         models_dir = Path("/bundle/models")
@@ -295,46 +319,41 @@ class TestPackager:
         mock_copy2.assert_has_calls(expected_calls, any_order=True)
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
-    @patch("pathlib.Path.exists")
-    def test_copy_models_missing_xml(
-        self, mock_exists, mock_ensure_dir, package_config, single_model
-    ):
+    def test_copy_models_missing_xml(self, mock_ensure_dir, package_config, single_model):
         """Test model copying with missing XML file."""
         mock_ensure_dir.side_effect = lambda x: x  # Return path as-is
 
-        def exists_side_effect(self):
-            return "xml" not in str(self)
-
-        mock_exists.side_effect = exists_side_effect
-
         packager = Packager(package_config, single_model, Path("/output"))
         models_dir = Path("/bundle/models")
 
-        with pytest.raises(OVMobileBenchError) as exc_info:
-            packager._copy_models(models_dir)
+        # Create mock for Path.exists that returns False for XML files
+        def mock_exists(self):
+            return "xml" not in str(self)
 
-        assert "Model XML not found" in str(exc_info.value)
+        with patch.object(Path, "exists", mock_exists):
+            with pytest.raises(OVMobileBenchError) as exc_info:
+                packager._copy_models(models_dir)
+
+            assert "Model XML not found" in str(exc_info.value)
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
-    @patch("pathlib.Path.exists")
-    def test_copy_models_missing_bin(
-        self, mock_exists, mock_ensure_dir, package_config, single_model
-    ):
+    def test_copy_models_missing_bin(self, mock_ensure_dir, package_config, single_model):
         """Test model copying with missing BIN file."""
         mock_ensure_dir.side_effect = lambda x: x  # Return path as-is
 
-        def exists_side_effect(self):
-            return "bin" not in str(self)
-
-        mock_exists.side_effect = exists_side_effect
-
         packager = Packager(package_config, single_model, Path("/output"))
         models_dir = Path("/bundle/models")
 
-        with pytest.raises(OVMobileBenchError) as exc_info:
-            packager._copy_models(models_dir)
+        # Create mock for Path.exists that returns False for BIN files
+        def mock_exists(self):
+            return "bin" not in str(self)
 
-        assert "Model BIN not found" in str(exc_info.value)
+        with patch.object(Path, "exists", mock_exists):
+
+            with pytest.raises(OVMobileBenchError) as exc_info:
+                packager._copy_models(models_dir)
+
+            assert "Model BIN not found" in str(exc_info.value)
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
     def test_create_readme(self, mock_ensure_dir, package_config, single_model):
@@ -428,8 +447,10 @@ class TestPackager:
             packager._create_archive(bundle_dir, name)
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
+    @patch("shutil.copy2")
+    @patch("pathlib.Path.chmod")
     def test_create_bundle_logs_completion(
-        self, mock_ensure_dir, package_config, single_model, artifacts
+        self, mock_chmod, mock_copy2, mock_ensure_dir, package_config, single_model, artifacts
     ):
         """Test that bundle creation logs completion."""
         mock_ensure_dir.side_effect = lambda x: x
@@ -445,9 +466,10 @@ class TestPackager:
                         with patch("ovmobilebench.packaging.packager.logger") as mock_logger:
                             packager.create_bundle(artifacts)
 
-                            mock_logger.info.assert_called_with(
-                                "Bundle created: /output/ovbundle.tar.gz"
-                            )
+                            # Check that logger was called with the bundle path
+                            # Use str() to handle platform-specific path separators
+                            expected_path = Path("/output/ovbundle.tar.gz")
+                            mock_logger.info.assert_called_with(f"Bundle created: {expected_path}")
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
     def test_copy_models_logs_progress(self, mock_ensure_dir, package_config, models):
@@ -476,16 +498,22 @@ class TestPackager:
         # Mock library files
         mock_lib = MagicMock()
         mock_lib.is_file.return_value = True
-        mock_lib.name = "libtest.so"
+        mock_lib.relative_to.return_value = Path("libtest.so")
 
         libs_dir = MagicMock()
-        libs_dir.glob.side_effect = [[mock_lib], []]  # First pattern finds file, second finds none
+        libs_dir.exists.return_value = True
+        libs_dir.rglob.return_value = [mock_lib]  # Return mock library from rglob
+
+        dest_dir = MagicMock()
+        dest_dir.rglob.return_value = [mock_lib]  # For counting total libs
 
         with patch("ovmobilebench.packaging.packager.shutil.copy2"):
-            with patch("ovmobilebench.packaging.packager.logger") as mock_logger:
-                packager._copy_libs(libs_dir, Path("/dest"))
+            with patch.object(packager, "_copy_ndk_stl_lib"):  # Mock NDK lib copy
+                with patch("ovmobilebench.packaging.packager.logger") as mock_logger:
+                    packager._copy_libs(libs_dir, dest_dir)
 
-                mock_logger.debug.assert_called_with("Copied library: libtest.so")
+                    mock_logger.debug.assert_called_with("Copied library: libtest.so")
+                    mock_logger.info.assert_called_with(f"Copied 1 libraries from {libs_dir}")
 
     @patch("ovmobilebench.packaging.packager.ensure_dir")
     def test_empty_models_list(self, mock_ensure_dir):

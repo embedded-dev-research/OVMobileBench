@@ -119,7 +119,7 @@ def get_ndk_filename(version: str) -> str:
     if host.os == "windows":
         return f"android-ndk-{version}-windows.zip"
     elif host.os == "darwin":
-        return f"android-ndk-{version}-darwin.dmg"
+        return f"android-ndk-{version}-darwin.zip"
     else:
         return f"android-ndk-{version}-linux.zip"
 
@@ -212,9 +212,16 @@ def get_recommended_settings(host: HostInfo | None = None) -> dict:
         "create_avd": is_ci_environment(),  # Auto-create AVD in CI
     }
 
+    # Skip emulator on Linux ARM64 (not supported by Google)
+    if host.os == "linux" and host.arch in ["arm64", "aarch64"]:
+        settings["install_emulator"] = False
+        settings["create_avd"] = False
+
     # Adjust for CI environments
     if is_ci_environment():
         settings["target"] = "google_atd"  # Optimized for testing
-        settings["install_emulator"] = True
+        # Only enable emulator if platform supports it
+        if not (host.os == "linux" and host.arch in ["arm64", "aarch64"]):
+            settings["install_emulator"] = True
 
     return settings

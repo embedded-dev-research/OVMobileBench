@@ -20,10 +20,12 @@ class Packager:
         config: PackageConfig,
         models: list[ModelItem],
         output_dir: Path,
+        android_abi: str = "arm64-v8a",
     ):
         self.config = config
         self.models = models
         self.output_dir = ensure_dir(output_dir)
+        self.android_abi = android_abi
 
     def create_bundle(
         self,
@@ -66,14 +68,78 @@ class Packager:
         return archive_path
 
     def _copy_libs(self, libs_dir: Path, dest_dir: Path):
-        """Copy required shared libraries."""
-        lib_patterns = ["*.so", "*.so.*"]
+        """Copy all libraries from release directory recursively."""
+        # Copy entire release directory structure
+        if libs_dir.exists():
+            # Copy all .so files recursively
+            for src_file in libs_dir.rglob("*.so*"):
+                if src_file.is_file():
+                    # Preserve directory structure for plugins
+                    rel_path = src_file.relative_to(libs_dir)
+                    dst_file = dest_dir / rel_path
+                    dst_file.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src_file, dst_file)
+                    logger.debug(f"Copied library: {rel_path}")
 
-        for pattern in lib_patterns:
-            for lib in libs_dir.glob(pattern):
-                if lib.is_file():
-                    shutil.copy2(lib, dest_dir / lib.name)
-                    logger.debug(f"Copied library: {lib.name}")
+            # Count total libraries copied
+            total_libs = sum(1 for _ in dest_dir.rglob("*.so*"))
+            logger.info(f"Copied {total_libs} libraries from {libs_dir}")
+        else:
+            logger.warning(f"Library directory not found: {libs_dir}")
+
+        # Also copy libc++_shared.so from NDK if available
+        self._copy_ndk_stl_lib(dest_dir)
+
+    def _copy_ndk_stl_lib(self, dest_dir: Path):
+        """Copy C++ standard library from Android NDK."""
+        # Try to find NDK path from environment or common locations
+        ndk_paths = [
+            Path.home() / "ovmb_cache" / "android-sdk" / "ndk",
+            Path.cwd() / "ovmb_cache" / "android-sdk" / "ndk",
+            Path("/Users/anesterov/CLionProjects/OVMobileBench/ovmb_cache/android-sdk/ndk"),
+        ]
+
+        # Find NDK version directory
+        ndk_root = None
+        for ndk_path in ndk_paths:
+            if ndk_path.exists():
+                # Get the first NDK version directory
+                ndk_versions = [d for d in ndk_path.iterdir() if d.is_dir()]
+                if ndk_versions:
+                    ndk_root = ndk_versions[0]
+                    break
+
+        if not ndk_root:
+            logger.warning("Android NDK not found, libc++_shared.so will not be included")
+            return
+
+        # Map Android ABI to NDK arch directory name
+        abi_to_arch = {
+            "arm64-v8a": "aarch64-linux-android",
+            "armeabi-v7a": "arm-linux-androideabi",
+            "x86": "i686-linux-android",
+            "x86_64": "x86_64-linux-android",
+        }
+
+        arch_dir = abi_to_arch.get(self.android_abi, "aarch64-linux-android")
+
+        # Find libc++_shared.so for the target architecture
+        stl_paths = [
+            ndk_root
+            / f"toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/{arch_dir}/libc++_shared.so",
+            ndk_root
+            / f"toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/{arch_dir}/libc++_shared.so",
+            ndk_root
+            / f"toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib/{arch_dir}/libc++_shared.so",
+        ]
+
+        for stl_path in stl_paths:
+            if stl_path.exists():
+                shutil.copy2(stl_path, dest_dir / "libc++_shared.so")
+                logger.info(f"Copied libc++_shared.so for {self.android_abi} from Android NDK")
+                return
+
+        logger.warning(f"libc++_shared.so not found in Android NDK for {self.android_abi}")
 
     def _copy_models(self, models_dir: Path):
         """Copy model files."""

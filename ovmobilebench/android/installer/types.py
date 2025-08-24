@@ -120,6 +120,8 @@ class NdkVersion:
         """Parse NDK version from alias like 'r26d'."""
         # Mapping of common NDK aliases to versions
         ndk_versions = {
+            "r27c": "27.2.12479018",  # Latest LTS
+            "r27b": "27.1.12297006",
             "r27": "27.0.11718014",
             "r26d": "26.3.11579264",
             "r26c": "26.2.11394342",

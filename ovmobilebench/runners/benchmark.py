@@ -49,7 +49,8 @@ class BenchmarkRunner:
         }
 
         if rc != 0:
-            logger.error(f"Benchmark failed:\n{stdout}\n{stderr}")
+            error_msg = stderr if stderr else stdout
+            logger.error(f"Benchmark failed with rc={rc}: {error_msg}")
 
         return result
 
@@ -95,11 +96,16 @@ class BenchmarkRunner:
             f"-d {spec['device']}",
             f"-api {spec['api']}",
             f"-niter {spec['niter']}",
-            f"-nireq {spec['nireq']}",
         ]
 
-        # CPU-specific options
-        if spec["device"] == "CPU":
+        # Performance hint (latency, throughput, or none)
+        if "hint" in spec:
+            cmd_parts.append(f"-hint {spec['hint']}")
+
+        # If hint is "none", we can use the fine-tuning options
+        if spec.get("hint") == "none":
+            if "nireq" in spec:
+                cmd_parts.append(f"-nireq {spec['nireq']}")
             if "nstreams" in spec:
                 cmd_parts.append(f"-nstreams {spec['nstreams']}")
             if "threads" in spec:
@@ -118,7 +124,7 @@ class BenchmarkRunner:
             "device": "CPU",
             "api": "sync",
             "niter": 10,
-            "nireq": 1,
+            "hint": "latency",
         }
 
         logger.info(f"Warmup run for {model_name}")

@@ -20,6 +20,7 @@ class NdkResolver:
     """Resolve and manage Android NDK installations."""
 
     NDK_BASE_URL = "https://dl.google.com/android/repository"
+    NDK_LATEST_URL = "https://developer.android.com/ndk/downloads"
 
     def __init__(self, sdk_root: Path, logger: StructuredLogger | None = None):
         """Initialize NDK resolver.
@@ -32,6 +33,17 @@ class NdkResolver:
         self.ndk_dir = self.sdk_root / "ndk"
         self.logger = logger
         self.sdk_manager = SdkManager(sdk_root, logger)
+
+    def get_latest_ndk_version(self) -> str:
+        """Get the latest stable NDK version.
+
+        Returns:
+            Latest NDK alias (e.g., 'r27c')
+        """
+        # TODO: Implement dynamic fetching of latest NDK version
+        # For now, return a known recent stable version
+        # This should be updated periodically or fetched from a remote source
+        return "r27c"  # Latest LTS as of 2024
 
     def resolve_path(self, spec: NdkSpec) -> Path:
         """Resolve NDK specification to a path.
@@ -58,14 +70,17 @@ class NdkResolver:
 
         # Resolve alias to version
         if spec.alias:
+            # Handle "latest" alias
+            alias = self.get_latest_ndk_version() if spec.alias == "latest" else spec.alias
+
             try:
-                ndk_version = NdkVersion.from_alias(spec.alias)
+                ndk_version = NdkVersion.from_alias(alias)
             except ValueError:
                 # Try as version string
                 try:
-                    ndk_version = NdkVersion.from_version(spec.alias)
+                    ndk_version = NdkVersion.from_version(alias)
                 except ValueError:
-                    raise InvalidArgumentError("ndk_alias", spec.alias, "Unknown NDK version")
+                    raise InvalidArgumentError("ndk_alias", alias, "Unknown NDK version")
 
             # Check if installed via sdkmanager
             ndk_path = self.ndk_dir / ndk_version.version
@@ -114,7 +129,9 @@ class NdkResolver:
 
         # Install NDK
         if spec.alias:
-            return self._install_ndk(spec.alias)
+            # Handle "latest" alias
+            alias = self.get_latest_ndk_version() if spec.alias == "latest" else spec.alias
+            return self._install_ndk(alias)
 
         raise InvalidArgumentError("ndk_spec", str(spec), "No alias provided for installation")
 

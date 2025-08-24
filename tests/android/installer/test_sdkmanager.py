@@ -38,7 +38,7 @@ class TestSdkManager:
         assert manager.logger == logger
         assert manager.cmdline_tools_dir == self.sdk_root / "cmdline-tools" / "latest"
 
-    @patch("ovmobilebench.android.installer.detect.detect_host")
+    @patch("ovmobilebench.android.installer.sdkmanager.detect_host")
     def test_get_sdkmanager_path_linux(self, mock_detect):
         """Test getting sdkmanager path on Linux."""
         mock_detect.return_value = Mock(os="linux")
@@ -50,8 +50,7 @@ class TestSdkManager:
         else:
             assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
 
-    @pytest.mark.skip(reason="Platform-specific test fails on non-Windows")
-    @patch("ovmobilebench.android.installer.detect.detect_host")
+    @patch("ovmobilebench.android.installer.sdkmanager.detect_host")
     def test_get_sdkmanager_path_windows(self, mock_detect):
         """Test getting sdkmanager path on Windows."""
         mock_detect.return_value = Mock(os="windows")
@@ -135,13 +134,18 @@ class TestSdkManager:
         result = self.manager.ensure_cmdline_tools()
         assert result == self.manager.cmdline_tools_dir
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
-    @patch("urllib.request.urlretrieve")
+    @patch("ovmobilebench.android.installer.sdkmanager._secure_urlretrieve")
     @patch("zipfile.ZipFile")
     @patch("ovmobilebench.android.installer.detect.get_sdk_tools_filename")
     def test_ensure_cmdline_tools_install(self, mock_get_filename, mock_zipfile, mock_urlretrieve):
         """Test installing cmdline-tools."""
         mock_get_filename.return_value = "commandlinetools-linux-11076708_latest.zip"
+
+        # Create the download file that will be deleted
+        def create_download_file(url, path):
+            Path(path).touch()
+
+        mock_urlretrieve.side_effect = create_download_file
 
         # Mock ZIP extraction
         mock_zip = MagicMock()
@@ -151,7 +155,13 @@ class TestSdkManager:
         def create_structure(*args):
             extracted_dir = self.sdk_root / "cmdline-tools" / "bin"
             extracted_dir.mkdir(parents=True)
-            (extracted_dir / "sdkmanager").touch()
+            # Create the right sdkmanager file based on platform
+            import platform
+
+            if platform.system() == "Windows":
+                (extracted_dir / "sdkmanager.bat").touch()
+            else:
+                (extracted_dir / "sdkmanager").touch()
 
         mock_zip.extractall.side_effect = create_structure
 
@@ -325,10 +335,11 @@ class TestSdkManager:
             with pytest.raises(ComponentNotFoundError, match="platform-tools"):
                 self.manager.ensure_platform_tools()
 
-    @pytest.mark.skip(reason="SSL certificate issues in test environment")
     def test_ensure_cmdline_tools_download_failure(self):
         """Test cmdline-tools download failure."""
-        with patch("urllib.request.urlretrieve") as mock_urlretrieve:
+        with patch(
+            "ovmobilebench.android.installer.sdkmanager._secure_urlretrieve"
+        ) as mock_urlretrieve:
             mock_urlretrieve.side_effect = Exception("Network error")
 
             with pytest.raises(DownloadError, match="Network error"):

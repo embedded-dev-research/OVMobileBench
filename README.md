@@ -45,6 +45,7 @@ See [Configuration Reference](docs/configuration.md) for details.
 - **[Build Guide](docs/build-guide.md)** - Building OpenVINO for mobile
 - **[Benchmarking Guide](docs/benchmarking.md)** - Running and interpreting benchmarks
 - **[Testing Guide](docs/testing.md)** - Running and writing tests
+- **[End-to-End Testing](docs/e2e-testing.md)** - E2E test infrastructure and examples
 - **[CI/CD Integration](docs/ci-cd.md)** - GitHub Actions and automation
 - **[API Reference](docs/api-reference.md)** - Python API documentation
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
@@ -60,7 +61,8 @@ See [Configuration Reference](docs/configuration.md) for details.
 - 🔄 **CI/CD Ready** - GitHub Actions integration included
 - 📈 **Reproducible** - Full provenance tracking of builds and runs
 - 🤖 **Android SDK/NDK Installer** - Automated setup of Android development tools
-- 🔗 **Auto-Download** - Fetch latest OpenVINO builds for your platform
+- 🔗 **Auto-Clone & Build** - Automatically clones OpenVINO with submodules if not present
+- 📁 **Config-Based Paths** - All paths managed through YAML config, no environment variables needed
 
 ## 🔧 Supported Platforms
 

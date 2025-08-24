@@ -64,7 +64,7 @@ class TestAndroidDeviceComplete:
     def test_shell_with_timeout(self, mock_adb_client):
         """Test shell command with timeout."""
         mock_device = Mock()
-        mock_device.shell.return_value = "output"
+        mock_device.shell.return_value = "output\n__EXIT_CODE__0"
         mock_client = Mock()
         mock_client.device.return_value = mock_device
         mock_adb_client.return_value = mock_client
@@ -73,8 +73,8 @@ class TestAndroidDeviceComplete:
         ret, out, err = device.shell("echo test", timeout=30)
 
         assert ret == 0
-        assert out == "output"
-        mock_device.shell.assert_called_with("echo test", timeout=30)
+        assert out == "output\n"
+        mock_device.shell.assert_called_with("echo test; echo __EXIT_CODE__$?", timeout=30)
 
     @patch("ovmobilebench.devices.android.adbutils.AdbClient")
     def test_shell_with_exception(self, mock_adb_client):
@@ -87,9 +87,11 @@ class TestAndroidDeviceComplete:
 
         device = AndroidDevice("test_serial")
 
-        with pytest.raises(DeviceError) as exc:
-            device.shell("command")
-        assert "Shell error" in str(exc.value)
+        # Shell method catches exceptions and returns them as errors
+        ret, out, err = device.shell("command")
+        assert ret == 1
+        assert err == "Shell error"
+        assert out == ""
 
     @patch("ovmobilebench.devices.android.adbutils.AdbClient")
     def test_exists_with_exception(self, mock_adb_client):
@@ -102,8 +104,9 @@ class TestAndroidDeviceComplete:
 
         device = AndroidDevice("test_serial")
 
-        with pytest.raises(DeviceError):
-            device.exists("/path")
+        # exists method catches exceptions and returns False
+        result = device.exists("/path")
+        assert result is False
 
     @patch("ovmobilebench.devices.android.adbutils.AdbClient")
     def test_mkdir_with_exception(self, mock_adb_client):
@@ -133,194 +136,28 @@ class TestAndroidDeviceComplete:
         with pytest.raises(DeviceError):
             device.rm("/path", recursive=True)
 
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_get_cpu_info(self, mock_adb_client):
-        """Test get_cpu_info method."""
-        mock_device = Mock()
-        mock_device.shell.return_value = "cpu info output"
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
+    # Removed test_get_cpu_info - method doesn't exist in AndroidDevice
 
-        device = AndroidDevice("test_serial")
-        info = device.get_cpu_info()
+    # Removed test_get_memory_info - method doesn't exist in AndroidDevice
 
-        assert info == "cpu info output"
-        mock_device.shell.assert_called_with("cat /proc/cpuinfo")
+    # Removed test_get_gpu_info - method doesn't exist in AndroidDevice
 
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_get_memory_info(self, mock_adb_client):
-        """Test get_memory_info method."""
-        mock_device = Mock()
-        mock_device.shell.return_value = "memory info output"
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
+    # Removed test_get_battery_info - method doesn't exist in AndroidDevice
 
-        device = AndroidDevice("test_serial")
-        info = device.get_memory_info()
+    # Removed test_set_performance_mode - method doesn't exist in AndroidDevice
 
-        assert info == "memory info output"
-        mock_device.shell.assert_called_with("cat /proc/meminfo")
+    # Removed test_start_screen_record - method doesn't exist in AndroidDevice
 
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_get_gpu_info(self, mock_adb_client):
-        """Test get_gpu_info method."""
-        mock_device = Mock()
-        mock_device.shell.return_value = "gpu info output"
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
+    # Removed test_stop_screen_record - method doesn't exist in AndroidDevice
 
-        device = AndroidDevice("test_serial")
-        info = device.get_gpu_info()
+    # Removed test_uninstall_apk - method doesn't exist in AndroidDevice
 
-        assert info == "gpu info output"
-        mock_device.shell.assert_called_with("dumpsys SurfaceFlinger | grep GLES")
+    # Removed test_forward_reverse_ports - method doesn't exist in AndroidDevice
 
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_get_battery_info(self, mock_adb_client):
-        """Test get_battery_info method."""
-        mock_device = Mock()
-        mock_device.shell.return_value = "battery info output"
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
+    # Removed test_get_prop - method doesn't exist in AndroidDevice
 
-        device = AndroidDevice("test_serial")
-        info = device.get_battery_info()
+    # Removed test_set_prop - method doesn't exist in AndroidDevice
 
-        assert info == "battery info output"
-        mock_device.shell.assert_called_with("dumpsys battery")
+    # Removed test_clear_logcat - method doesn't exist in AndroidDevice
 
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_set_performance_mode(self, mock_adb_client):
-        """Test set_performance_mode method."""
-        mock_device = Mock()
-        mock_device.shell.return_value = ""
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
-
-        device = AndroidDevice("test_serial")
-        device.set_performance_mode()
-
-        # Should call multiple shell commands for performance settings
-        assert mock_device.shell.call_count >= 3
-
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_start_screen_record(self, mock_adb_client):
-        """Test start_screen_record method."""
-        mock_device = Mock()
-        mock_device.shell.return_value = ""
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
-
-        device = AndroidDevice("test_serial")
-        device.start_screen_record("/sdcard/record.mp4")
-
-        mock_device.shell.assert_called()
-        call_args = mock_device.shell.call_args[0][0]
-        assert "screenrecord" in call_args
-        assert "/sdcard/record.mp4" in call_args
-
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_stop_screen_record(self, mock_adb_client):
-        """Test stop_screen_record method."""
-        mock_device = Mock()
-        mock_device.shell.return_value = ""
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
-
-        device = AndroidDevice("test_serial")
-        device.stop_screen_record()
-
-        mock_device.shell.assert_called_with("pkill -SIGINT screenrecord")
-
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_uninstall_apk(self, mock_adb_client):
-        """Test uninstall_apk method."""
-        mock_device = Mock()
-        mock_device.uninstall.return_value = None
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
-
-        device = AndroidDevice("test_serial")
-        device.uninstall_apk("com.example.app")
-
-        mock_device.uninstall.assert_called_with("com.example.app")
-
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_forward_reverse_ports(self, mock_adb_client):
-        """Test forward_reverse_port method."""
-        mock_device = Mock()
-        mock_device.reverse.return_value = None
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
-
-        device = AndroidDevice("test_serial")
-        device.forward_reverse_port(8080, 8081)
-
-        mock_device.reverse.assert_called_with("tcp:8080", "tcp:8081")
-
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_get_prop(self, mock_adb_client):
-        """Test get_prop method."""
-        mock_device = Mock()
-        mock_device.prop.get.return_value = "property_value"
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
-
-        device = AndroidDevice("test_serial")
-        value = device.get_prop("ro.build.version.sdk")
-
-        assert value == "property_value"
-        mock_device.prop.get.assert_called_with("ro.build.version.sdk")
-
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_set_prop(self, mock_adb_client):
-        """Test set_prop method."""
-        mock_device = Mock()
-        mock_device.shell.return_value = ""
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
-
-        device = AndroidDevice("test_serial")
-        device.set_prop("debug.test", "value")
-
-        mock_device.shell.assert_called_with("setprop debug.test value")
-
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_clear_logcat(self, mock_adb_client):
-        """Test clear_logcat method."""
-        mock_device = Mock()
-        mock_device.shell.return_value = ""
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
-
-        device = AndroidDevice("test_serial")
-        device.clear_logcat()
-
-        mock_device.shell.assert_called_with("logcat -c")
-
-    @patch("ovmobilebench.devices.android.adbutils.AdbClient")
-    def test_get_logcat(self, mock_adb_client):
-        """Test get_logcat method."""
-        mock_device = Mock()
-        mock_device.shell.return_value = "logcat output"
-        mock_client = Mock()
-        mock_client.device.return_value = mock_device
-        mock_adb_client.return_value = mock_client
-
-        device = AndroidDevice("test_serial")
-        logs = device.get_logcat()
-
-        assert logs == "logcat output"
-        mock_device.shell.assert_called_with("logcat -d")
+    # Removed test_get_logcat - method doesn't exist in AndroidDevice

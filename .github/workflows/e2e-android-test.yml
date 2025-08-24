@@ -1,0 +1,257 @@
+name: E2E Android Test - Full Pipeline Example
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+#  schedule:
+#    - cron: '0 2 * * *' # Daily at 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      clear_cache:
+        description: 'Clear all caches and rebuild from scratch'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-android-pipeline:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest  # Ubuntu
+            android-api: 30
+            arch: x86_64
+            config_file: experiments/android_x86_64_ci.yaml
+#          - os: macOS-latest  # macOS on Apple Silicon (M1/M2)
+#            android-api: 30
+#            arch: arm64-v8a  # Android ARM64 architecture
+#            config_file: experiments/android_example.yaml
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # === SETUP PHASE ===
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            setup.py
+
+      - name: Install OVMobileBench
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Install build tools
+        run: |
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y ccache ninja-build
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            # Check if already installed to save time
+            brew list ccache &>/dev/null || brew install ccache
+            brew list ninja &>/dev/null || brew install ninja
+          fi
+
+      - name: Setup Java for Android
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Enable KVM for Android emulator (Linux only)
+        if: runner.os == 'Linux'
+        run: bash helpers/scripts/setup_kvm_linux.sh
+
+      - name: Enable Hypervisor.framework for Android emulator (macOS only)
+        if: runner.os == 'macOS'
+        run: bash helpers/scripts/setup_hypervisor_macos.sh
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        id: android-sdk-cache
+        with:
+          path: ovmb_cache/android-sdk
+          key: android-sdk-${{ runner.os }}-${{ matrix.android-api }}-${{ matrix.arch }}-v1${{
+            github.event.inputs.clear_cache == 'true' && '-nocache' || '' }}
+          restore-keys: |
+            android-sdk-${{ runner.os }}-${{ matrix.android-api }}-${{ matrix.arch }}-
+            android-sdk-${{ runner.os }}-${{ matrix.android-api }}-
+            android-sdk-${{ runner.os }}-
+
+      - name: Cache Models
+        uses: actions/cache@v4
+        id: models-cache
+        with:
+          path: ovmb_cache/models
+          key: models-${{ runner.os }}-${{ hashFiles('helpers/model_helper.py') }}-v1
+          restore-keys: |
+            models-${{ runner.os }}-
+            models-
+
+      - name: Setup Android SDK/NDK via OVMobileBench
+        run: |
+          # Check if cache was forced to be cleared
+          if [ "${{ github.event.inputs.clear_cache }}" = "true" ]; then
+            echo "🧹 Cache clearing was requested - installing from scratch"
+            rm -rf $PWD/ovmb_cache/android-sdk 2>/dev/null || true
+            rm -rf $PWD/ovmb_cache/models 2>/dev/null || true
+          fi
+
+          # Use config file from matrix
+          echo "📱 Using configuration: ${{ matrix.config_file }}"
+          echo "  Architecture: ${{ matrix.arch }}"
+          echo "  OS: ${{ matrix.os }}"
+
+          # Set Android environment variables for AVD location
+          export ANDROID_HOME=$PWD/ovmb_cache/android-sdk
+          export ANDROID_SDK_ROOT=$PWD/ovmb_cache/android-sdk
+          export ANDROID_SDK_HOME=$PWD/ovmb_cache/android-sdk
+          export ANDROID_AVD_HOME=$PWD/ovmb_cache/android-sdk/.android/avd
+
+          # Export to GitHub Environment for subsequent steps
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_HOME=$ANDROID_SDK_HOME" >> $GITHUB_ENV
+          echo "ANDROID_AVD_HOME=$ANDROID_AVD_HOME" >> $GITHUB_ENV
+
+          echo "📍 Environment variables set:"
+          echo "  ANDROID_HOME=$ANDROID_HOME"
+          echo "  ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "  ANDROID_SDK_HOME=$ANDROID_SDK_HOME"
+          echo "  ANDROID_AVD_HOME=$ANDROID_AVD_HOME"
+
+          python -m ovmobilebench.cli setup-android \
+            -c ${{ matrix.config_file }} \
+            --api ${{ matrix.android-api }} \
+            --arch ${{ matrix.arch }} \
+            --create-avd \
+            --verbose
+
+          # Display cache stats
+          echo "📊 Android SDK setup complete:"
+          echo "  Cache size: $(du -sh $PWD/ovmb_cache 2>/dev/null || echo 'calculating...')"
+
+          # List created AVDs
+          echo "📱 Created AVDs:"
+          ls -la $ANDROID_AVD_HOME 2>/dev/null || echo "AVD directory not found"
+
+      # === PREPARE EMULATOR ===
+      - name: Start Android Emulator
+        run: |
+          # Environment variables should already be set from previous step
+          echo "📍 Starting emulator with environment:"
+          echo "  ANDROID_AVD_HOME=$ANDROID_AVD_HOME"
+          echo "📱 Available AVDs:"
+          ls -la $ANDROID_AVD_HOME 2>/dev/null || echo "No AVDs found"
+
+          python helpers/emulator_helper.py -c ${{ matrix.config_file }} start-emulator &
+          # Give emulator a moment to start before checking
+          sleep 10
+          python helpers/emulator_helper.py -c ${{ matrix.config_file }} wait-for-boot
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-${{ matrix.arch }}-android
+          create-symlink: true
+          max-size: 2G
+
+      # Models are already in ovmb_cache, no separate cache needed
+
+      # === PREPARE MODEL ===
+      - name: Download ResNet-50 model
+        run: python helpers/model_helper.py -c ${{ matrix.config_file }} download-resnet50
+
+      # === OVMOBILEBENCH PIPELINE ===
+      - name: List available devices
+        run: python -m ovmobilebench.cli list-devices
+
+      - name: Build OpenVINO for Android
+        run: |
+          python -m ovmobilebench.cli build \
+            -c ${{ matrix.config_file }} \
+            --verbose
+
+      - name: Show ccache statistics
+        run: |
+          echo "📊 ccache statistics:"
+          ccache --show-stats
+
+      - name: Package OpenVINO runtime and model
+        run: |
+          python -m ovmobilebench.cli package \
+            -c ${{ matrix.config_file }} \
+            --verbose
+
+      - name: Deploy to Android device
+        run: |
+          python -m ovmobilebench.cli deploy \
+            -c ${{ matrix.config_file }} \
+            --verbose
+
+      - name: Run benchmark on device
+        run: |
+          python -m ovmobilebench.cli run \
+            -c ${{ matrix.config_file }} \
+            --verbose
+
+      - name: Generate benchmark report
+        run: |
+          python -m ovmobilebench.cli report \
+            -c ${{ matrix.config_file }} \
+            --verbose
+
+      # === ALTERNATIVE: Run all stages at once ===
+      - name: Run complete pipeline (alternative)
+        if: false  # Set to true to use this instead of individual stages
+        run: |
+          python -m ovmobilebench.cli all \
+            -c ${{ matrix.config_file }} \
+            --verbose
+
+      # === VALIDATION ===
+      - name: Validate results
+        run: python helpers/validate_results.py
+
+      - name: Display benchmark results
+        run: python helpers/display_results.py
+
+      # === CLEANUP ===
+      - name: Stop emulator
+        if: always()
+        run: |
+          # Environment variables should already be set from setup step
+          python helpers/emulator_helper.py -c ${{ matrix.config_file }} stop-emulator
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ matrix.os }}-api${{ matrix.android-api }}
+          path: |
+            artifacts/
+          retention-days: 7
+
+      # === REPORT TO PR ===
+      - name: Post results to PR
+        if: github.event_name == 'pull_request'
+        run: |
+          python helpers/pr_comment.py \
+            --api ${{ matrix.android-api }} \
+            --pr ${{ github.event.pull_request.number }}

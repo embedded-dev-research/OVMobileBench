@@ -102,35 +102,38 @@ class TestAndroidInstaller:
                     with patch.object(self.installer.sdk, "ensure_platform_tools"):
                         with patch.object(self.installer.sdk, "ensure_platform"):
                             with patch.object(self.installer.sdk, "ensure_build_tools"):
-                                with patch.object(self.installer.sdk, "ensure_emulator"):
-                                    with patch.object(self.installer.sdk, "ensure_system_image"):
+                                with patch.object(self.installer.sdk, "ensure_cmake"):
+                                    with patch.object(self.installer.sdk, "ensure_emulator"):
                                         with patch.object(
-                                            self.installer.ndk, "ensure"
-                                        ) as mock_ndk_ensure:
+                                            self.installer.sdk, "ensure_system_image"
+                                        ):
                                             with patch.object(
-                                                self.installer.avd, "create"
-                                            ) as mock_avd_create:
-                                                ndk_path = Path("/opt/ndk")
-                                                mock_ndk_ensure.return_value = ndk_path
-                                                mock_avd_create.return_value = True
+                                                self.installer.ndk, "ensure"
+                                            ) as mock_ndk_ensure:
+                                                with patch.object(
+                                                    self.installer.avd, "create"
+                                                ) as mock_avd_create:
+                                                    ndk_path = Path("/opt/ndk")
+                                                    mock_ndk_ensure.return_value = ndk_path
+                                                    mock_avd_create.return_value = True
 
-                                                result = self.installer.ensure(
-                                                    api=30,
-                                                    target="google_atd",
-                                                    arch="arm64-v8a",
-                                                    ndk=NdkSpec(alias="r26d"),
-                                                    install_build_tools="34.0.0",
-                                                    create_avd_name="test_avd",
-                                                    accept_licenses=True,
-                                                    dry_run=False,
-                                                )
+                                                    result = self.installer.ensure(
+                                                        api=30,
+                                                        target="google_atd",
+                                                        arch="arm64-v8a",
+                                                        ndk=NdkSpec(alias="r26d"),
+                                                        install_build_tools="34.0.0",
+                                                        create_avd_name="test_avd",
+                                                        accept_licenses=True,
+                                                        dry_run=False,
+                                                    )
 
-                                                assert result["sdk_root"] == self.sdk_root
-                                                assert result["ndk_path"] == ndk_path
-                                                assert result["avd_created"] is True
-                                                assert "cmdline_tools" in result["performed"]
-                                                assert "platform_tools" in result["performed"]
-                                                assert "ndk" in result["performed"]
+                                                    assert result["sdk_root"] == self.sdk_root
+                                                    assert result["ndk_path"] == ndk_path
+                                                    assert result["avd_created"] is True
+                                                    assert "cmdline_tools" in result["performed"]
+                                                    assert "platform_tools" in result["performed"]
+                                                    assert "ndk" in result["performed"]
 
     def test_ensure_permission_error(self):
         """Test permission error during installation."""
@@ -271,28 +274,28 @@ class TestAndroidInstaller:
             mock_build_plan.return_value = mock_plan
 
             with patch.object(self.installer.sdk, "ensure_cmdline_tools"):
-                with patch.object(self.installer.sdk, "accept_licenses"):
-                    with patch.object(self.installer.ndk, "ensure") as mock_ndk_ensure:
-                        ndk_path = Path("/opt/ndk")
-                        mock_ndk_ensure.return_value = ndk_path
+                with patch.object(self.installer.sdk, "ensure_cmake"):
+                    with patch.object(self.installer.sdk, "accept_licenses"):
+                        with patch.object(self.installer.ndk, "ensure") as mock_ndk_ensure:
+                            ndk_path = Path("/opt/ndk")
+                            mock_ndk_ensure.return_value = ndk_path
 
-                        result = self.installer.ensure(
-                            api=30,
-                            target="google_atd",
-                            arch="arm64-v8a",
-                            ndk=NdkSpec(alias="r26d"),
-                            install_platform_tools=False,
-                            install_emulator=False,
-                            dry_run=False,
-                        )
+                            result = self.installer.ensure(
+                                api=30,
+                                target="google_atd",
+                                arch="arm64-v8a",
+                                ndk=NdkSpec(alias="r26d"),
+                                install_platform_tools=False,
+                                install_emulator=False,
+                                dry_run=False,
+                            )
 
-                        assert result["ndk_path"] == ndk_path
-                        assert result["avd_created"] is False
-                        assert "ndk" in result["performed"]
+                            assert result["ndk_path"] == ndk_path
+                            assert result["avd_created"] is False
+                            assert "ndk" in result["performed"]
 
-    @pytest.mark.skip(reason="Mock setup issues with NDK resolution")
     @patch("ovmobilebench.android.installer.detect.detect_host")
-    @patch("ovmobilebench.android.installer.detect.check_disk_space")
+    @patch("ovmobilebench.android.installer.core.check_disk_space")
     def test_ensure_low_disk_space_warning(self, mock_check_disk, mock_detect_host):
         """Test warning for low disk space."""
         mock_detect_host.return_value = HostInfo(os="linux", arch="x86_64", has_kvm=True)
@@ -312,25 +315,28 @@ class TestAndroidInstaller:
             )
             mock_build_plan.return_value = mock_plan
 
-            installer.ensure(
-                api=30,
-                target="google_atd",
-                arch="arm64-v8a",
-                ndk=NdkSpec(alias="r26d"),
-                dry_run=True,
-            )
+            # Mock NDK resolve_path for dry run
+            with patch.object(installer.ndk, "resolve_path") as mock_resolve:
+                mock_resolve.return_value = self.sdk_root / "ndk" / "r26d"
 
-            # Check that warning was logged
-            logger.warning.assert_called_with("Low disk space detected (< 15GB free)")
+                installer.ensure(
+                    api=30,
+                    target="google_atd",
+                    arch="arm64-v8a",
+                    ndk=NdkSpec(alias="r26d"),
+                    dry_run=True,
+                )
 
-    @pytest.mark.skip(reason="Mock setup issues with NDK resolution")
+                # Check that warning was logged
+                logger.warning.assert_called_with("Low disk space detected (< 15GB free)")
+
     def test_ensure_logs_host_info(self):
         """Test that host information is logged."""
         logger = Mock()
         installer = AndroidInstaller(self.sdk_root, logger=logger)
 
-        with patch("ovmobilebench.android.installer.detect.detect_host") as mock_detect:
-            with patch("ovmobilebench.android.installer.detect.check_disk_space"):
+        with patch("ovmobilebench.android.installer.core.detect_host") as mock_detect:
+            with patch("ovmobilebench.android.installer.core.check_disk_space"):
                 mock_detect.return_value = HostInfo(
                     os="linux", arch="arm64", has_kvm=True, java_version="17.0.8"
                 )
@@ -346,13 +352,17 @@ class TestAndroidInstaller:
                     )
                     mock_build_plan.return_value = mock_plan
 
-                    installer.ensure(
-                        api=30,
-                        target="google_atd",
-                        arch="arm64-v8a",
-                        ndk=NdkSpec(alias="r26d"),
-                        dry_run=True,
-                    )
+                    # Mock NDK resolve_path for dry run
+                    with patch.object(installer.ndk, "resolve_path") as mock_resolve:
+                        mock_resolve.return_value = self.sdk_root / "ndk" / "r26d"
+
+                        installer.ensure(
+                            api=30,
+                            target="google_atd",
+                            arch="arm64-v8a",
+                            ndk=NdkSpec(alias="r26d"),
+                            dry_run=True,
+                        )
 
                     # Check that host info was logged
                     logger.info.assert_any_call(

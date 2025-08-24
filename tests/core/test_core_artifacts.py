@@ -4,7 +4,7 @@ import json
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import call, mock_open, patch
+from unittest.mock import Mock, call, mock_open, patch
 
 import pytest
 
@@ -160,7 +160,8 @@ class TestArtifactManager:
         mock_is_file.return_value = True
         mock_stat.return_value.st_size = 1024
 
-        artifact_path = Path("/test/artifact.bin")
+        # Use a path that's inside the artifact_manager's base_dir
+        artifact_path = artifact_manager.base_dir / "artifact.bin"
         metadata = {"custom": "data"}
 
         with patch.object(artifact_manager, "_calculate_checksum", return_value="abc123def456"):
@@ -192,7 +193,8 @@ class TestArtifactManager:
         """Test registering a directory artifact."""
         mock_is_file.return_value = False  # It's a directory
 
-        artifact_path = Path("/test/artifact_dir")
+        # Use a path that's inside the artifact_manager's base_dir
+        artifact_path = artifact_manager.base_dir / "artifact_dir"
 
         with patch.object(artifact_manager, "_calculate_checksum", return_value="dir123abc456"):
             with patch.object(artifact_manager, "load_metadata", return_value={}):
@@ -305,13 +307,8 @@ class TestArtifactManager:
 
             assert result == []
 
-    @patch("pathlib.Path.exists")
-    @patch("pathlib.Path.is_dir")
-    @patch("pathlib.Path.unlink")
     @patch("shutil.rmtree")
-    def test_cleanup_old_artifacts(
-        self, mock_rmtree, mock_unlink, mock_is_dir, mock_exists, artifact_manager
-    ):
+    def test_cleanup_old_artifacts(self, mock_rmtree, artifact_manager):
         """Test cleaning up old artifacts."""
         # Create test artifacts - some old, some new
         now = datetime.now(timezone.utc)
@@ -324,30 +321,48 @@ class TestArtifactManager:
             "new_file": {"type": "build", "path": "build/new_file.bin", "created_at": new_date},
         }
 
-        # Mock file system operations
-        mock_exists.return_value = True
+        # Create mock path objects that will be returned by base_dir / path
+        mock_old_file = Mock()
+        mock_old_file.exists.return_value = True
+        mock_old_file.is_dir.return_value = False
 
-        def is_dir_side_effect(self):
-            return "old_dir" in str(self)
+        mock_old_dir = Mock()
+        mock_old_dir.exists.return_value = True
+        mock_old_dir.is_dir.return_value = True
 
-        mock_is_dir.side_effect = is_dir_side_effect
+        mock_new_file = Mock()
+        mock_new_file.exists.return_value = True
+        mock_new_file.is_dir.return_value = False
 
-        with patch.object(artifact_manager, "load_metadata", return_value={"artifacts": artifacts}):
-            with patch.object(artifact_manager, "save_metadata") as mock_save:
-                result = artifact_manager.cleanup_old_artifacts(days=30)
+        # Mock the path creation
+        def path_div_side_effect(path):
+            if "old_file.bin" in str(path):
+                return mock_old_file
+            elif "old_dir" in str(path):
+                return mock_old_dir
+            elif "new_file.bin" in str(path):
+                return mock_new_file
+            return Mock()
 
-                assert result == 2  # Two artifacts removed
+        with patch.object(Path, "__truediv__", side_effect=path_div_side_effect):
+            with patch.object(
+                artifact_manager, "load_metadata", return_value={"artifacts": artifacts}
+            ):
+                with patch.object(artifact_manager, "save_metadata") as mock_save:
+                    result = artifact_manager.cleanup_old_artifacts(days=30)
 
-                # Check that files were removed
-                mock_rmtree.assert_called_once()  # For directory
-                mock_unlink.assert_called_once()  # For file
+                    assert result == 2  # Two artifacts removed
 
-                # Check metadata was updated
-                save_call = mock_save.call_args[0][0]
-                remaining_artifacts = save_call["artifacts"]
-                assert "new_file" in remaining_artifacts
-                assert "old_file" not in remaining_artifacts
-                assert "old_dir" not in remaining_artifacts
+                    # Check that files were removed
+                    mock_rmtree.assert_called_once()  # For directory
+                    mock_old_file.unlink.assert_called_once()  # For file
+
+                    # Check metadata was updated
+                    save_call = mock_save.call_args[0][0]
+                    remaining_artifacts = save_call["artifacts"]
+                    assert "new_file" in remaining_artifacts
+                    assert "old_file" not in remaining_artifacts
+                    assert "old_dir" not in remaining_artifacts
 
     @patch("pathlib.Path.exists")
     def test_cleanup_old_artifacts_missing_files(self, mock_exists, artifact_manager):

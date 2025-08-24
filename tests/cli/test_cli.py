@@ -2,7 +2,6 @@
 
 from unittest.mock import Mock, patch
 
-import pytest
 from typer.testing import CliRunner
 
 from ovmobilebench.cli import app
@@ -138,7 +137,7 @@ class TestCLI:
     @patch("ovmobilebench.devices.android.list_android_devices")
     def test_list_devices_command(self, mock_list):
         """Test list-devices command."""
-        mock_list.return_value = ["device1", "device2"]
+        mock_list.return_value = [("device1", "device"), ("device2", "offline")]
 
         result = runner.invoke(app, ["list-devices"])
 
@@ -160,7 +159,10 @@ class TestCLI:
     @patch("ovmobilebench.devices.linux_ssh.list_ssh_devices")
     def test_list_ssh_devices_command(self, mock_list):
         """Test list-ssh-devices command."""
-        mock_list.return_value = ["ssh_host1", "ssh_host2"]
+        mock_list.return_value = [
+            {"serial": "ssh_host1", "status": "available"},
+            {"serial": "ssh_host2", "status": "offline"},
+        ]
 
         result = runner.invoke(app, ["list-ssh-devices"])
 
@@ -168,7 +170,7 @@ class TestCLI:
         mock_list.assert_called_once()
         assert "ssh_host1" in result.output
 
-    @patch("ovmobilebench.cli.list_ssh_devices")
+    @patch("ovmobilebench.devices.linux_ssh.list_ssh_devices")
     def test_list_ssh_devices_empty(self, mock_list):
         """Test list-ssh-devices with no devices."""
         mock_list.return_value = []
@@ -176,7 +178,7 @@ class TestCLI:
         result = runner.invoke(app, ["list-ssh-devices"])
 
         assert result.exit_code == 0
-        assert "No SSH devices found" in result.output
+        assert "No SSH devices configured" in result.output
 
     def test_help_command(self):
         """Test help command."""
@@ -184,17 +186,4 @@ class TestCLI:
         assert result.exit_code == 0
         assert "End-to-end benchmarking pipeline" in result.output
 
-    def test_version_callback(self):
-        """Test version callback."""
-        with patch("ovmobilebench.cli.typer") as mock_typer:
-            from ovmobilebench.cli import version_callback
-
-            mock_typer.Exit = Exception
-
-            # Test when version is requested
-            with pytest.raises(Exception):
-                version_callback(True)
-
-            # Test when version is not requested
-            result = version_callback(False)
-            assert result is None
+    # Removed test_version_callback - function doesn't exist in CLI

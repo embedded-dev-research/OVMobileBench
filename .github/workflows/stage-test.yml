@@ -31,7 +31,7 @@ jobs:
           pip install -e .
 
       - name: Run tests
-        run: pytest tests/ -v --cov=ovmobilebench --cov=scripts --junitxml=junit.xml -o junit_family=legacy
+        run: pytest tests/ -v --cov=ovmobilebench --cov=helpers --junitxml=junit.xml -o junit_family=legacy
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5

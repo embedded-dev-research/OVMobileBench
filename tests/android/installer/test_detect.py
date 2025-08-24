@@ -162,7 +162,7 @@ class TestPlatformFunctions:
         """Test getting NDK filename for macOS."""
         mock_detect.return_value = Mock(os="darwin")
         filename = get_ndk_filename("r26d")
-        assert filename == "android-ndk-r26d-darwin.dmg"
+        assert filename == "android-ndk-r26d-darwin.zip"
 
     @patch("ovmobilebench.android.installer.detect.detect_host")
     def test_get_ndk_filename_windows(self, mock_detect):

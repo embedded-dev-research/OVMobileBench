@@ -163,6 +163,10 @@ class AndroidInstaller:
             self.sdk.ensure_build_tools(install_build_tools)
             performed[f"build_tools_{install_build_tools}"] = True
 
+        # Install CMake for building Android projects
+        self.sdk.ensure_cmake()
+        performed["cmake"] = True
+
         if plan.need_emulator:
             self.sdk.ensure_emulator()
             performed["emulator"] = True

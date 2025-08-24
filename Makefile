@@ -52,6 +52,10 @@ lint:
 test:
 	pytest tests/ -v
 
+test-e2e:
+	# E2E tests moved to helpers directory as utility scripts
+	@echo "E2E scripts are now in helpers/ directory"
+
 clean:
 	rm -rf artifacts/
 	rm -rf build/

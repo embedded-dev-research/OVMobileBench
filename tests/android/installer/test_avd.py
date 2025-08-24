@@ -32,7 +32,7 @@ class TestAvdManager:
         assert manager.sdk_root == self.sdk_root.absolute()
         assert manager.logger == logger
 
-    @patch("ovmobilebench.android.installer.detect.detect_host")
+    @patch("ovmobilebench.android.installer.avd.detect_host")
     def test_get_avdmanager_path_linux(self, mock_detect):
         """Test getting avdmanager path on Linux."""
         mock_detect.return_value = Mock(os="linux")
@@ -44,8 +44,7 @@ class TestAvdManager:
         else:
             assert path == self.sdk_root / "cmdline-tools" / "latest" / "bin" / "avdmanager"
 
-    @pytest.mark.skip(reason="Platform-specific test fails on non-Windows")
-    @patch("ovmobilebench.android.installer.detect.detect_host")
+    @patch("ovmobilebench.android.installer.avd.detect_host")
     def test_get_avdmanager_path_windows(self, mock_detect):
         """Test getting avdmanager path on Windows."""
         mock_detect.return_value = Mock(os="windows")
@@ -211,7 +210,26 @@ class TestAvdManager:
             name="test_avd", api=30, target="google_atd", arch="arm64-v8a", force=False
         )
 
-        assert result is True  # Should return True without creating
+        assert result is True
+
+    @patch.object(AvdManager, "list_avds")
+    def test_create_existing_avd_without_force_with_logger(self, mock_list):
+        """Test creating an AVD that already exists without force with logger."""
+        # AVD exists
+        mock_list.return_value = ["test_avd"]
+
+        # Create manager with logger
+        mock_logger = Mock()
+        manager = AvdManager(self.sdk_root, logger=mock_logger)
+
+        result = manager.create(
+            name="test_avd", api=30, target="google_atd", arch="arm64-v8a", force=False
+        )
+
+        assert result is True
+        mock_logger.info.assert_called_with(
+            "AVD 'test_avd' already exists"
+        )  # Should return True without creating
 
     @patch.object(AvdManager, "_run_avdmanager")
     @patch.object(AvdManager, "list_avds")
@@ -243,6 +261,65 @@ class TestAvdManager:
 
     @patch.object(AvdManager, "_run_avdmanager")
     @patch.object(AvdManager, "list_avds")
+    def test_create_success_with_logger(self, mock_list, mock_run):
+        """Test successful AVD creation with logger."""
+        mock_list.side_effect = [[], ["test_avd"]]  # AVD doesn't exist initially, exists after
+        mock_run.return_value = Mock(returncode=0)
+
+        # Create manager with logger
+        mock_logger = Mock()
+        mock_logger.step = Mock(return_value=Mock(__enter__=Mock(), __exit__=Mock()))
+        manager = AvdManager(self.sdk_root, logger=mock_logger)
+
+        result = manager.create(name="test_avd", api=30, target="google_atd", arch="arm64-v8a")
+        assert result is True
+        mock_logger.success.assert_called_with("AVD 'test_avd' created successfully")
+
+    @patch.object(AvdManager, "_run_avdmanager")
+    @patch.object(AvdManager, "list_avds")
+    def test_create_failure_with_logger(self, mock_list, mock_run):
+        """Test AVD creation failure with logger."""
+        mock_list.side_effect = [[], []]  # AVD doesn't exist before or after
+        # Make _run_avdmanager raise AvdManagerError
+        mock_run.side_effect = AvdManagerError("create avd", "test_avd", "Creation failed")
+
+        # Create manager with logger
+        mock_logger = Mock()
+        mock_context = Mock()
+        mock_context.__enter__ = Mock(return_value=mock_context)
+        mock_context.__exit__ = Mock(return_value=None)
+        mock_logger.step = Mock(return_value=mock_context)
+        manager = AvdManager(self.sdk_root, logger=mock_logger)
+
+        with pytest.raises(AvdManagerError):
+            manager.create(name="test_avd", api=30, target="google_atd", arch="arm64-v8a")
+
+        mock_logger.error.assert_called()
+
+    @patch("subprocess.run")
+    def test_run_avdmanager_with_logger_debug(self, mock_run):
+        """Test debug logging in _run_avdmanager."""
+        # Create avdmanager
+        avdmanager_dir = self.sdk_root / "cmdline-tools" / "latest" / "bin"
+        avdmanager_dir.mkdir(parents=True)
+        avdmanager_path = avdmanager_dir / "avdmanager"
+        avdmanager_path.touch()
+        avdmanager_bat = avdmanager_dir / "avdmanager.bat"
+        avdmanager_bat.touch()
+
+        mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
+
+        # Create manager with logger
+        mock_logger = Mock()
+        manager = AvdManager(self.sdk_root, logger=mock_logger)
+
+        manager._run_avdmanager(["list", "avd"])
+
+        # Check that debug was called with the command
+        mock_logger.debug.assert_called()
+
+    @patch.object(AvdManager, "_run_avdmanager")
+    @patch.object(AvdManager, "list_avds")
     def test_delete_existing_avd(self, mock_list, mock_run):
         """Test deleting an existing AVD."""
         mock_list.return_value = ["test_avd"]
@@ -261,6 +338,34 @@ class TestAvdManager:
         result = self.manager.delete("test_avd")
 
         assert result is True  # Should return True even if doesn't exist
+
+    @patch.object(AvdManager, "list_avds")
+    def test_delete_nonexistent_avd_with_logger(self, mock_list):
+        """Test deleting a non-existent AVD with logger."""
+        mock_list.return_value = []
+
+        # Create manager with logger
+        mock_logger = Mock()
+        manager = AvdManager(self.sdk_root, logger=mock_logger)
+
+        result = manager.delete("test_avd")
+        assert result is True
+        mock_logger.debug.assert_called_with("AVD 'test_avd' does not exist")
+
+    @patch.object(AvdManager, "_run_avdmanager")
+    @patch.object(AvdManager, "list_avds")
+    def test_delete_existing_avd_with_logger(self, mock_list, mock_run):
+        """Test deleting an existing AVD with logger."""
+        mock_list.return_value = ["test_avd"]
+        mock_run.return_value = Mock(returncode=0)
+
+        # Create manager with logger
+        mock_logger = Mock()
+        manager = AvdManager(self.sdk_root, logger=mock_logger)
+
+        result = manager.delete("test_avd")
+        assert result is True
+        mock_logger.info.assert_called_with("AVD 'test_avd' deleted")
 
     @patch.object(AvdManager, "_run_avdmanager")
     @patch.object(AvdManager, "list_avds")
