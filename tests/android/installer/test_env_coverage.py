@@ -57,15 +57,16 @@ class TestEnvExporterAdditional:
                 else:
                     assert any("export ANDROID_HOME" in call for call in calls)
 
-        # Test fish format
-        with patch.dict(os.environ, {"SHELL": "/usr/bin/fish"}):
-            with patch("builtins.print") as mock_print:
-                exporter.export(
-                    print_stdout=True,
-                    sdk_root=sdk_root,
-                )
-                calls = [str(call) for call in mock_print.call_args_list]
-                assert any("set -x ANDROID_HOME" in call for call in calls)
+        # Test fish format (skip on Windows)
+        if platform.system() != "Windows":
+            with patch.dict(os.environ, {"SHELL": "/usr/bin/fish"}):
+                with patch("builtins.print") as mock_print:
+                    exporter.export(
+                        print_stdout=True,
+                        sdk_root=sdk_root,
+                    )
+                    calls = [str(call) for call in mock_print.call_args_list]
+                    assert any("set -x ANDROID_HOME" in call for call in calls)
 
         # Test Windows format
         with patch("sys.platform", "win32"):
